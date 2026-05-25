@@ -8,11 +8,7 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Segoe UI', sans-serif; background: #0d0d0d; color: #e0d5c5; min-height: 100vh; }
 
-    /* Login */
-    #login-screen {
-      display: flex; align-items: center; justify-content: center;
-      min-height: 100vh;
-    }
+    #login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
     #login-box {
       background: #1a1814; border: 1px solid #3a2f20;
       border-radius: 20px; padding: 40px; width: 380px;
@@ -36,16 +32,13 @@
     }
     #login-btn:hover { opacity: .9; }
 
-    /* Panel */
     #panel { display: none; }
     header {
       background: linear-gradient(135deg, #0d0d0d, #3a2b16);
-      border-bottom: 1px solid #3a2f20;
-      padding: 16px 32px;
+      border-bottom: 1px solid #3a2f20; padding: 16px 32px;
       display: flex; align-items: center; justify-content: space-between;
     }
     header h1 { color: #b99a5b; font-size: 20px; }
-    header span { color: #888; font-size: 13px; }
     #logout-btn {
       background: #2d2318; border: 1px solid #3a2f20; color: #b99a5b;
       padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px;
@@ -53,39 +46,90 @@
     #logout-btn:hover { background: #3a2b16; }
 
     main { padding: 32px; max-width: 1100px; margin: 0 auto; }
-
     .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 32px; }
-    .stat-card {
-      background: #1a1814; border: 1px solid #3a2f20; border-radius: 14px; padding: 20px;
-    }
+    .stat-card { background: #1a1814; border: 1px solid #3a2f20; border-radius: 14px; padding: 20px; }
     .stat-card .num { font-size: 32px; font-weight: bold; color: #b99a5b; }
     .stat-card .lbl { font-size: 13px; color: #888; margin-top: 4px; }
-
     h2 { color: #b99a5b; font-size: 18px; margin-bottom: 16px; }
-
     .table-wrap { background: #1a1814; border: 1px solid #3a2f20; border-radius: 14px; overflow: hidden; }
     table { width: 100%; border-collapse: collapse; }
     thead th {
       background: #141210; padding: 14px 16px; text-align: left;
       font-size: 12px; font-weight: 700; color: #b99a5b; text-transform: uppercase; letter-spacing: .5px;
     }
-    tbody tr { border-top: 1px solid #2d2318; }
-    tbody tr:hover { background: #1e1c18; }
+    tbody tr { border-top: 1px solid #2d2318; cursor: pointer; transition: background .15s; }
+    tbody tr:hover { background: #252118; }
     tbody td { padding: 14px 16px; font-size: 14px; color: #e0d5c5; }
-    .plan-badge {
-      display: inline-block; padding: 4px 12px; border-radius: 20px;
-      font-size: 12px; font-weight: bold;
-    }
+    .plan-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
     .plan-normal   { background: #2d2318; color: #b99a5b; }
     .plan-premium  { background: #3a2b16; color: #d4a96a; }
     .plan-exeltior { background: #1a1814; color: #fff; border: 1px solid #b99a5b; }
     .plan-sin      { background: #222; color: #666; }
     .empty { text-align: center; padding: 40px; color: #555; }
+    .click-hint { font-size: 12px; color: #555; margin-bottom: 10px; }
+
+    /* Modal usuario */
+    #user-overlay {
+      position: fixed; inset: 0; z-index: 1000;
+      background: rgba(0,0,0,.75); backdrop-filter: blur(6px);
+      display: none; align-items: center; justify-content: center;
+    }
+    #user-overlay.open { display: flex; }
+    #user-modal {
+      background: #1a1814; border: 1px solid #3a2f20;
+      border-radius: 20px; width: 440px; max-width: 96vw;
+      box-shadow: 0 30px 80px rgba(0,0,0,.6);
+      animation: popIn .25s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes popIn { from { opacity:0; transform:scale(.9) translateY(16px); } to { opacity:1; transform:none; } }
+    #user-modal-head {
+      background: linear-gradient(135deg, #0d0d0d, #4a3520, #b99a5b);
+      padding: 24px; border-radius: 20px 20px 0 0;
+      display: flex; align-items: center; gap: 16px;
+    }
+    #um-avatar {
+      width: 56px; height: 56px; border-radius: 50%; flex-shrink: 0;
+      background: rgba(255,255,255,.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; font-weight: bold; color: white;
+    }
+    #um-title strong { display: block; color: white; font-size: 18px; }
+    #um-title span   { color: rgba(255,255,255,.6); font-size: 13px; }
+    #um-close {
+      margin-left: auto; background: rgba(255,255,255,.15); border: none;
+      color: white; width: 32px; height: 32px; border-radius: 50%;
+      cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center;
+    }
+    #um-close:hover { background: rgba(255,255,255,.3); }
+    #user-modal-body { padding: 24px; }
+    .um-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 0; border-bottom: 1px solid #2d2318; font-size: 14px;
+    }
+    .um-row:last-of-type { border-bottom: none; }
+    .um-row .lbl { color: #888; }
+    .um-row .val { font-weight: 600; color: #e0d5c5; }
+    .um-row .val.pwd { color: #555; font-style: italic; font-size: 13px; }
+
+    .plan-select-wrap { margin-top: 20px; }
+    .plan-select-wrap label { display: block; font-size: 12px; font-weight: 700; color: #b99a5b; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+    #um-plan-select {
+      width: 100%; padding: 11px 14px; border: 1.5px solid #3a2f20; border-radius: 10px;
+      background: #141210; color: #e0d5c5; font-size: 14px; outline: none; cursor: pointer;
+    }
+    #um-plan-select:focus { border-color: #b99a5b; }
+    #um-save-btn {
+      width: 100%; margin-top: 12px; padding: 12px;
+      background: linear-gradient(135deg, #6b5438, #b99a5b);
+      color: white; border: none; border-radius: 12px;
+      font-size: 14px; font-weight: bold; cursor: pointer;
+    }
+    #um-save-btn:hover { opacity: .9; }
+    #um-msg { text-align: center; font-size: 13px; min-height: 18px; margin-top: 8px; color: #27ae60; }
   </style>
 </head>
 <body>
 
-<!-- Login -->
 <div id="login-screen">
   <div id="login-box">
     <h2>Panel de Administración</h2>
@@ -97,12 +141,11 @@
   </div>
 </div>
 
-<!-- Panel -->
 <div id="panel">
   <header>
     <h1>M&M Studio · Admin</h1>
     <div style="display:flex;align-items:center;gap:16px;">
-      <span id="admin-name"></span>
+      <span id="admin-name" style="color:#888;font-size:13px;"></span>
       <button id="logout-btn">Cerrar sesión</button>
     </div>
   </header>
@@ -114,16 +157,11 @@
       <div class="stat-card"><div class="num" id="s-exeltior">—</div><div class="lbl">Plan Exeltior</div></div>
     </div>
     <h2>Usuarios</h2>
+    <p class="click-hint">Haz clic en un usuario para ver sus detalles y editar su plan.</p>
     <div class="table-wrap">
       <table>
         <thead>
-          <tr>
-            <th>#</th>
-            <th>Nombre</th>
-            <th>Email</th>
-            <th>Plan</th>
-            <th>Miembro desde</th>
-          </tr>
+          <tr><th>#</th><th>Nombre</th><th>Email</th><th>Plan</th><th>Miembro desde</th></tr>
         </thead>
         <tbody id="users-tbody"></tbody>
       </table>
@@ -131,8 +169,43 @@
   </main>
 </div>
 
+<!-- Modal usuario -->
+<div id="user-overlay">
+  <div id="user-modal">
+    <div id="user-modal-head">
+      <div id="um-avatar"></div>
+      <div id="um-title"><strong></strong><span></span></div>
+      <button id="um-close">✕</button>
+    </div>
+    <div id="user-modal-body">
+      <div class="um-row"><span class="lbl">Nombre</span><span class="val" id="um-name"></span></div>
+      <div class="um-row"><span class="lbl">Email</span><span class="val" id="um-email"></span></div>
+      <div class="um-row"><span class="lbl">Contraseña</span><span class="val pwd">Cifrada — no visible por seguridad</span></div>
+      <div class="um-row"><span class="lbl">Miembro desde</span><span class="val" id="um-joined"></span></div>
+      <div class="um-row"><span class="lbl">Plan actual</span><span class="val" id="um-plan-current"></span></div>
+      <div class="plan-select-wrap">
+        <label>Cambiar plan</label>
+        <select id="um-plan-select">
+          <option value="Sin plan activo">Sin plan</option>
+          <option value="Plan Normal activo">Plan Normal</option>
+          <option value="Plan Premium activo">Plan Premium</option>
+          <option value="Plan Exeltior activo">Plan Exeltior</option>
+        </select>
+        <button id="um-save-btn">Guardar cambio</button>
+        <div id="um-msg"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 var token = null
+var currentUserId = null
+var allUsers = []
+
+function initials(name) {
+  return name.trim().split(/\s+/).map(function(w){ return w[0] }).slice(0,2).join('').toUpperCase()
+}
 
 function planBadge(plan) {
   if (!plan || plan === 'Sin plan activo') return '<span class="plan-badge plan-sin">Sin plan</span>'
@@ -146,16 +219,19 @@ function loadUsers() {
   fetch('/api/admin/users', { headers: { 'Authorization': 'Bearer ' + token } })
     .then(function(r) { return r.json() })
     .then(function(users) {
+      allUsers = users
       var tbody = document.getElementById('users-tbody')
-      if (!users.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">No hay usuarios registrados aún.</td></tr>'; return }
-
-      document.getElementById('s-total').textContent = users.length
+      if (!users.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty">No hay usuarios registrados aún.</td></tr>'
+        return
+      }
+      document.getElementById('s-total').textContent    = users.length
       document.getElementById('s-normal').textContent   = users.filter(function(u){ return u.plan && u.plan.indexOf('Normal') !== -1 }).length
       document.getElementById('s-premium').textContent  = users.filter(function(u){ return u.plan && u.plan.indexOf('Premium') !== -1 }).length
       document.getElementById('s-exeltior').textContent = users.filter(function(u){ return u.plan && u.plan.indexOf('Exeltior') !== -1 }).length
 
       tbody.innerHTML = users.map(function(u, i) {
-        return '<tr>' +
+        return '<tr data-id="' + u.id + '">' +
           '<td>' + (i + 1) + '</td>' +
           '<td>' + u.name + '</td>' +
           '<td>' + u.email + '</td>' +
@@ -163,8 +239,60 @@ function loadUsers() {
           '<td>' + u.joined + '</td>' +
           '</tr>'
       }).join('')
+
+      tbody.querySelectorAll('tr').forEach(function(tr) {
+        tr.addEventListener('click', function() { openUserModal(parseInt(tr.dataset.id)) })
+      })
     })
 }
+
+function openUserModal(id) {
+  var u = allUsers.find(function(x){ return x.id === id })
+  if (!u) return
+  currentUserId = id
+  var ini = initials(u.name)
+  document.getElementById('um-avatar').textContent = ini
+  document.getElementById('um-title').querySelector('strong').textContent = u.name
+  document.getElementById('um-title').querySelector('span').textContent   = u.email
+  document.getElementById('um-name').textContent   = u.name
+  document.getElementById('um-email').textContent  = u.email
+  document.getElementById('um-joined').textContent = u.joined
+  document.getElementById('um-plan-current').innerHTML = planBadge(u.plan)
+  document.getElementById('um-plan-select').value = u.plan || 'Sin plan activo'
+  document.getElementById('um-msg').textContent = ''
+  document.getElementById('user-overlay').classList.add('open')
+}
+
+document.getElementById('um-close').addEventListener('click', function() {
+  document.getElementById('user-overlay').classList.remove('open')
+})
+document.getElementById('user-overlay').addEventListener('click', function(e) {
+  if (e.target === document.getElementById('user-overlay'))
+    document.getElementById('user-overlay').classList.remove('open')
+})
+
+document.getElementById('um-save-btn').addEventListener('click', function() {
+  var plan = document.getElementById('um-plan-select').value
+  var btn  = document.getElementById('um-save-btn')
+  var msg  = document.getElementById('um-msg')
+  btn.disabled = true; btn.textContent = 'Guardando…'
+  fetch('/api/admin/users/' + currentUserId + '/plan', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({ plan: plan })
+  })
+  .then(function(r) { return r.json() })
+  .then(function(res) {
+    if (res.ok) {
+      msg.textContent = '✓ Plan actualizado correctamente'
+      var u = allUsers.find(function(x){ return x.id === currentUserId })
+      if (u) { u.plan = plan; document.getElementById('um-plan-current').innerHTML = planBadge(plan) }
+      loadUsers()
+    }
+  })
+  .catch(function() { msg.style.color = '#e74c3c'; msg.textContent = 'Error al guardar.' })
+  .finally(function() { btn.disabled = false; btn.textContent = 'Guardar cambio' })
+})
 
 document.getElementById('login-btn').addEventListener('click', function() {
   var email = document.getElementById('a-email').value.trim()
