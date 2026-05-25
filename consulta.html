@@ -378,6 +378,7 @@ function activarPlan() {
     }
     localStorage.setItem('mm_session', JSON.stringify(res))
     localStorage.setItem('mm_last_plan_status', 'pending:' + info.key)
+    sessionStorage.removeItem('plan_activated_shown')
     localStorage.removeItem('mm_solicitud')
     window.location.href = 'inicio.html'
   })
