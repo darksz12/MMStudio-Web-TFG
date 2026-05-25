@@ -17,6 +17,7 @@ services:
     volumes:
       - ./backups:/backups          # backups del sitio
       - ./logs:/var/log/nginx       # logs centralizados en el host
+      - /etc/letsencrypt:/etc/letsencrypt:ro  # certificado SSL real
     restart: unless-stopped
 
   # ---- Exportador de métricas de Nginx ----
