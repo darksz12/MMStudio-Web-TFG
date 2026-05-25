@@ -1,246 +1,178 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>M&M Studio — App</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M&M Studio — App</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--gold:#b99a5b;--brown:#6b5438;--dark:#3a2b16;--cream:#faf7f2;--muted:#888;--border:#e8e0d5;}
+html,body{min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
+body{background:linear-gradient(145deg,#0d0d0d 0%,#1c1509 40%,#2b1e0a 70%,#3a2b16 100%);
+  display:flex;flex-direction:column;align-items:center;padding:24px 16px 40px;}
 
-    :root {
-      --gold:   #b99a5b;
-      --brown:  #6b5438;
-      --dark:   #3a2b16;
-      --black:  #0d0d0d;
-      --cream:  #faf7f2;
-      --muted:  #888;
-      --border: #e8e0d5;
+.app-wrap{width:100%;max-width:700px;display:flex;flex-direction:column;align-items:center;}
 
-      --plan-normal:   #8c6a32;
-      --plan-premium:  #b99a5b;
-      --plan-exeltior: #1a1a1a;
-      --plan-none:     #aaa;
-    }
+/* Brand */
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:24px;}
+.brand-logo{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#6b5438,#b99a5b);
+  display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:bold;color:white;
+  box-shadow:0 4px 16px rgba(185,154,91,.4);}
+.brand-text{color:white;}
+.brand-text strong{display:block;font-size:20px;letter-spacing:1px;}
+.brand-text span{font-size:12px;color:rgba(255,255,255,.55);}
 
-    html, body {
-      min-height: 100vh;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    }
+/* Card base */
+.card{width:100%;background:white;border-radius:24px;box-shadow:0 32px 80px rgba(0,0,0,.55);
+  overflow:hidden;animation:popIn .3s cubic-bezier(.34,1.56,.64,1);}
+@keyframes popIn{from{opacity:0;transform:scale(.9) translateY(20px)}to{opacity:1;transform:none}}
+.card-head{background:linear-gradient(135deg,#0d0d0d 0%,#6b5438 55%,#b99a5b 100%);padding:24px 28px 20px;}
+.card-head h2{color:white;font-size:20px;margin-bottom:4px;}
+.card-head p{color:rgba(255,255,255,.6);font-size:13px;}
 
-    body {
-      background: linear-gradient(145deg, #0d0d0d 0%, #1c1509 40%, #2b1e0a 70%, #3a2b16 100%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 24px 16px;
-    }
+/* Login */
+.card-body{padding:24px 28px;}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:16px;}
+.field label{font-size:11px;font-weight:700;color:var(--brown);text-transform:uppercase;letter-spacing:.5px;}
+.field input{padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;
+  color:#2b2b2b;background:var(--cream);outline:none;transition:border-color .2s,box-shadow .2s;}
+.field input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(185,154,91,.15);background:white;}
+.msg-err{display:none;background:#fff0f0;border:1px solid #f5c6c6;border-radius:10px;
+  padding:12px 14px;font-size:13px;color:#c0392b;font-weight:600;margin-bottom:16px;line-height:1.5;}
+.msg-err.show{display:block;}
+.btn-primary{width:100%;padding:14px;background:linear-gradient(135deg,var(--brown),var(--gold));
+  color:white;border:none;border-radius:12px;font-size:15px;font-weight:bold;cursor:pointer;
+  box-shadow:0 4px 14px rgba(107,84,56,.35);transition:opacity .2s,transform .15s;}
+.btn-primary:hover{opacity:.9;transform:translateY(-1px);}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+.form-note{margin-top:16px;text-align:center;font-size:12px;color:var(--muted);line-height:1.6;}
+.form-note a{color:var(--brown);font-weight:600;text-decoration:none;}
 
-    /* ---- BRANDING ---- */
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 28px;
-    }
-    .brand-logo {
-      width: 48px; height: 48px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #6b5438, #b99a5b);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px; font-weight: bold; color: white;
-      box-shadow: 0 4px 16px rgba(185,154,91,.4);
-    }
-    .brand-text { color: white; }
-    .brand-text strong { display: block; font-size: 20px; letter-spacing: 1px; }
-    .brand-text span { font-size: 12px; color: rgba(255,255,255,.55); }
+/* Dashboard */
+#view-dashboard{display:none;}
+.user-strip{display:flex;align-items:center;gap:14px;padding:20px 28px;border-bottom:1px solid var(--border);}
+.u-av{width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:bold;color:white;flex-shrink:0;box-shadow:0 3px 12px rgba(0,0,0,.2);}
+.u-name{font-size:16px;font-weight:bold;color:#2b2b2b;}
+.u-email{font-size:12px;color:var(--muted);margin-top:2px;}
+.u-badge{display:inline-block;font-size:11px;font-weight:bold;padding:3px 10px;border-radius:20px;margin-top:5px;}
+.badge-ex{background:#111;color:#ffd700;}
+.badge-pr{background:var(--gold);color:white;}
+.badge-no{background:var(--brown);color:white;}
+.badge-sin{background:#e0d9cc;color:var(--muted);}
 
-    /* ---- CARD ---- */
-    .card {
-      width: 100%;
-      max-width: 440px;
-      background: white;
-      border-radius: 24px;
-      box-shadow: 0 32px 80px rgba(0,0,0,.55);
-      overflow: hidden;
-      animation: popIn .3s cubic-bezier(.34,1.56,.64,1);
-    }
-    @keyframes popIn {
-      from { opacity: 0; transform: scale(.9) translateY(20px); }
-      to   { opacity: 1; transform: none; }
-    }
+/* Services section */
+.serv-head{display:flex;align-items:center;justify-content:space-between;padding:16px 28px 10px;}
+.serv-head h3{font-size:15px;font-weight:bold;color:var(--dark);}
+.serv-head span{font-size:12px;color:var(--muted);}
+.serv-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 28px 24px;}
+.scard{background:var(--cream);border-radius:14px;padding:16px;
+  border:1.5px solid var(--border);display:flex;flex-direction:column;gap:5px;}
+.scard.active-svc{border-color:rgba(107,84,56,.35);box-shadow:0 2px 10px rgba(0,0,0,.06);}
+.scard-icon{font-size:22px;}
+.scard-title{font-size:13px;font-weight:bold;color:var(--dark);}
+.scard-desc{font-size:12px;color:var(--muted);line-height:1.4;flex:1;}
+.scard-btn{margin-top:10px;padding:9px 14px;
+  background:linear-gradient(135deg,#111,#4a3520);color:#ffd700;
+  border:none;border-radius:9px;font-size:12px;font-weight:bold;cursor:pointer;
+  width:100%;letter-spacing:.3px;transition:opacity .2s;}
+.scard-btn:hover{opacity:.8;}
+.scard-soon{margin-top:10px;font-size:11px;color:#bbb;text-align:center;font-style:italic;}
 
-    .card-head {
-      background: linear-gradient(135deg, #0d0d0d 0%, #6b5438 55%, #b99a5b 100%);
-      padding: 28px 28px 20px;
-    }
-    .card-head h2 { color: white; font-size: 20px; margin-bottom: 4px; }
-    .card-head p  { color: rgba(255,255,255,.6); font-size: 13px; }
+/* No plan / Pending */
+.msg-state{padding:32px 28px;text-align:center;}
+.msg-state .big{font-size:44px;margin-bottom:12px;}
+.msg-state h3{font-size:17px;color:var(--dark);margin-bottom:8px;}
+.msg-state p{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px;}
+.msg-state a.btn-link{display:inline-block;padding:12px 24px;
+  background:linear-gradient(135deg,var(--brown),var(--gold));
+  color:white;border-radius:12px;font-weight:bold;font-size:14px;text-decoration:none;}
 
-    .card-body { padding: 28px; }
+/* Card footer actions */
+.card-actions{padding:0 28px 24px;display:flex;gap:10px;}
+.btn-sec{flex:1;padding:12px;background:#f0ebe2;color:var(--brown);border:none;
+  border-radius:12px;font-size:14px;font-weight:bold;cursor:pointer;transition:background .2s;}
+.btn-sec:hover{background:#e0d9cc;}
+.btn-logout{flex:1;padding:12px;background:#fdf0f0;color:#c0392b;border:none;
+  border-radius:12px;font-size:14px;font-weight:bold;cursor:pointer;transition:background .2s;}
+.btn-logout:hover{background:#fce0e0;}
 
-    /* ---- FORM ---- */
-    .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 16px; }
-    .field label {
-      font-size: 11px; font-weight: 700;
-      color: var(--brown); text-transform: uppercase; letter-spacing: .5px;
-    }
-    .field input {
-      padding: 12px 14px;
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      font-size: 14px; color: #2b2b2b;
-      background: var(--cream);
-      outline: none;
-      transition: border-color .2s, box-shadow .2s;
-    }
-    .field input:focus {
-      border-color: var(--gold);
-      box-shadow: 0 0 0 3px rgba(185,154,91,.15);
-      background: white;
-    }
+/* Service views topbar */
+#view-consultoria,#view-linkedin{display:none;}
+.serv-topbar{display:flex;align-items:center;gap:12px;padding:14px 28px;
+  border-bottom:1px solid var(--border);background:var(--cream);}
+.back-btn{background:#e8e0d5;border:none;border-radius:8px;padding:7px 14px;
+  font-size:13px;font-weight:bold;color:var(--brown);cursor:pointer;white-space:nowrap;}
+.back-btn:hover{background:#ddd4c6;}
+.serv-topbar-title{font-size:15px;font-weight:bold;color:var(--dark);}
 
-    .msg-err {
-      display: none;
-      background: #fff0f0;
-      border: 1px solid #f5c6c6;
-      border-radius: 10px;
-      padding: 12px 14px;
-      font-size: 13px; color: #c0392b; font-weight: 600;
-      margin-bottom: 16px;
-      line-height: 1.5;
-    }
-    .msg-err.show { display: block; }
+/* Consultoría chat */
+.con-msgs{height:360px;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:#faf7f2;}
+.cmsg{max-width:84%;padding:10px 14px;border-radius:14px;font-size:14px;line-height:1.5;word-break:break-word;}
+.cmsg.bot{align-self:flex-start;background:#eadfcf;color:#2b2b2b;border-bottom-left-radius:4px;}
+.cmsg.user{align-self:flex-end;background:#8c6a32;color:white;border-bottom-right-radius:4px;}
+.cmsg.typing{color:#aaa;font-style:italic;background:#f0ebe2;align-self:flex-start;}
+.con-inp-row{display:flex;padding:12px;gap:8px;border-top:1px solid var(--border);background:white;align-items:center;}
+.con-inp{flex:1;border:1.5px solid var(--border);border-radius:20px;padding:10px 14px;
+  font-size:14px;outline:none;transition:border-color .2s;}
+.con-inp:focus{border-color:var(--gold);}
+.con-send{background:linear-gradient(135deg,var(--brown),var(--gold));color:white;border:none;
+  border-radius:20px;padding:10px 18px;cursor:pointer;font-size:14px;font-weight:bold;
+  white-space:nowrap;transition:opacity .2s;}
+.con-send:hover{opacity:.88;}
 
-    .btn-primary {
-      width: 100%; padding: 14px;
-      background: linear-gradient(135deg, var(--brown), var(--gold));
-      color: white; border: none; border-radius: 12px;
-      font-size: 15px; font-weight: bold; cursor: pointer;
-      box-shadow: 0 4px 14px rgba(107,84,56,.35);
-      transition: opacity .2s, transform .15s;
-    }
-    .btn-primary:hover { opacity: .9; transform: translateY(-1px); }
+/* LinkedIn */
+.li-body{padding:20px 28px;overflow-y:auto;max-height:500px;}
+.li-lbl{display:block;font-size:11px;font-weight:700;color:#0077b5;
+  text-transform:uppercase;letter-spacing:.5px;margin:12px 0 4px;}
+.li-fld{width:100%;padding:10px 12px;border:1.5px solid #dde8f2;border-radius:9px;
+  font-size:14px;outline:none;transition:border-color .2s;font-family:inherit;}
+.li-fld:focus{border-color:#0077b5;}
+.li-gen-btn{width:100%;padding:13px;background:linear-gradient(135deg,#0062a3,#0a66c2);
+  color:white;border:none;border-radius:12px;font-size:15px;font-weight:bold;
+  cursor:pointer;margin-top:16px;transition:opacity .2s;}
+.li-gen-btn:hover{opacity:.9;}.li-gen-btn:disabled{opacity:.55;cursor:not-allowed;}
+.li-err{color:#c0392b;font-size:12px;min-height:14px;margin-top:6px;}
+.li-res-card{background:white;border:1.5px solid #dde8f2;border-radius:12px;padding:14px 16px;margin-top:14px;}
+.li-res-lbl{font-size:11px;font-weight:bold;color:#0077b5;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.li-res-txt{font-size:13px;color:#2b2b2b;line-height:1.7;white-space:pre-wrap;}
+.li-copy{margin-top:10px;background:rgba(0,119,181,.1);color:#0077b5;
+  border:1px solid rgba(0,119,181,.3);border-radius:7px;padding:6px 14px;font-size:12px;cursor:pointer;}
+.li-copy:hover{background:rgba(0,119,181,.18);}
+.li-regen{width:100%;padding:11px;background:rgba(0,119,181,.07);color:#0077b5;
+  border:1.5px solid rgba(0,119,181,.25);border-radius:12px;font-size:14px;
+  font-weight:bold;cursor:pointer;margin-top:12px;}
 
-    .form-note {
-      margin-top: 16px;
-      text-align: center;
-      font-size: 12px; color: var(--muted); line-height: 1.6;
-    }
-    .form-note a { color: var(--brown); font-weight: 600; text-decoration: none; }
-    .form-note a:hover { text-decoration: underline; }
+/* Plan avatar colors */
+.bg-ex{background:#111;}.bg-pr{background:var(--gold);}.bg-no{background:var(--brown);}.bg-sin{background:#ccc;}
 
-    /* ---- DASHBOARD ---- */
-    #view-dashboard { display: none; }
+/* Footer */
+.page-footer{margin-top:20px;text-align:center;font-size:11px;color:rgba(255,255,255,.3);}
+.page-footer a{color:rgba(255,255,255,.45);text-decoration:none;}
+.page-footer a:hover{color:var(--gold);}
 
-    .dash-avatar {
-      width: 80px; height: 80px;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 28px; font-weight: bold; color: white;
-      margin: 0 auto 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,.25);
-    }
-    .dash-name  { text-align: center; font-size: 22px; font-weight: bold; color: #2b2b2b; }
-    .dash-email { text-align: center; font-size: 13px; color: var(--muted); margin-bottom: 20px; }
-
-    .dash-plan-card {
-      border-radius: 14px;
-      padding: 16px 18px;
-      margin-bottom: 20px;
-      display: flex; align-items: center; gap: 14px;
-    }
-    .dash-plan-card.active {
-      background: linear-gradient(135deg, #0d0d0d 0%, #4a3520 50%, #b99a5b 100%);
-      box-shadow: 0 6px 20px rgba(0,0,0,.3);
-    }
-    .dash-plan-card.inactive {
-      background: #f5f0e8;
-      border: 1.5px dashed var(--border);
-    }
-    .plan-icon {
-      font-size: 28px;
-      flex-shrink: 0;
-    }
-    .plan-info { flex: 1; }
-    .plan-label {
-      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px;
-      margin-bottom: 3px;
-    }
-    .plan-name  { font-size: 17px; font-weight: bold; }
-    .plan-badge {
-      display: inline-block;
-      font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: .5px;
-      padding: 3px 10px; border-radius: 20px;
-      margin-top: 5px;
-    }
-    .dash-plan-card.active .plan-label { color: rgba(255,255,255,.6); }
-    .dash-plan-card.active .plan-name  { color: white; }
-    .dash-plan-card.active .plan-badge {
-      background: rgba(255,255,255,.2);
-      border: 1px solid rgba(255,255,255,.35);
-      color: white;
-    }
-    .dash-plan-card.inactive .plan-label { color: var(--muted); }
-    .dash-plan-card.inactive .plan-name  { color: #aaa; }
-    .dash-plan-card.inactive .plan-badge {
-      background: #e8e0d5;
-      color: var(--muted);
-    }
-
-    .dash-info {
-      background: var(--cream);
-      border-radius: 12px;
-      margin-bottom: 20px;
-      overflow: hidden;
-    }
-    .info-row {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border);
-      font-size: 13px;
-    }
-    .info-row:last-child { border-bottom: none; }
-    .info-row .label { color: var(--muted); }
-    .info-row .value { font-weight: 700; color: var(--brown); }
-
-    .btn-logout {
-      width: 100%; padding: 13px;
-      background: #f0ebe2; color: var(--brown);
-      border: none; border-radius: 12px;
-      font-size: 14px; font-weight: bold; cursor: pointer;
-      transition: background .2s;
-    }
-    .btn-logout:hover { background: #e0d9cc; }
-
-    /* ---- PLAN-SPECIFIC COLORS ---- */
-    .color-normal   { background: var(--plan-normal); }
-    .color-premium  { background: var(--plan-premium); }
-    .color-exeltior { background: var(--plan-exeltior); }
-    .color-none     { background: #ccc; }
-
-    /* ---- FOOTER ---- */
-    .page-footer {
-      margin-top: 24px;
-      text-align: center;
-      font-size: 11px;
-      color: rgba(255,255,255,.3);
-    }
-    .page-footer a { color: rgba(255,255,255,.45); text-decoration: none; }
-    .page-footer a:hover { color: var(--gold); }
-  </style>
+@media(max-width:560px){
+  .serv-grid{grid-template-columns:1fr;}
+  .card-actions{flex-direction:column;}
+  .user-strip{padding:16px 20px;}
+  .serv-head,.serv-grid,.card-actions{padding-left:16px;padding-right:16px;}
+  .card-body,.li-body{padding:20px 16px;}
+  .serv-topbar{padding:12px 16px;}
+}
+</style>
 </head>
 <body>
+<div class="app-wrap">
 
   <div class="brand">
     <div class="brand-logo">M</div>
     <div class="brand-text">
       <strong>M&amp;M Studio</strong>
-      <span>Asesoría de imagen digital</span>
+      <span>App privada · Área de miembros</span>
     </div>
   </div>
 
-  <!-- ======== VISTA LOGIN ======== -->
+  <!-- ===== LOGIN ===== -->
   <div class="card" id="view-login">
     <div class="card-head">
       <h2>Acceder a la app</h2>
@@ -248,7 +180,6 @@
     </div>
     <div class="card-body">
       <div class="msg-err" id="login-err"></div>
-
       <div class="field">
         <label>Email</label>
         <input type="email" id="l-email" placeholder="tu@email.com" autocomplete="email">
@@ -257,52 +188,89 @@
         <label>Contraseña</label>
         <input type="password" id="l-pwd" placeholder="••••••••" autocomplete="current-password">
       </div>
-
       <button class="btn-primary" id="btn-login">Entrar →</button>
-
       <p class="form-note">
-        ¿No tienes cuenta? Para acceder a esta app es necesario
-        <a href="servicios.html">contratar un plan en M&amp;M Studio</a>.<br>
-        Las cuentas se gestionan desde la <a href="inicio.html">web principal</a>.
+        ¿No tienes cuenta? <a href="servicios.html">Contrata un plan</a> desde la web principal.<br>
+        Gestiona tu cuenta en la <a href="inicio.html">web de M&amp;M Studio</a>.
       </p>
     </div>
   </div>
 
-  <!-- ======== VISTA DASHBOARD ======== -->
+  <!-- ===== DASHBOARD ===== -->
   <div class="card" id="view-dashboard">
     <div class="card-head">
       <h2>Mi panel</h2>
       <p>Bienvenido/a a tu área personal de M&amp;M Studio</p>
     </div>
-    <div class="card-body">
-
-      <div class="dash-avatar" id="dash-avatar"></div>
-      <div class="dash-name"  id="dash-name"></div>
-      <div class="dash-email" id="dash-email"></div>
-
-      <!-- Plan card -->
-      <div class="dash-plan-card" id="dash-plan-card">
-        <div class="plan-icon" id="dash-plan-icon"></div>
-        <div class="plan-info">
-          <div class="plan-label">Plan activo</div>
-          <div class="plan-name"  id="dash-plan-name"></div>
-          <span class="plan-badge" id="dash-plan-badge"></span>
-        </div>
+    <div class="user-strip">
+      <div class="u-av" id="u-av"></div>
+      <div>
+        <div class="u-name" id="u-name"></div>
+        <div class="u-email" id="u-email"></div>
+        <span class="u-badge" id="u-badge"></span>
       </div>
-
-      <!-- Info rows -->
-      <div class="dash-info">
-        <div class="info-row">
-          <span class="label">Miembro desde</span>
-          <span class="value" id="dash-joined"></span>
-        </div>
-        <div class="info-row">
-          <span class="label">Email de acceso</span>
-          <span class="value" id="dash-email2"></span>
-        </div>
-      </div>
-
+    </div>
+    <div id="services-area"></div>
+    <div class="card-actions">
+      <button class="btn-sec" onclick="window.location.href='inicio.html'">← Volver a la web</button>
       <button class="btn-logout" id="btn-logout">Cerrar sesión</button>
+    </div>
+  </div>
+
+  <!-- ===== CONSULTORÍA ===== -->
+  <div class="card" id="view-consultoria">
+    <div class="card-head">
+      <h2>Consultoría Estratégica</h2>
+      <p>Sesión personalizada con tu asesora de imagen</p>
+    </div>
+    <div class="serv-topbar">
+      <button class="back-btn" id="back-con">← Mis servicios</button>
+      <span class="serv-topbar-title">🎯 Sesión en curso</span>
+    </div>
+    <div class="con-msgs" id="con-msgs"></div>
+    <div class="con-inp-row">
+      <input class="con-inp" id="con-inp" type="text" placeholder="Escribe tu respuesta…" maxlength="500">
+      <button class="con-send" id="con-send">Enviar</button>
+    </div>
+  </div>
+
+  <!-- ===== LINKEDIN ===== -->
+  <div class="card" id="view-linkedin">
+    <div class="card-head">
+      <h2>LinkedIn Premium</h2>
+      <p>Generador de perfil optimizado con IA</p>
+    </div>
+    <div class="serv-topbar">
+      <button class="back-btn" id="back-li">← Mis servicios</button>
+      <span class="serv-topbar-title">💼 Optimizador de perfil</span>
+    </div>
+    <div class="li-body" id="li-body">
+      <p style="font-size:13px;color:#888;margin-bottom:4px;">Rellena los datos y genera tu perfil optimizado.</p>
+      <label class="li-lbl">Cargo actual</label>
+      <input class="li-fld" id="li-cargo" type="text" placeholder="ej. Directora de Marketing">
+      <label class="li-lbl">Empresa / Sector</label>
+      <input class="li-fld" id="li-empresa" type="text" placeholder="ej. Startup tecnológica B2B">
+      <label class="li-lbl">Especialidad / puntos fuertes</label>
+      <input class="li-fld" id="li-esp" type="text" placeholder="ej. growth hacking, SaaS, equipos remotos">
+      <label class="li-lbl">¿Qué quieres conseguir en LinkedIn?</label>
+      <input class="li-fld" id="li-obj" type="text" placeholder="ej. Atraer clientes, cambiar de trabajo…">
+      <label class="li-lbl">Trayectoria breve (opcional)</label>
+      <textarea class="li-fld" id="li-tray" rows="3" placeholder="ej. 8 años en marketing digital, ex-Google…" style="resize:vertical;"></textarea>
+      <div class="li-err" id="li-err"></div>
+      <button class="li-gen-btn" id="li-gen">✨ Generar perfil LinkedIn</button>
+      <div id="li-results" style="display:none;">
+        <div class="li-res-card">
+          <div class="li-res-lbl">📌 Headline</div>
+          <div class="li-res-txt" id="li-res-h"></div>
+          <button class="li-copy" data-copy="li-res-h">Copiar</button>
+        </div>
+        <div class="li-res-card">
+          <div class="li-res-lbl">📝 Acerca de</div>
+          <div class="li-res-txt" id="li-res-a"></div>
+          <button class="li-copy" data-copy="li-res-a">Copiar</button>
+        </div>
+        <button class="li-regen" id="li-regen">↺ Regenerar</button>
+      </div>
     </div>
   </div>
 
@@ -310,136 +278,325 @@
     <a href="inicio.html">← Volver a la web</a> &nbsp;·&nbsp; M&amp;M Studio © 2025
   </p>
 
-  <script>
-  ;(function () {
-    'use strict'
+</div>
+<script>
+;(function(){
+'use strict'
 
-    var USERS_KEY   = 'mm_users'
-    var SESSION_KEY = 'mm_session'
+var GROQ_KEY = 'TU_API_KEY_GROQ_AQUI'
 
-    function getUsers()   { return JSON.parse(localStorage.getItem(USERS_KEY)   || '[]')   }
-    function getSession() { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null') }
-    function setSession(u){ localStorage.setItem(SESSION_KEY, JSON.stringify(u)) }
-    function clearSession(){ localStorage.removeItem(SESSION_KEY) }
-    function hashPwd(s)   { return btoa(encodeURIComponent(s)) }
+var _conHistory = []
+var _conInit    = false
+var _user       = null
 
-    function getInitials(name) {
-      return name.trim().split(/\s+/).map(function(w){ return w[0] }).slice(0,2).join('').toUpperCase()
-    }
+var SERVICIOS = {
+  'Plan Normal': [
+    { icon:'📸', titulo:'Guía de foto de perfil',   desc:'Ángulos, iluminación y composición para transmitir confianza en tu primera impresión.' },
+    { icon:'✍️', titulo:'Plantillas de biografía',  desc:'Fórmulas probadas para Instagram, LinkedIn y TikTok que generan más visitas.' },
+    { icon:'🔒', titulo:'Checklist de privacidad',  desc:'10 ajustes esenciales que deberías revisar en tus cuentas ahora mismo.' },
+    { icon:'📄', titulo:'Informe inicial PDF',       desc:'Tu asesora está preparando tu informe personalizado de imagen digital.' }
+  ],
+  'Plan Premium': [
+    { icon:'📸', titulo:'Guía de foto de perfil',          desc:'Ángulos, iluminación y composición para transmitir confianza.' },
+    { icon:'✍️', titulo:'Plantillas de biografía',         desc:'Fórmulas probadas para todas tus redes sociales.' },
+    { icon:'📊', titulo:'Informe mensual de rendimiento',  desc:'Análisis detallado de publicaciones, horarios y evolución del engagement.' },
+    { icon:'🚀', titulo:'Estrategia de crecimiento 90d',   desc:'Plan personalizado para crecer de forma orgánica y consistente.' },
+    { icon:'💾', titulo:'Copia de seguridad activa',       desc:'Tu contenido respaldado automáticamente cada semana.' },
+    { icon:'⏰', titulo:'Calendario de publicaciones',     desc:'Horarios optimizados según el comportamiento de tu audiencia.' }
+  ],
+  'Plan Exeltior': [
+    { icon:'🎯', titulo:'Consultoría estratégica',    desc:'Sesión 1-a-1 con tu asesora senior para definir tu imagen ejecutiva.',           accion:'consultoria', btn:'🎯 Iniciar consulta →' },
+    { icon:'💼', titulo:'LinkedIn premium',           desc:'Headline y "Acerca de" reescritos con IA para posicionarte mejor.',              accion:'linkedin',     btn:'💼 Optimizar perfil →' },
+    { icon:'📷', titulo:'Sesión fotográfica',         desc:'Brief completo y coordinación con fotógrafo profesional.' },
+    { icon:'🛡️', titulo:'Gestión de reputación',     desc:'Monitorización de menciones y estrategia ante crisis.' },
+    { icon:'🧹', titulo:'Limpieza huella digital',    desc:'Identificación y eliminación de contenido no deseado.' },
+    { icon:'🤝', titulo:'Filtrado de oportunidades',  desc:'Evaluación estratégica de colaboraciones y apariciones.' },
+    { icon:'⚡', titulo:'Acceso prioritario',         desc:'Tu asesora responde en menos de 24 h, cualquier día.' }
+  ]
+}
 
-    function getActivePlan(planStr) {
-      if (!planStr) return null
-      var plans = ['Plan Exeltior', 'Plan Premium', 'Plan Normal']
-      for (var i = 0; i < plans.length; i++) {
-        if (planStr.indexOf(plans[i]) !== -1 && planStr.indexOf('activo') !== -1) return plans[i]
-      }
-      return null
-    }
+function getToken()    { return localStorage.getItem('mm_token') }
+function setToken(t)   { localStorage.setItem('mm_token', t) }
+function getSession()  { return JSON.parse(localStorage.getItem('mm_session') || 'null') }
+function setSession(u) { localStorage.setItem('mm_session', JSON.stringify(u)) }
+function clearAuth()   { localStorage.removeItem('mm_token'); localStorage.removeItem('mm_session') }
 
-    function planMeta(plan) {
-      if (plan === 'Plan Exeltior') return { icon: '🎯', colorClass: 'color-exeltior', badge: 'Ejecutivo' }
-      if (plan === 'Plan Premium')  return { icon: '🚀', colorClass: 'color-premium',  badge: 'Popular'   }
-      if (plan === 'Plan Normal')   return { icon: '⭐', colorClass: 'color-normal',   badge: 'Básico'    }
-      return { icon: '🔒', colorClass: 'color-none', badge: 'Sin plan' }
-    }
+function getActivePlan(user) {
+  if (!user || !user.plan) return null
+  var plans = ['Plan Exeltior','Plan Premium','Plan Normal']
+  for (var i = 0; i < plans.length; i++) {
+    if (user.plan.indexOf(plans[i]) !== -1 && user.plan.indexOf('activo') !== -1) return plans[i]
+  }
+  return null
+}
+function initials(name) {
+  return name.trim().split(/\s+/).map(function(w){ return w[0] }).slice(0,2).join('').toUpperCase()
+}
 
-    // ---- Renderizar dashboard ----
-    function showDashboard(user) {
-      document.getElementById('view-login').style.display     = 'none'
-      document.getElementById('view-dashboard').style.display = 'block'
+function showView(id) {
+  ['view-login','view-dashboard','view-consultoria','view-linkedin'].forEach(function(v){
+    document.getElementById(v).style.display = v === id ? 'block' : 'none'
+  })
+}
 
-      var plan     = getActivePlan(user.plan)
-      var meta     = planMeta(plan)
-      var initials = getInitials(user.name)
-
-      var avatar = document.getElementById('dash-avatar')
-      avatar.textContent = initials
-      avatar.className   = 'dash-avatar ' + meta.colorClass
-
-      document.getElementById('dash-name').textContent   = user.name
-      document.getElementById('dash-email').textContent  = user.email
-      document.getElementById('dash-email2').textContent = user.email
-      document.getElementById('dash-joined').textContent = user.joined || '—'
-
-      var card     = document.getElementById('dash-plan-card')
-      var planName = document.getElementById('dash-plan-name')
-      var planBadge= document.getElementById('dash-plan-badge')
-      var planIcon = document.getElementById('dash-plan-icon')
-
-      if (plan) {
-        card.className     = 'dash-plan-card active'
-        planIcon.textContent = meta.icon
-        planName.textContent = plan
-        planBadge.textContent= meta.badge
-      } else {
-        card.className     = 'dash-plan-card inactive'
-        planIcon.textContent = '🔒'
-        planName.textContent = 'Sin plan activo'
-        planBadge.textContent= 'Sin suscripción'
-        document.querySelector('.plan-label').textContent = 'Estado'
-      }
-    }
-
-    // ---- Login ----
-    function attemptLogin() {
-      var email = document.getElementById('l-email').value.trim()
-      var pwd   = document.getElementById('l-pwd').value
-      var errEl = document.getElementById('login-err')
-
-      errEl.classList.remove('show')
-
-      if (!email || !pwd) {
-        errEl.textContent = 'Por favor, completa todos los campos.'
-        errEl.classList.add('show')
-        return
-      }
-
-      var users   = getUsers()
-      var matched = users.find(function(u){ return u.email.toLowerCase() === email.toLowerCase() })
-
-      if (!matched) {
-        errEl.innerHTML = '⚠️ No tienes una cuenta registrada en M&amp;M Studio.<br>No puedes continuar. Contacta con nosotros para crear tu cuenta.'
-        errEl.classList.add('show')
-        return
-      }
-
-      if (matched.password !== hashPwd(pwd)) {
-        errEl.textContent = 'Contraseña incorrecta. Inténtalo de nuevo.'
-        errEl.classList.add('show')
-        return
-      }
-
-      setSession(matched)
-      showDashboard(matched)
-    }
-
-    // ---- Logout ----
-    document.getElementById('btn-logout').addEventListener('click', function () {
-      clearSession()
-      document.getElementById('view-dashboard').style.display = 'none'
-      document.getElementById('view-login').style.display     = 'block'
-      document.getElementById('l-email').value = ''
-      document.getElementById('l-pwd').value   = ''
-      document.getElementById('login-err').classList.remove('show')
+// ---- DASHBOARD ----
+function showDashboard(user) {
+  _user = user
+  var plan = getActivePlan(user)
+  var ini  = initials(user.name)
+  var av   = document.getElementById('u-av')
+  av.textContent = ini
+  av.className   = 'u-av ' + (plan === 'Plan Exeltior' ? 'bg-ex' : plan === 'Plan Premium' ? 'bg-pr' : plan === 'Plan Normal' ? 'bg-no' : 'bg-sin')
+  document.getElementById('u-name').textContent  = user.name
+  document.getElementById('u-email').textContent = user.email
+  var badge = document.getElementById('u-badge')
+  if (plan) {
+    badge.textContent = plan
+    badge.className   = 'u-badge ' + (plan === 'Plan Exeltior' ? 'badge-ex' : plan === 'Plan Premium' ? 'badge-pr' : 'badge-no')
+  } else {
+    badge.textContent = user.planRequested ? (user.planRequested + ' · pendiente') : 'Sin plan activo'
+    badge.className   = 'u-badge badge-sin'
+  }
+  var area = document.getElementById('services-area')
+  area.innerHTML = buildServices(plan, user)
+  area.querySelectorAll('.scard-btn[data-action]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      if (btn.dataset.action === 'consultoria') openConsultoria()
+      if (btn.dataset.action === 'linkedin')    openLinkedin()
     })
+  })
+  showView('view-dashboard')
+}
 
-    // ---- Botón login ----
-    document.getElementById('btn-login').addEventListener('click', attemptLogin)
-
-    // ---- Enter en inputs ----
-    ;['l-email', 'l-pwd'].forEach(function(id){
-      document.getElementById(id).addEventListener('keydown', function(e){
-        if (e.key === 'Enter') attemptLogin()
-      })
-    })
-
-    // ---- Auto-login si ya hay sesión ----
-    var session = getSession()
-    if (session) {
-      showDashboard(session)
+function buildServices(plan, user) {
+  if (!plan) {
+    if (user && user.planRequested) {
+      return '<div class="msg-state"><div class="big">⏳</div>' +
+        '<h3>Solicitud pendiente de activación</h3>' +
+        '<p>Has solicitado el <strong>' + user.planRequested + '</strong>.<br>Nuestro equipo lo activará en las próximas horas.</p></div>'
     }
+    return '<div class="msg-state"><div class="big">🔒</div>' +
+      '<h3>Sin plan activo</h3>' +
+      '<p>Contrata un plan desde la web para acceder a tus servicios exclusivos.</p>' +
+      '<a class="btn-link" href="servicios.html">Ver planes →</a></div>'
+  }
+  var lista = SERVICIOS[plan] || []
+  var cards = lista.map(function(s){
+    var action = s.accion
+      ? '<button class="scard-btn" data-action="' + s.accion + '">' + s.btn + '</button>'
+      : '<div class="scard-soon">Disponible en tu plan</div>'
+    return '<div class="scard' + (s.accion ? ' active-svc' : '') + '">' +
+      '<div class="scard-icon">' + s.icon + '</div>' +
+      '<div class="scard-title">' + s.titulo + '</div>' +
+      '<div class="scard-desc">' + s.desc + '</div>' +
+      action + '</div>'
+  }).join('')
+  return '<div class="serv-head"><h3>Mis servicios</h3><span>' + plan + '</span></div>' +
+    '<div class="serv-grid">' + cards + '</div>'
+}
 
-  })()
-  </script>
+// ---- CONSULTORÍA ----
+function openConsultoria() {
+  showView('view-consultoria')
+  var box = document.getElementById('con-msgs')
+  box.innerHTML = ''
+  _conHistory.forEach(function(m){
+    addConMsg(m.content, m.role === 'assistant' ? 'bot' : 'user')
+  })
+  if (!_conInit) {
+    _conInit = true
+    var nombre = _user.name.split(' ')[0]
+    var w = '¡Hola ' + nombre + '! Vamos a empezar tu consultoría estratégica. Te haré unas preguntas para entender tu situación y construiremos juntos tu plan de imagen personalizado. Para empezar: ¿cuál es tu objetivo principal ahora mismo?'
+    addConMsg(w, 'bot')
+    _conHistory.push({ role: 'assistant', content: w })
+  }
+  var inp  = document.getElementById('con-inp')
+  var send = document.getElementById('con-send')
+  send.onclick   = enviarConsultoria
+  inp.onkeydown  = function(e){ if (e.key === 'Enter') enviarConsultoria() }
+  inp.focus()
+}
+
+function addConMsg(text, cls, id) {
+  var box = document.getElementById('con-msgs')
+  if (!box) return
+  var el = document.createElement('div')
+  el.className = 'cmsg ' + cls
+  el.textContent = text
+  if (id) el.id = id
+  box.appendChild(el)
+  box.scrollTop = box.scrollHeight
+}
+
+function enviarConsultoria() {
+  var inp  = document.getElementById('con-inp')
+  var send = document.getElementById('con-send')
+  var text = inp.value.trim()
+  if (!text) return
+  inp.value = ''; inp.disabled = true; send.disabled = true
+  addConMsg(text, 'user')
+  _conHistory.push({ role: 'user', content: text })
+  var tId = 'ct' + Date.now()
+  addConMsg('Analizando…', 'typing', tId)
+  var nombre = _user.name.split(' ')[0]
+  var sys = 'Eres una consultora de imagen y marca personal senior de M&M Studio, en sesión de consultoría 1 a 1 con ' + nombre + '.' +
+    ' Tu objetivo es entender su situación y metas para construir un plan estratégico de imagen personalizado.' +
+    ' Haz preguntas una por una. Cuando tengas suficiente información (unas 4-5 respuestas) presenta un "Plan Estratégico" con 3-5 acciones concretas y priorizadas.' +
+    ' Tono profesional y cercano. Máximo 4 frases por respuesta. En español. No menciones que eres IA.'
+  fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
+    body: JSON.stringify({ model: 'llama-3.3-70b-versatile', max_tokens: 450,
+      messages: [{ role: 'system', content: sys }].concat(_conHistory) })
+  })
+  .then(function(r){ return r.json() })
+  .then(function(d){
+    var el = document.getElementById(tId); if (el) el.remove()
+    var reply = (d.choices && d.choices[0]) ? d.choices[0].message.content : 'Cuéntame más sobre tu situación.'
+    addConMsg(reply, 'bot')
+    _conHistory.push({ role: 'assistant', content: reply })
+  })
+  .catch(function(){
+    var el = document.getElementById(tId); if (el) el.remove()
+    addConMsg('Error de conexión. Inténtalo de nuevo.', 'bot')
+  })
+  .finally(function(){ inp.disabled = false; send.disabled = false; inp.focus() })
+}
+
+// ---- LINKEDIN ----
+function openLinkedin() {
+  showView('view-linkedin')
+  document.getElementById('li-gen').onclick   = generarLinkedin
+  document.getElementById('li-regen').onclick = generarLinkedin
+  document.querySelectorAll('.li-copy').forEach(function(btn){
+    btn.onclick = function(){
+      var el = document.getElementById(btn.dataset.copy)
+      if (!el) return
+      var txt = el.textContent
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(txt).then(function(){ flashCopy(btn) }).catch(function(){ fallbackCopy(txt, btn) })
+      } else { fallbackCopy(txt, btn) }
+    }
+  })
+}
+
+function generarLinkedin() {
+  var cargo = (document.getElementById('li-cargo').value || '').trim()
+  var obj   = (document.getElementById('li-obj').value   || '').trim()
+  var err   = document.getElementById('li-err')
+  if (!cargo || !obj) { err.textContent = 'Introduce al menos el cargo y el objetivo.'; return }
+  err.textContent = ''
+  var esp   = (document.getElementById('li-esp').value   || '').trim()
+  var emp   = (document.getElementById('li-empresa').value || '').trim()
+  var tray  = (document.getElementById('li-tray').value  || '').trim()
+  var btn   = document.getElementById('li-gen')
+  btn.disabled = true; btn.textContent = '✨ Generando…'
+  var prompt = 'Genera un perfil LinkedIn optimizado:\n' +
+    '- Cargo: ' + cargo + '\n' +
+    (emp  ? '- Empresa/Sector: '  + emp  + '\n' : '') +
+    (esp  ? '- Especialidad: '    + esp  + '\n' : '') +
+    '- Objetivo: ' + obj + '\n' +
+    (tray ? '- Trayectoria: '     + tray + '\n' : '') +
+    '\nResponde EXACTAMENTE con este formato (sin texto extra):\n' +
+    'HEADLINE: [máx 120 caracteres, con keywords relevantes, sin clichés]\n' +
+    'ABOUT: [150-200 palabras, primera persona, gancho inicial, propuesta de valor y llamada a la acción]'
+  fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
+    body: JSON.stringify({ model: 'llama-3.3-70b-versatile', max_tokens: 700,
+      messages: [{ role: 'user', content: prompt }] })
+  })
+  .then(function(r){ return r.json() })
+  .then(function(d){
+    var text = (d.choices && d.choices[0]) ? d.choices[0].message.content : ''
+    var hm = text.match(/HEADLINE:\s*(.+)/i)
+    var am = text.match(/ABOUT:\s*([\s\S]+)/i)
+    document.getElementById('li-res-h').textContent = hm ? hm[1].trim() : text
+    document.getElementById('li-res-a').textContent = am ? am[1].trim() : ''
+    document.getElementById('li-results').style.display = 'block'
+    document.getElementById('li-body').scrollTop = 9999
+    btn.disabled = false; btn.textContent = '✨ Generar perfil LinkedIn'
+  })
+  .catch(function(){
+    err.textContent = 'Error al generar. Inténtalo de nuevo.'
+    btn.disabled = false; btn.textContent = '✨ Generar perfil LinkedIn'
+  })
+}
+
+function flashCopy(btn) {
+  var orig = btn.textContent
+  btn.textContent = '✓ Copiado'
+  setTimeout(function(){ btn.textContent = orig }, 2000)
+}
+function fallbackCopy(text, btn) {
+  var ta = document.createElement('textarea')
+  ta.value = text; ta.style.cssText = 'position:fixed;opacity:0'
+  document.body.appendChild(ta); ta.select()
+  try { document.execCommand('copy'); flashCopy(btn) } catch(e){}
+  ta.remove()
+}
+
+// Back buttons
+document.getElementById('back-con').addEventListener('click', function(){ showView('view-dashboard') })
+document.getElementById('back-li').addEventListener('click',  function(){ showView('view-dashboard') })
+
+// Login
+function attemptLogin() {
+  var email = document.getElementById('l-email').value.trim()
+  var pwd   = document.getElementById('l-pwd').value
+  var err   = document.getElementById('login-err')
+  err.classList.remove('show')
+  if (!email || !pwd) { err.textContent = 'Completa todos los campos.'; err.classList.add('show'); return }
+  var btn = document.getElementById('btn-login')
+  btn.disabled = true; btn.textContent = 'Entrando…'
+  fetch('/api/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email, password: pwd })
+  })
+  .then(function(r){ return r.json() })
+  .then(function(res){
+    btn.disabled = false; btn.textContent = 'Entrar →'
+    if (res.error) { err.textContent = res.error; err.classList.add('show'); return }
+    setToken(res.token); setSession(res.user)
+    showDashboard(res.user)
+  })
+  .catch(function(){
+    btn.disabled = false; btn.textContent = 'Entrar →'
+    err.textContent = 'Error de conexión.'; err.classList.add('show')
+  })
+}
+document.getElementById('btn-login').addEventListener('click', attemptLogin)
+;['l-email','l-pwd'].forEach(function(id){
+  document.getElementById(id).addEventListener('keydown', function(e){ if (e.key === 'Enter') attemptLogin() })
+})
+
+// Logout
+document.getElementById('btn-logout').addEventListener('click', function(){
+  clearAuth()
+  document.getElementById('l-email').value = ''
+  document.getElementById('l-pwd').value   = ''
+  document.getElementById('login-err').classList.remove('show')
+  showView('view-login')
+})
+
+// Auto-login
+var token = getToken()
+if (token) {
+  fetch('/api/me', { headers: { 'Authorization': 'Bearer ' + token } })
+  .then(function(r){ return r.json() })
+  .then(function(user){
+    if (user.error) { clearAuth(); showView('view-login'); return }
+    setSession(user); showDashboard(user)
+  })
+  .catch(function(){ showView('view-login') })
+} else {
+  var s = getSession()
+  if (s) showDashboard(s)
+  else showView('view-login')
+}
+
+})()
+</script>
 </body>
 </html>
