@@ -274,6 +274,68 @@ body{background:linear-gradient(145deg,#0d0d0d 0%,#1c1509 40%,#2b1e0a 70%,#3a2b1
     </div>
   </div>
 
+  <!-- ===== SESIÓN FOTOGRÁFICA ===== -->
+  <div class="card" id="view-foto">
+    <div class="card-head">
+      <h2>Sesión Fotográfica</h2>
+      <p>Brief personalizado para tu sesión de fotos profesionales</p>
+    </div>
+    <div class="serv-topbar">
+      <button class="back-btn" id="back-foto">← Mis servicios</button>
+      <span class="serv-topbar-title">📷 Generador de brief</span>
+    </div>
+    <div class="li-body" id="foto-body">
+      <p style="font-size:13px;color:#888;margin-bottom:4px;">Cuéntanos sobre tu sesión y generamos un brief profesional completo.</p>
+      <label class="li-lbl">Tipo de sesión</label>
+      <select class="li-fld" id="foto-tipo">
+        <option>Headshots profesionales (LinkedIn, web...)</option>
+        <option>Branding personal (marca propia)</option>
+        <option>Contenido para redes sociales</option>
+        <option>Evento corporativo o empresarial</option>
+      </select>
+      <label class="li-lbl">Profesión / Sector</label>
+      <input class="li-fld" id="foto-prof" type="text" placeholder="ej. Abogada, CEO, Coach ejecutivo…">
+      <label class="li-lbl">¿Para qué vas a usar las fotos?</label>
+      <input class="li-fld" id="foto-uso" type="text" placeholder="ej. LinkedIn, web personal, Instagram…">
+      <label class="li-lbl">Estilo deseado</label>
+      <select class="li-fld" id="foto-estilo">
+        <option>Formal y corporativo</option>
+        <option>Profesional cercano</option>
+        <option>Creativo y moderno</option>
+        <option>Natural y auténtico</option>
+      </select>
+      <label class="li-lbl">Notas adicionales (opcional)</label>
+      <textarea class="li-fld" id="foto-notas" rows="2" placeholder="colores de marca, localización preferida, detalles…" style="resize:vertical;"></textarea>
+      <div class="li-err" id="foto-err"></div>
+      <button class="li-gen-btn" id="foto-gen" style="background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460)">📷 Generar brief de sesión</button>
+      <div id="foto-results" style="display:none;">
+        <div class="li-res-card">
+          <div class="li-res-lbl">📋 Brief de sesión fotográfica</div>
+          <div class="li-res-txt" id="foto-res-txt"></div>
+          <button class="li-copy" data-copy="foto-res-txt">Copiar</button>
+        </div>
+        <button class="li-regen" id="foto-regen">↺ Regenerar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== GESTIÓN DE REPUTACIÓN ===== -->
+  <div class="card" id="view-reputacion">
+    <div class="card-head">
+      <h2>Gestión de Reputación</h2>
+      <p>Estrategia personalizada de reputación digital</p>
+    </div>
+    <div class="serv-topbar">
+      <button class="back-btn" id="back-rep">← Mis servicios</button>
+      <span class="serv-topbar-title">🛡️ Asesora de reputación</span>
+    </div>
+    <div class="con-msgs" id="rep-msgs"></div>
+    <div class="con-inp-row">
+      <input class="con-inp" id="rep-inp" type="text" placeholder="Cuéntame tu situación…" maxlength="500">
+      <button class="con-send" id="rep-send">Enviar</button>
+    </div>
+  </div>
+
   <p class="page-footer">
     <a href="inicio.html">← Volver a la web</a> &nbsp;·&nbsp; M&amp;M Studio © 2025
   </p>
@@ -287,6 +349,8 @@ var GROQ_KEY = 'TU_API_KEY_GROQ_AQUI'
 
 var _conHistory = []
 var _conInit    = false
+var _repHistory = []
+var _repInit    = false
 var _user       = null
 
 var SERVICIOS = {
@@ -307,8 +371,8 @@ var SERVICIOS = {
   'Plan Exeltior': [
     { icon:'🎯', titulo:'Consultoría estratégica',    desc:'Sesión 1-a-1 con tu asesora senior para definir tu imagen ejecutiva.',           accion:'consultoria', btn:'🎯 Iniciar consulta →' },
     { icon:'💼', titulo:'LinkedIn premium',           desc:'Headline y "Acerca de" reescritos con IA para posicionarte mejor.',              accion:'linkedin',     btn:'💼 Optimizar perfil →' },
-    { icon:'📷', titulo:'Sesión fotográfica',         desc:'Brief completo y coordinación con fotógrafo profesional.' },
-    { icon:'🛡️', titulo:'Gestión de reputación',     desc:'Monitorización de menciones y estrategia ante crisis.' },
+    { icon:'📷', titulo:'Sesión fotográfica',         desc:'Brief completo y coordinación con fotógrafo profesional.',              accion:'foto',       btn:'📷 Crear brief →' },
+    { icon:'🛡️', titulo:'Gestión de reputación',     desc:'Monitorización de menciones y estrategia ante crisis.',                    accion:'reputacion',  btn:'🛡️ Gestionar →' },
     { icon:'🧹', titulo:'Limpieza huella digital',    desc:'Identificación y eliminación de contenido no deseado.' },
     { icon:'🤝', titulo:'Filtrado de oportunidades',  desc:'Evaluación estratégica de colaboraciones y apariciones.' },
     { icon:'⚡', titulo:'Acceso prioritario',         desc:'Tu asesora responde en menos de 24 h, cualquier día.' }
@@ -334,7 +398,7 @@ function initials(name) {
 }
 
 function showView(id) {
-  ['view-login','view-dashboard','view-consultoria','view-linkedin'].forEach(function(v){
+  ['view-login','view-dashboard','view-consultoria','view-linkedin','view-foto','view-reputacion'].forEach(function(v){
     document.getElementById(v).style.display = v === id ? 'block' : 'none'
   })
 }
@@ -363,6 +427,8 @@ function showDashboard(user) {
     btn.addEventListener('click', function(){
       if (btn.dataset.action === 'consultoria') openConsultoria()
       if (btn.dataset.action === 'linkedin')    openLinkedin()
+      if (btn.dataset.action === 'foto')        openFoto()
+      if (btn.dataset.action === 'reputacion')  openReputacion()
     })
   })
   showView('view-dashboard')
@@ -408,7 +474,6 @@ function openConsultoria() {
     var nombre = _user.name.split(' ')[0]
     var w = '¡Hola ' + nombre + '! Vamos a empezar tu consultoría estratégica. Te haré unas preguntas para entender tu situación y construiremos juntos tu plan de imagen personalizado. Para empezar: ¿cuál es tu objetivo principal ahora mismo?'
     addConMsg(w, 'bot')
-    _conHistory.push({ role: 'assistant', content: w })
   }
   var inp  = document.getElementById('con-inp')
   var send = document.getElementById('con-send')
@@ -536,9 +601,136 @@ function fallbackCopy(text, btn) {
   ta.remove()
 }
 
+// ---- SESIÓN FOTOGRÁFICA ----
+function openFoto() {
+  showView('view-foto')
+  document.getElementById('foto-gen').onclick   = generarFoto
+  document.getElementById('foto-regen').onclick = generarFoto
+  document.querySelectorAll('#view-foto .li-copy').forEach(function(btn){
+    btn.onclick = function(){
+      var el = document.getElementById(btn.dataset.copy)
+      if (!el) return
+      var txt = el.textContent
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(txt).then(function(){ flashCopy(btn) }).catch(function(){ fallbackCopy(txt, btn) })
+      } else { fallbackCopy(txt, btn) }
+    }
+  })
+}
+
+function generarFoto() {
+  var tipo   = (document.getElementById('foto-tipo').value    || '').trim()
+  var prof   = (document.getElementById('foto-prof').value    || '').trim()
+  var uso    = (document.getElementById('foto-uso').value     || '').trim()
+  var estilo = (document.getElementById('foto-estilo').value  || '').trim()
+  var notas  = (document.getElementById('foto-notas').value   || '').trim()
+  var err    = document.getElementById('foto-err')
+  if (!prof || !uso) { err.textContent = 'Introduce al menos tu profesión y el uso previsto.'; return }
+  err.textContent = ''
+  var btn = document.getElementById('foto-gen')
+  btn.disabled = true; btn.textContent = '📷 Generando brief…'
+  var prompt = 'Genera un brief profesional y detallado para una sesión fotográfica:\n' +
+    '- Tipo de sesión: ' + tipo + '\n' +
+    '- Profesión/sector: ' + prof + '\n' +
+    '- Uso de las fotos: ' + uso + '\n' +
+    '- Estilo deseado: ' + estilo + '\n' +
+    (notas ? '- Notas adicionales: ' + notas + '\n' : '') +
+    '\nIncluye: lista de tomas recomendadas, consejos de vestuario (colores, prendas, lo que evitar), ' +
+    'recomendaciones de localización/fondo, iluminación, posados y expresión facial, y 3 tips de preparación previa. ' +
+    'Formato claro con secciones, en español, tono profesional y práctico.'
+  fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
+    body: JSON.stringify({ model: 'llama-3.3-70b-versatile', max_tokens: 900,
+      messages: [{ role: 'user', content: prompt }] })
+  })
+  .then(function(r){ return r.json() })
+  .then(function(d){
+    var text = (d.choices && d.choices[0]) ? d.choices[0].message.content : ''
+    document.getElementById('foto-res-txt').textContent = text
+    document.getElementById('foto-results').style.display = 'block'
+    document.getElementById('foto-body').scrollTop = 9999
+    btn.disabled = false; btn.textContent = '📷 Generar brief de sesión'
+  })
+  .catch(function(){
+    err.textContent = 'Error al generar. Inténtalo de nuevo.'
+    btn.disabled = false; btn.textContent = '📷 Generar brief de sesión'
+  })
+}
+
+// ---- GESTIÓN DE REPUTACIÓN ----
+function openReputacion() {
+  showView('view-reputacion')
+  var box = document.getElementById('rep-msgs')
+  box.innerHTML = ''
+  _repHistory.forEach(function(m){
+    addRepMsg(m.content, m.role === 'assistant' ? 'bot' : 'user')
+  })
+  if (!_repInit) {
+    _repInit = true
+    var nombre = _user.name.split(' ')[0]
+    var w = '¡Hola ' + nombre + '! Soy tu asesora de reputación digital. Estoy aquí para ayudarte a proteger y mejorar tu imagen online. Cuéntame: ¿cuál es tu situación actual? ¿Hay algo que te preocupe o quieras mejorar en tu reputación digital?'
+    addRepMsg(w, 'bot')
+  }
+  var inp  = document.getElementById('rep-inp')
+  var send = document.getElementById('rep-send')
+  send.onclick  = enviarReputacion
+  inp.onkeydown = function(e){ if (e.key === 'Enter') enviarReputacion() }
+  inp.focus()
+}
+
+function addRepMsg(text, cls, id) {
+  var box = document.getElementById('rep-msgs')
+  if (!box) return
+  var el = document.createElement('div')
+  el.className = 'cmsg ' + cls
+  el.textContent = text
+  if (id) el.id = id
+  box.appendChild(el)
+  box.scrollTop = box.scrollHeight
+}
+
+function enviarReputacion() {
+  var inp  = document.getElementById('rep-inp')
+  var send = document.getElementById('rep-send')
+  var text = inp.value.trim()
+  if (!text) return
+  inp.value = ''; inp.disabled = true; send.disabled = true
+  addRepMsg(text, 'user')
+  _repHistory.push({ role: 'user', content: text })
+  var tId = 'rt' + Date.now()
+  addRepMsg('Analizando…', 'typing', tId)
+  var nombre = _user.name.split(' ')[0]
+  var sys = 'Eres una experta en gestión de reputación digital y personal de M&M Studio, en sesión 1 a 1 con ' + nombre + '.' +
+    ' Tu especialidad es auditar la presencia online, detectar riesgos reputacionales y diseñar estrategias de protección y mejora.' +
+    ' Haz preguntas focalizadas una a una para entender su situación: presencia actual, crisis activas o pasadas, sectores de riesgo, objetivos.' +
+    ' Cuando tengas suficiente contexto (3-4 respuestas) presenta un "Plan de Reputación" con acciones concretas: qué monitorizar, qué reforzar y cómo responder ante situaciones negativas.' +
+    ' Tono profesional y directo. Máximo 4 frases por respuesta. En español. No menciones que eres IA.'
+  fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
+    body: JSON.stringify({ model: 'llama-3.3-70b-versatile', max_tokens: 450,
+      messages: [{ role: 'system', content: sys }].concat(_repHistory) })
+  })
+  .then(function(r){ return r.json() })
+  .then(function(d){
+    var el = document.getElementById(tId); if (el) el.remove()
+    var reply = (d.choices && d.choices[0]) ? d.choices[0].message.content : 'Cuéntame más sobre tu situación.'
+    addRepMsg(reply, 'bot')
+    _repHistory.push({ role: 'assistant', content: reply })
+  })
+  .catch(function(){
+    var el = document.getElementById(tId); if (el) el.remove()
+    addRepMsg('Error de conexión. Inténtalo de nuevo.', 'bot')
+  })
+  .finally(function(){ inp.disabled = false; send.disabled = false; inp.focus() })
+}
+
 // Back buttons
-document.getElementById('back-con').addEventListener('click', function(){ showView('view-dashboard') })
-document.getElementById('back-li').addEventListener('click',  function(){ showView('view-dashboard') })
+document.getElementById('back-con').addEventListener('click',  function(){ showView('view-dashboard') })
+document.getElementById('back-li').addEventListener('click',   function(){ showView('view-dashboard') })
+document.getElementById('back-foto').addEventListener('click', function(){ showView('view-dashboard') })
+document.getElementById('back-rep').addEventListener('click',  function(){ showView('view-dashboard') })
 
 // Login
 function attemptLogin() {
