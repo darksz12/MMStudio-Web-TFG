@@ -33,12 +33,31 @@
     #login-btn:hover { opacity: .9; }
 
     #panel { display: none; }
+
     header {
       background: linear-gradient(135deg, #0d0d0d, #3a2b16);
       border-bottom: 1px solid #3a2f20; padding: 16px 32px;
       display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
     }
     header h1 { color: #b99a5b; font-size: 20px; }
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    #bell-btn {
+      position: relative; background: transparent; border: none;
+      cursor: pointer; font-size: 22px; padding: 4px; line-height: 1;
+      display: none;
+    }
+    #bell-btn.has-requests { display: block; animation: bellRing .6s ease-in-out infinite alternate; }
+    @keyframes bellRing {
+      from { transform: rotate(-18deg); filter: drop-shadow(0 0 6px #b99a5b); }
+      to   { transform: rotate(18deg);  filter: drop-shadow(0 0 14px #ffd700); }
+    }
+    #bell-badge {
+      position: absolute; top: -2px; right: -2px;
+      background: #e74c3c; color: white; font-size: 10px; font-weight: bold;
+      border-radius: 50%; width: 18px; height: 18px;
+      display: flex; align-items: center; justify-content: center;
+    }
     #logout-btn {
       background: #2d2318; border: 1px solid #3a2f20; color: #b99a5b;
       padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px;
@@ -50,7 +69,58 @@
     .stat-card { background: #1a1814; border: 1px solid #3a2f20; border-radius: 14px; padding: 20px; }
     .stat-card .num { font-size: 32px; font-weight: bold; color: #b99a5b; }
     .stat-card .lbl { font-size: 13px; color: #888; margin-top: 4px; }
-    h2 { color: #b99a5b; font-size: 18px; margin-bottom: 16px; }
+
+    .section-title {
+      color: #b99a5b; font-size: 18px; margin-bottom: 16px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .section-title .badge {
+      background: #e74c3c; color: white; font-size: 11px; font-weight: bold;
+      padding: 2px 8px; border-radius: 20px;
+    }
+    .section-wrap { margin-bottom: 40px; }
+
+    /* Solicitudes */
+    #section-requests { scroll-margin-top: 80px; }
+    .req-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+    .req-card {
+      background: #1a1814; border: 1px solid #3a2f20; border-radius: 16px;
+      padding: 20px; display: flex; flex-direction: column; gap: 12px;
+      border-left: 3px solid #b99a5b;
+    }
+    .req-card-top { display: flex; align-items: center; gap: 12px; }
+    .req-av {
+      width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, #6b5438, #b99a5b);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: bold; color: white;
+    }
+    .req-info strong { display: block; color: #e0d5c5; font-size: 15px; }
+    .req-info small  { color: #888; font-size: 12px; }
+    .req-plan {
+      display: inline-block; padding: 5px 14px; border-radius: 20px;
+      font-size: 13px; font-weight: bold; width: fit-content;
+    }
+    .req-plan.normal   { background: #2d2318; color: #b99a5b; }
+    .req-plan.premium  { background: #3a2b16; color: #d4a96a; }
+    .req-plan.exeltior { background: #1a1814; color: #fff; border: 1px solid #b99a5b; }
+    .req-actions { display: flex; gap: 8px; }
+    .btn-approve {
+      flex: 1; padding: 9px; border: none; border-radius: 10px;
+      background: linear-gradient(135deg, #1a5c1a, #27ae60);
+      color: white; font-size: 13px; font-weight: bold; cursor: pointer;
+      transition: opacity .2s;
+    }
+    .btn-approve:hover { opacity: .85; }
+    .btn-reject {
+      flex: 1; padding: 9px; border: 1px solid #3a2f20; border-radius: 10px;
+      background: #141210; color: #888; font-size: 13px; cursor: pointer;
+      transition: background .2s;
+    }
+    .btn-reject:hover { background: #2d2318; color: #e0d5c5; }
+    .empty-state { color: #555; font-size: 14px; padding: 20px 0; }
+
+    /* Tablas */
     .table-wrap { background: #1a1814; border: 1px solid #3a2f20; border-radius: 14px; overflow: hidden; }
     table { width: 100%; border-collapse: collapse; }
     thead th {
@@ -66,7 +136,6 @@
     .plan-exeltior { background: #1a1814; color: #fff; border: 1px solid #b99a5b; }
     .plan-sin      { background: #222; color: #666; }
     .empty { text-align: center; padding: 40px; color: #555; }
-    .click-hint { font-size: 12px; color: #555; margin-bottom: 10px; }
 
     /* Modal usuario */
     #user-overlay {
@@ -78,6 +147,7 @@
     #user-modal {
       background: #1a1814; border: 1px solid #3a2f20;
       border-radius: 20px; width: 440px; max-width: 96vw;
+      max-height: 90vh; overflow-y: auto;
       box-shadow: 0 30px 80px rgba(0,0,0,.6);
       animation: popIn .25s cubic-bezier(.34,1.56,.64,1);
     }
@@ -110,7 +180,6 @@
     .um-row .lbl { color: #888; }
     .um-row .val { font-weight: 600; color: #e0d5c5; }
     .um-row .val.pwd { color: #555; font-style: italic; font-size: 13px; }
-
     .plan-select-wrap { margin-top: 20px; }
     .plan-select-wrap label { display: block; font-size: 12px; font-weight: 700; color: #b99a5b; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
     #um-plan-select {
@@ -144,7 +213,8 @@
 <div id="panel">
   <header>
     <h1>M&M Studio · Admin</h1>
-    <div style="display:flex;align-items:center;gap:16px;">
+    <div class="header-right">
+      <button id="bell-btn" title="Solicitudes pendientes">🔔<span id="bell-badge">0</span></button>
       <span id="admin-name" style="color:#888;font-size:13px;"></span>
       <button id="logout-btn">Cerrar sesión</button>
     </div>
@@ -152,19 +222,42 @@
   <main>
     <div class="stats">
       <div class="stat-card"><div class="num" id="s-total">—</div><div class="lbl">Usuarios registrados</div></div>
-      <div class="stat-card"><div class="num" id="s-normal">—</div><div class="lbl">Plan Normal</div></div>
-      <div class="stat-card"><div class="num" id="s-premium">—</div><div class="lbl">Plan Premium</div></div>
-      <div class="stat-card"><div class="num" id="s-exeltior">—</div><div class="lbl">Plan Exeltior</div></div>
+      <div class="stat-card"><div class="num" id="s-pending">—</div><div class="lbl">Solicitudes pendientes</div></div>
+      <div class="stat-card"><div class="num" id="s-active">—</div><div class="lbl">Con plan activo</div></div>
+      <div class="stat-card"><div class="num" id="s-noplan">—</div><div class="lbl">Sin plan</div></div>
     </div>
-    <h2>Usuarios</h2>
-    <p class="click-hint">Haz clic en un usuario para ver sus detalles y editar su plan.</p>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr><th>#</th><th>Nombre</th><th>Email</th><th>Plan</th><th>Miembro desde</th></tr>
-        </thead>
-        <tbody id="users-tbody"></tbody>
-      </table>
+
+    <!-- Solicitudes pendientes -->
+    <div class="section-wrap" id="section-requests">
+      <div class="section-title">
+        🔔 Solicitudes de activación
+        <span class="badge" id="req-badge" style="display:none">0</span>
+      </div>
+      <div class="req-grid" id="req-grid">
+        <p class="empty-state">No hay solicitudes pendientes.</p>
+      </div>
+    </div>
+
+    <!-- Usuarios con plan activo -->
+    <div class="section-wrap">
+      <div class="section-title">✅ Usuarios con plan activo</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Nombre</th><th>Email</th><th>Plan</th><th>Miembro desde</th></tr></thead>
+          <tbody id="tbody-active"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Usuarios sin plan -->
+    <div class="section-wrap">
+      <div class="section-title">⏳ Usuarios sin plan</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Nombre</th><th>Email</th><th>Estado</th><th>Miembro desde</th></tr></thead>
+          <tbody id="tbody-noplan"></tbody>
+        </table>
+      </div>
     </div>
   </main>
 </div>
@@ -230,35 +323,111 @@ function planBadge(plan) {
   return '<span class="plan-badge plan-sin">' + plan + '</span>'
 }
 
+function reqPlanClass(plan) {
+  if (plan.indexOf('Exeltior') !== -1) return 'exeltior'
+  if (plan.indexOf('Premium') !== -1)  return 'premium'
+  return 'normal'
+}
+
 function loadUsers() {
   fetch('/api/admin/users', { headers: { 'Authorization': 'Bearer ' + token } })
     .then(function(r) { return r.json() })
     .then(function(users) {
       allUsers = users
-      var tbody = document.getElementById('users-tbody')
-      if (!users.length) {
-        tbody.innerHTML = '<tr><td colspan="5" class="empty">No hay usuarios registrados aún.</td></tr>'
-        return
+
+      var pending  = users.filter(function(u){ return u.plan_requested && u.plan === 'Sin plan activo' })
+      var active   = users.filter(function(u){ return u.plan && u.plan !== 'Sin plan activo' })
+      var noplan   = users.filter(function(u){ return (!u.plan || u.plan === 'Sin plan activo') && !u.plan_requested })
+
+      document.getElementById('s-total').textContent   = users.length
+      document.getElementById('s-pending').textContent = pending.length
+      document.getElementById('s-active').textContent  = active.length
+      document.getElementById('s-noplan').textContent  = noplan.length
+
+      // Bell
+      var bell = document.getElementById('bell-btn')
+      var badge = document.getElementById('bell-badge')
+      var reqBadge = document.getElementById('req-badge')
+      if (pending.length > 0) {
+        bell.classList.add('has-requests')
+        badge.textContent = pending.length
+        reqBadge.style.display = 'inline'
+        reqBadge.textContent = pending.length
+      } else {
+        bell.classList.remove('has-requests')
+        reqBadge.style.display = 'none'
       }
-      document.getElementById('s-total').textContent    = users.length
-      document.getElementById('s-normal').textContent   = users.filter(function(u){ return u.plan && u.plan.indexOf('Normal') !== -1 }).length
-      document.getElementById('s-premium').textContent  = users.filter(function(u){ return u.plan && u.plan.indexOf('Premium') !== -1 }).length
-      document.getElementById('s-exeltior').textContent = users.filter(function(u){ return u.plan && u.plan.indexOf('Exeltior') !== -1 }).length
 
-      tbody.innerHTML = users.map(function(u, i) {
-        return '<tr data-id="' + u.id + '">' +
-          '<td>' + (i + 1) + '</td>' +
-          '<td>' + u.name + '</td>' +
-          '<td>' + u.email + '</td>' +
-          '<td>' + planBadge(u.plan) + '</td>' +
-          '<td>' + u.joined + '</td>' +
-          '</tr>'
-      }).join('')
+      // Solicitudes
+      var grid = document.getElementById('req-grid')
+      if (pending.length === 0) {
+        grid.innerHTML = '<p class="empty-state">No hay solicitudes pendientes.</p>'
+      } else {
+        grid.innerHTML = pending.map(function(u) {
+          return '<div class="req-card" id="req-' + u.id + '">' +
+            '<div class="req-card-top">' +
+            '<div class="req-av">' + initials(u.name) + '</div>' +
+            '<div class="req-info"><strong>' + u.name + '</strong><small>' + u.email + '</small></div>' +
+            '</div>' +
+            '<span class="req-plan ' + reqPlanClass(u.plan_requested) + '">' + u.plan_requested + '</span>' +
+            '<div class="req-actions">' +
+            '<button class="btn-approve" data-id="' + u.id + '">✓ Aprobar</button>' +
+            '<button class="btn-reject"  data-id="' + u.id + '">✕ Rechazar</button>' +
+            '</div></div>'
+        }).join('')
 
-      tbody.querySelectorAll('tr').forEach(function(tr) {
-        tr.addEventListener('click', function() { openUserModal(parseInt(tr.dataset.id)) })
-      })
+        grid.querySelectorAll('.btn-approve').forEach(function(btn) {
+          btn.addEventListener('click', function() { approveRequest(btn.dataset.id) })
+        })
+        grid.querySelectorAll('.btn-reject').forEach(function(btn) {
+          btn.addEventListener('click', function() { rejectRequest(btn.dataset.id) })
+        })
+      }
+
+      // Tabla activos
+      var tbActive = document.getElementById('tbody-active')
+      if (active.length === 0) {
+        tbActive.innerHTML = '<tr><td colspan="5" class="empty">No hay usuarios con plan activo.</td></tr>'
+      } else {
+        tbActive.innerHTML = active.map(function(u, i) {
+          return '<tr data-id="' + u.id + '"><td>' + (i+1) + '</td><td>' + u.name + '</td><td>' + u.email + '</td><td>' + planBadge(u.plan) + '</td><td>' + u.joined + '</td></tr>'
+        }).join('')
+        tbActive.querySelectorAll('tr').forEach(function(tr) {
+          tr.addEventListener('click', function() { openUserModal(parseInt(tr.dataset.id)) })
+        })
+      }
+
+      // Tabla sin plan
+      var tbNo = document.getElementById('tbody-noplan')
+      var sinPlan = users.filter(function(u){ return !u.plan || u.plan === 'Sin plan activo' })
+      if (sinPlan.length === 0) {
+        tbNo.innerHTML = '<tr><td colspan="5" class="empty">Todos los usuarios tienen plan activo.</td></tr>'
+      } else {
+        tbNo.innerHTML = sinPlan.map(function(u, i) {
+          var estado = u.plan_requested
+            ? '<span style="color:#d4a96a;font-size:12px;">⏳ Pendiente: ' + u.plan_requested + '</span>'
+            : '<span style="color:#555;font-size:12px;">Sin solicitud</span>'
+          return '<tr data-id="' + u.id + '"><td>' + (i+1) + '</td><td>' + u.name + '</td><td>' + u.email + '</td><td>' + estado + '</td><td>' + u.joined + '</td></tr>'
+        }).join('')
+        tbNo.querySelectorAll('tr').forEach(function(tr) {
+          tr.addEventListener('click', function() { openUserModal(parseInt(tr.dataset.id)) })
+        })
+      }
     })
+}
+
+function approveRequest(id) {
+  fetch('/api/admin/plan-requests/' + id + '/approve', {
+    method: 'PATCH', headers: { 'Authorization': 'Bearer ' + token }
+  }).then(function(r) { return r.json() })
+    .then(function(res) { if (res.ok) loadUsers() })
+}
+
+function rejectRequest(id) {
+  fetch('/api/admin/plan-requests/' + id + '/reject', {
+    method: 'PATCH', headers: { 'Authorization': 'Bearer ' + token }
+  }).then(function(r) { return r.json() })
+    .then(function(res) { if (res.ok) loadUsers() })
 }
 
 function openUserModal(id) {
@@ -276,40 +445,16 @@ function openUserModal(id) {
   document.getElementById('um-email').textContent     = u.email
   document.getElementById('um-joined').textContent    = u.joined
   document.getElementById('um-plan-current').innerHTML = planBadge(u.plan)
-  document.getElementById('um-plan-select').value = u.plan || 'Sin plan activo'
-  document.getElementById('um-msg').textContent     = ''
-  document.getElementById('um-new-pwd').value       = ''
-  document.getElementById('um-force-change').checked = u.force_pwd_change === 1
-  document.getElementById('um-pwd-msg').textContent  = ''
+  document.getElementById('um-plan-select').value     = u.plan || 'Sin plan activo'
+  document.getElementById('um-msg').textContent       = ''
+  document.getElementById('um-new-pwd').value         = ''
+  document.getElementById('um-force-change').checked  = u.force_pwd_change === 1
+  document.getElementById('um-pwd-msg').textContent   = ''
   document.getElementById('user-overlay').classList.add('open')
 }
 
-document.getElementById('um-pwd-btn').addEventListener('click', function() {
-  var pwd  = document.getElementById('um-new-pwd').value
-  var force = document.getElementById('um-force-change').checked
-  var msg  = document.getElementById('um-pwd-msg')
-  var btn  = document.getElementById('um-pwd-btn')
-  if (!pwd || pwd.length < 6) { msg.style.color = '#e74c3c'; msg.textContent = 'La contraseña debe tener al menos 6 caracteres.'; return }
-  btn.disabled = true; btn.textContent = 'Guardando…'
-  fetch('/api/admin/users/' + currentUserId + '/password', {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-    body: JSON.stringify({ password: pwd, forceChange: force })
-  })
-  .then(function(r) { return r.json() })
-  .then(function(res) {
-    if (res.ok) {
-      msg.style.color = '#27ae60'
-      msg.textContent = force ? '✓ Contraseña cambiada — el usuario deberá cambiarla al iniciar sesión' : '✓ Contraseña cambiada correctamente'
-      document.getElementById('um-new-pwd').value = ''
-      var u = allUsers.find(function(x){ return x.id === currentUserId })
-      if (u) u.force_pwd_change = force ? 1 : 0
-    } else {
-      msg.style.color = '#e74c3c'; msg.textContent = res.error || 'Error al guardar.'
-    }
-  })
-  .catch(function() { msg.style.color = '#e74c3c'; msg.textContent = 'Error de conexión.' })
-  .finally(function() { btn.disabled = false; btn.textContent = 'Cambiar contraseña' })
+document.getElementById('bell-btn').addEventListener('click', function() {
+  document.getElementById('section-requests').scrollIntoView({ behavior: 'smooth' })
 })
 
 document.getElementById('um-close').addEventListener('click', function() {
@@ -334,13 +479,37 @@ document.getElementById('um-save-btn').addEventListener('click', function() {
   .then(function(res) {
     if (res.ok) {
       msg.textContent = '✓ Plan actualizado correctamente'
-      var u = allUsers.find(function(x){ return x.id === currentUserId })
-      if (u) { u.plan = plan; document.getElementById('um-plan-current').innerHTML = planBadge(plan) }
       loadUsers()
     }
   })
   .catch(function() { msg.style.color = '#e74c3c'; msg.textContent = 'Error al guardar.' })
-  .finally(function() { btn.disabled = false; btn.textContent = 'Guardar cambio' })
+  .finally(function() { btn.disabled = false; btn.textContent = 'Guardar plan' })
+})
+
+document.getElementById('um-pwd-btn').addEventListener('click', function() {
+  var pwd   = document.getElementById('um-new-pwd').value
+  var force = document.getElementById('um-force-change').checked
+  var msg   = document.getElementById('um-pwd-msg')
+  var btn   = document.getElementById('um-pwd-btn')
+  if (!pwd || pwd.length < 6) { msg.style.color = '#e74c3c'; msg.textContent = 'La contraseña debe tener al menos 6 caracteres.'; return }
+  btn.disabled = true; btn.textContent = 'Guardando…'
+  fetch('/api/admin/users/' + currentUserId + '/password', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({ password: pwd, forceChange: force })
+  })
+  .then(function(r) { return r.json() })
+  .then(function(res) {
+    if (res.ok) {
+      msg.style.color = '#27ae60'
+      msg.textContent = force ? '✓ Contraseña cambiada — el usuario deberá cambiarla al iniciar sesión' : '✓ Contraseña cambiada correctamente'
+      document.getElementById('um-new-pwd').value = ''
+    } else {
+      msg.style.color = '#e74c3c'; msg.textContent = res.error || 'Error al guardar.'
+    }
+  })
+  .catch(function() { msg.style.color = '#e74c3c'; msg.textContent = 'Error de conexión.' })
+  .finally(function() { btn.disabled = false; btn.textContent = 'Cambiar contraseña' })
 })
 
 document.getElementById('login-btn').addEventListener('click', function() {

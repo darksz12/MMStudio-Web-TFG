@@ -23,6 +23,7 @@ db.exec(`
     email            TEXT    UNIQUE NOT NULL,
     password         TEXT    NOT NULL,
     plan             TEXT    NOT NULL DEFAULT 'Sin plan activo',
+    plan_requested   TEXT    NOT NULL DEFAULT '',
     joined           TEXT    NOT NULL,
     is_admin         INTEGER NOT NULL DEFAULT 0,
     force_pwd_change INTEGER NOT NULL DEFAULT 0
@@ -34,6 +35,7 @@ db.exec(`
   'ALTER TABLE users ADD COLUMN apellidos TEXT NOT NULL DEFAULT \'\'',
   'ALTER TABLE users ADD COLUMN telefono TEXT NOT NULL DEFAULT \'\'',
   'ALTER TABLE users ADD COLUMN birthday TEXT NOT NULL DEFAULT \'\'',
+  'ALTER TABLE users ADD COLUMN plan_requested TEXT NOT NULL DEFAULT \'\'',
   'ALTER TABLE users ADD COLUMN force_pwd_change INTEGER NOT NULL DEFAULT 0'
 ].forEach(function(sql) { try { db.exec(sql) } catch(e) {} })
 
@@ -59,7 +61,7 @@ function authMiddleware(req, res, next) {
 function userPublic(u) {
   return {
     name: u.name, apellidos: u.apellidos || '', telefono: u.telefono || '',
-    birthday: u.birthday || '',
+    birthday: u.birthday || '', planRequested: u.plan_requested || '',
     email: u.email, plan: u.plan, joined: u.joined,
     isAdmin: u.is_admin, forcePwdChange: u.force_pwd_change === 1
   }
@@ -124,11 +126,41 @@ app.post('/api/change-password', authMiddleware, (req, res) => {
   res.json({ ok: true })
 })
 
+// POST /api/plan/request
+app.post('/api/plan/request', authMiddleware, (req, res) => {
+  const { plan } = req.body
+  const valid = ['Plan Normal', 'Plan Premium', 'Plan Exeltior']
+  if (!valid.includes(plan)) return res.status(400).json({ error: 'Plan no válido.' })
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id)
+  if (user.plan !== 'Sin plan activo') return res.status(400).json({ error: 'Ya tienes un plan activo.' })
+  if (user.plan_requested) return res.status(400).json({ error: 'Ya tienes una solicitud pendiente.' })
+  db.prepare('UPDATE users SET plan_requested = ? WHERE id = ?').run(plan, req.user.id)
+  const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id)
+  res.json(userPublic(updated))
+})
+
 // GET /api/admin/users
 app.get('/api/admin/users', authMiddleware, (req, res) => {
   if (!req.user.isAdmin) return res.status(403).json({ error: 'Acceso denegado' })
-  const users = db.prepare('SELECT id, name, apellidos, telefono, email, plan, joined, force_pwd_change FROM users ORDER BY id DESC').all()
+  const users = db.prepare('SELECT id, name, apellidos, telefono, email, plan, plan_requested, joined, force_pwd_change FROM users ORDER BY id DESC').all()
   res.json(users)
+})
+
+// PATCH /api/admin/plan-requests/:id/approve
+app.patch('/api/admin/plan-requests/:id/approve', authMiddleware, (req, res) => {
+  if (!req.user.isAdmin) return res.status(403).json({ error: 'Acceso denegado' })
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.params.id)
+  if (!user || !user.plan_requested) return res.status(404).json({ error: 'Solicitud no encontrada.' })
+  db.prepare('UPDATE users SET plan = ?, plan_requested = ? WHERE id = ?')
+    .run(user.plan_requested + ' activo', '', req.params.id)
+  res.json({ ok: true })
+})
+
+// PATCH /api/admin/plan-requests/:id/reject
+app.patch('/api/admin/plan-requests/:id/reject', authMiddleware, (req, res) => {
+  if (!req.user.isAdmin) return res.status(403).json({ error: 'Acceso denegado' })
+  db.prepare('UPDATE users SET plan_requested = ? WHERE id = ?').run('', req.params.id)
+  res.json({ ok: true })
 })
 
 // PATCH /api/admin/users/:id/plan

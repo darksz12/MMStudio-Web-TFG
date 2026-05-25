@@ -443,7 +443,14 @@
       }
       bdEl.textContent = bdText; bdEl.style.fontStyle = s.birthday ? 'normal' : 'italic'; bdEl.style.color = s.birthday ? '#6b5438' : '#aaa'
     }
-    document.getElementById('a-p-plan').textContent = s.plan
+    var planEl = document.getElementById('a-p-plan')
+    if (planEl) {
+      if (s.plan === 'Sin plan activo' && s.planRequested) {
+        planEl.innerHTML = '<span style="color:#8c6a32;font-style:italic;font-size:13px;">⏳ ' + s.planRequested + ' — pendiente de revisión</span>'
+      } else {
+        planEl.textContent = s.plan
+      }
+    }
     document.getElementById('a-p-joined').textContent = s.joined
   }
 
@@ -528,6 +535,56 @@
     } else if (isTodayBirthday(session.birthday)) {
       showBirthdayToast(session.name)
     }
+    checkPlanActivation(session)
+  }
+
+  function checkPlanActivation(session) {
+    if (!session) return
+    var lastStatus = localStorage.getItem('mm_last_plan_status') || 'none'
+    var currentStatus = 'none'
+    if (session.plan && session.plan !== 'Sin plan activo') currentStatus = 'active:' + session.plan
+    else if (session.planRequested) currentStatus = 'pending:' + session.planRequested
+    if (lastStatus.startsWith('pending:') && currentStatus.startsWith('active:')) {
+      showPlanActivated(session.plan)
+    }
+    localStorage.setItem('mm_last_plan_status', currentStatus)
+  }
+
+  function showPlanActivated(plan) {
+    if (sessionStorage.getItem('plan_activated_shown')) return
+    sessionStorage.setItem('plan_activated_shown', '1')
+    var themes = {
+      'Plan Normal activo':   { bg: 'linear-gradient(135deg,#1a0a00,#3a1f00,#6b5438)', color: '#ffd700', emoji: '🌟', msg: '¡Tu Plan Normal ya está activo!', sub: 'Bienvenido/a a M&M Studio. Ya tienes acceso a tus recursos.' },
+      'Plan Premium activo':  { bg: 'linear-gradient(135deg,#0a0a1a,#1a1a3a,#4a3520)', color: '#d4a96a', emoji: '✨', msg: '¡Plan Premium activado!',          sub: 'Disfruta de tu asesora privada y todos tus recursos premium.' },
+      'Plan Exeltior activo': { bg: 'linear-gradient(135deg,#000000,#0d0d0d,#1a1200)', color: '#ffd700', emoji: '👑', msg: '¡Acceso Exeltior concedido!',       sub: 'Nivel ejecutivo desbloqueado. Tu asesora senior ya te espera.' }
+    }
+    var t = themes[plan] || themes['Plan Normal activo']
+    var el = document.createElement('div')
+    el.id = 'plan-activated-overlay'
+    el.style.cssText = 'position:fixed;inset:0;z-index:999998;background:' + t.bg + ';display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:32px;overflow:hidden;'
+
+    var colors = ['#ffd700','#d4a96a','#fff','#b99a5b','#ffecb3']
+    var confetti = ''
+    for (var i = 0; i < 50; i++) {
+      var size = 6 + Math.random() * 8
+      confetti += '<div style="position:absolute;border-radius:2px;' +
+        'left:' + Math.random()*100 + '%;top:' + (-15+Math.random()*-20) + 'px;' +
+        'width:' + size + 'px;height:' + size + 'px;' +
+        'background:' + colors[Math.floor(Math.random()*colors.length)] + ';' +
+        'animation:confettiFall ' + (2.5+Math.random()*3) + 's linear ' + Math.random()*2 + 's infinite;"></div>'
+    }
+
+    el.innerHTML = confetti +
+      '<div style="position:relative;z-index:2;">' +
+      '<div style="font-size:72px;animation:gretaBounce .7s ease-in-out infinite alternate;">' + t.emoji + '</div>' +
+      '<h1 style="font-size:clamp(24px,6vw,52px);font-weight:900;color:' + t.color + ';margin:16px 0 10px;text-shadow:0 0 30px rgba(255,215,0,.4);">' + t.msg + '</h1>' +
+      '<p style="color:rgba(255,255,255,.75);font-size:16px;max-width:380px;line-height:1.6;margin-bottom:28px;">' + t.sub + '</p>' +
+      '<button onclick="this.parentElement.parentElement.style.opacity=\'0\';setTimeout(function(){document.getElementById(\'plan-activated-overlay\').remove()},400)" ' +
+      'style="padding:14px 36px;border-radius:30px;border:none;background:' + t.color + ';color:#0d0d0d;font-size:16px;font-weight:bold;cursor:pointer;box-shadow:0 4px 24px rgba(0,0,0,.4);transition:transform .2s;">' +
+      '¡Genial! →</button>' +
+      '</div>'
+    el.style.transition = 'opacity .4s'
+    document.body.appendChild(el)
   }
 
   // ---- Eventos ----
@@ -945,6 +1002,27 @@
     if (!plan) {
       modal.innerHTML = buildLocked(session)
       modal.querySelector('#m-close-lk').addEventListener('click', cerrar)
+      modal.querySelectorAll('.mlk-plan-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var planName = btn.dataset.plan
+          var msg = document.getElementById('mlk-msg')
+          btn.disabled = true; btn.textContent = 'Enviando solicitud…'
+          fetch('/api/plan/request', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
+            body: JSON.stringify({ plan: planName })
+          })
+          .then(function(r) { return r.json() })
+          .then(function(res) {
+            if (res.error) { if (msg) msg.style.color = '#e74c3c'; if (msg) msg.textContent = res.error; btn.disabled = false; btn.textContent = planName; return }
+            setSession(res)
+            localStorage.setItem('mm_last_plan_status', 'pending:' + planName)
+            modal.innerHTML = buildLocked(res)
+            modal.querySelector('#m-close-lk').addEventListener('click', cerrar)
+          })
+          .catch(function() { if (msg) { msg.style.color='#e74c3c'; msg.textContent='Error de conexión.' } btn.disabled=false })
+        })
+      })
       ov.classList.add('open')
       return
     }
@@ -1048,9 +1126,23 @@
 
   // ---- CONSTRUCTORES HTML ----
   function buildLocked(session) {
-    var msg = session
-      ? 'Tu cuenta no tiene ningún plan activo. Contrata un plan para acceder a tu área privada con asesora personal y recursos exclusivos.'
-      : 'Inicia sesión y contrata un plan para acceder a tu área privada con asesora personal y recursos exclusivos.'
+    var isPending = session && session.planRequested
+    var pendingBlock = isPending
+      ? '<div style="background:#fdf6e3;border:1.5px solid #b99a5b;border-radius:12px;padding:14px 18px;margin:0 auto 20px;max-width:360px;text-align:center;">' +
+        '<div style="font-size:22px;margin-bottom:6px;">⏳</div>' +
+        '<div style="font-weight:bold;color:#6b5438;font-size:14px;">Solicitud pendiente de revisión</div>' +
+        '<div style="color:#8c6a32;font-size:13px;margin-top:4px;">Has solicitado el <strong>' + session.planRequested + '</strong>.<br>Se activará en las próximas horas.</div>' +
+        '</div>'
+      : ''
+    var planButtons = (!session || isPending) ? '' :
+      '<div style="display:flex;flex-direction:column;gap:8px;width:100%;max-width:320px;margin:0 auto 20px;">' +
+      '<button class="mlk-plan-btn" data-plan="Plan Normal"   style="padding:12px;border-radius:10px;border:1.5px solid #8c6a32;background:#faf7f2;color:#6b5438;font-size:14px;font-weight:bold;cursor:pointer;">Plan Normal · 150€/mes</button>' +
+      '<button class="mlk-plan-btn" data-plan="Plan Premium"  style="padding:12px;border-radius:10px;border:2px solid #b99a5b;background:linear-gradient(135deg,#fdf6e3,#faf0d7);color:#6b5438;font-size:14px;font-weight:bold;cursor:pointer;">⭐ Plan Premium · 400€/mes</button>' +
+      '<button class="mlk-plan-btn" data-plan="Plan Exeltior" style="padding:12px;border-radius:10px;border:1.5px solid #3a3a3a;background:#1a1a1a;color:#ffd700;font-size:14px;font-weight:bold;cursor:pointer;">👑 Plan Exeltior · desde 1.500€/mes</button>' +
+      '</div>'
+    var noLoginMsg = !session
+      ? '<p style="color:#888;font-size:14px;margin-bottom:20px;">Inicia sesión para solicitar un plan.</p>'
+      : ''
     return '<div style="display:flex;align-items:center;justify-content:space-between;' +
       'padding:16px 20px;border-bottom:1px solid #eadfcf;">' +
       '<strong style="font-size:16px;color:#3a2b16">Área de Miembros</strong>' +
@@ -1059,9 +1151,11 @@
       'cursor:pointer!important;font-size:15px!important;display:flex;align-items:center;' +
       'justify-content:center;padding:0!important;margin:0!important;margin-top:0!important;">✕</button></div>' +
       '<div id="m-locked"><div class="mlk-ico">🔐</div>' +
-      '<h3>Acceso exclusivo para miembros</h3><p>' + msg + '</p>' +
-      '<a class="boton" href="servicios.html" style="display:inline-block;text-decoration:none">' +
-      'Ver planes disponibles →</a></div>' +
+      '<h3>Acceso exclusivo para miembros</h3>' +
+      '<p style="color:#888;font-size:14px;margin-bottom:20px;">Elige un plan para acceder a tu área privada con asesora personal y recursos exclusivos.</p>' +
+      pendingBlock + noLoginMsg + planButtons +
+      '<div id="mlk-msg" style="font-size:13px;min-height:16px;color:#27ae60;text-align:center;"></div>' +
+      '</div>' +
       '<div id="m-app-footer"><p><strong>M&M Studio App</strong>Para disfrutar de todas las ventajas, contrata un plan y accede a tu app privada</p>' +
       '<div class="mapp-b"></div></div>'
   }
