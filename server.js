@@ -19,6 +19,7 @@ db.exec(`
     name             TEXT    NOT NULL,
     apellidos        TEXT    NOT NULL DEFAULT '',
     telefono         TEXT    NOT NULL DEFAULT '',
+    birthday         TEXT    NOT NULL DEFAULT '',
     email            TEXT    UNIQUE NOT NULL,
     password         TEXT    NOT NULL,
     plan             TEXT    NOT NULL DEFAULT 'Sin plan activo',
@@ -32,6 +33,7 @@ db.exec(`
 ;[
   'ALTER TABLE users ADD COLUMN apellidos TEXT NOT NULL DEFAULT \'\'',
   'ALTER TABLE users ADD COLUMN telefono TEXT NOT NULL DEFAULT \'\'',
+  'ALTER TABLE users ADD COLUMN birthday TEXT NOT NULL DEFAULT \'\'',
   'ALTER TABLE users ADD COLUMN force_pwd_change INTEGER NOT NULL DEFAULT 0'
 ].forEach(function(sql) { try { db.exec(sql) } catch(e) {} })
 
@@ -39,6 +41,12 @@ const count = db.prepare('SELECT COUNT(*) as c FROM users').get()
 if (count.c === 0) {
   db.prepare('INSERT INTO users (name, email, password, plan, joined, is_admin) VALUES (?,?,?,?,?,?)')
     .run('Admin', 'admin@mmstudio.com', bcrypt.hashSync('admin123', 10), 'Sin plan activo', new Date().toLocaleDateString('es-ES'), 1)
+}
+
+// Easter egg — cuenta de Greta
+if (!db.prepare('SELECT id FROM users WHERE email = ?').get('greta@mmstudio.com')) {
+  db.prepare('INSERT INTO users (name, apellidos, email, password, plan, joined) VALUES (?,?,?,?,?,?)')
+    .run('Greta', '', 'greta@mmstudio.com', bcrypt.hashSync('felicidades', 10), 'Plan Premium activo', new Date().toLocaleDateString('es-ES'))
 }
 
 function authMiddleware(req, res, next) {
@@ -51,6 +59,7 @@ function authMiddleware(req, res, next) {
 function userPublic(u) {
   return {
     name: u.name, apellidos: u.apellidos || '', telefono: u.telefono || '',
+    birthday: u.birthday || '',
     email: u.email, plan: u.plan, joined: u.joined,
     isAdmin: u.is_admin, forcePwdChange: u.force_pwd_change === 1
   }
@@ -94,10 +103,10 @@ app.get('/api/me', authMiddleware, (req, res) => {
 
 // PATCH /api/me/profile
 app.patch('/api/me/profile', authMiddleware, (req, res) => {
-  const { name, apellidos, telefono } = req.body
+  const { name, apellidos, telefono, birthday } = req.body
   if (!name || name.trim().length < 2) return res.status(400).json({ error: 'El nombre es obligatorio.' })
-  db.prepare('UPDATE users SET name = ?, apellidos = ?, telefono = ? WHERE id = ?')
-    .run(name.trim(), (apellidos || '').trim(), (telefono || '').trim(), req.user.id)
+  db.prepare('UPDATE users SET name = ?, apellidos = ?, telefono = ?, birthday = ? WHERE id = ?')
+    .run(name.trim(), (apellidos || '').trim(), (telefono || '').trim(), (birthday || '').trim(), req.user.id)
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id)
   res.json(userPublic(user))
 })

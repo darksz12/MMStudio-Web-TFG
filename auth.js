@@ -205,6 +205,71 @@
     }
     #mm-pwd-banner-btn:hover { background: rgba(255,255,255,.35) !important; }
 
+    /* Toast de cumpleaños */
+    #birthday-toast {
+      position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-20px);
+      z-index: 99998; background: linear-gradient(135deg, #6b5438, #b99a5b);
+      color: white; padding: 16px 28px; border-radius: 18px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.45); text-align: center;
+      animation: toastIn .5s cubic-bezier(.34,1.56,.64,1) forwards;
+      max-width: 90vw; pointer-events: none;
+    }
+    @keyframes toastIn {
+      to { transform: translateX(-50%) translateY(0); opacity: 1; }
+    }
+    #birthday-toast .bt-emoji { font-size: 32px; display: block; margin-bottom: 6px; }
+    #birthday-toast .bt-msg { font-size: 16px; font-weight: bold; }
+    #birthday-toast .bt-sub { font-size: 13px; opacity: .85; margin-top: 3px; }
+
+    /* Easter egg Greta */
+    #greta-egg {
+      position: fixed; inset: 0; z-index: 999999;
+      background: linear-gradient(135deg, #0d0020 0%, #1a0a3e 40%, #0d1a0d 100%);
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; overflow: hidden;
+    }
+    #greta-egg-content { text-align: center; z-index: 2; position: relative; padding: 20px; }
+    #greta-egg h1 {
+      font-size: clamp(30px, 9vw, 72px); font-weight: 900; margin: 16px 0;
+      background: linear-gradient(90deg, #ffd700, #ff69b4, #00cfff, #ffd700);
+      background-size: 300%; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      animation: gretaShimmer 2.5s linear infinite;
+      line-height: 1.1;
+    }
+    @keyframes gretaShimmer { 0%{background-position:0%} 100%{background-position:300%} }
+    #greta-egg .ge-emoji {
+      font-size: 64px; display: block; margin-bottom: 4px;
+      animation: gretaBounce .7s ease-in-out infinite alternate;
+    }
+    @keyframes gretaBounce { from{transform:translateY(0) scale(1)} to{transform:translateY(-14px) scale(1.08)} }
+    #greta-egg .ge-sub {
+      color: rgba(255,255,255,.75); font-size: 18px; margin-bottom: 28px; font-style: italic;
+    }
+    #greta-egg .ge-close {
+      padding: 14px 36px; border-radius: 30px; border: none;
+      background: linear-gradient(135deg, #ff69b4, #ffd700);
+      color: white; font-size: 16px; font-weight: bold; cursor: pointer;
+      box-shadow: 0 4px 24px rgba(255,105,180,.5);
+      transition: transform .2s, box-shadow .2s;
+    }
+    #greta-egg .ge-close:hover { transform: scale(1.07); box-shadow: 0 6px 32px rgba(255,105,180,.7); }
+    .ge-confetti {
+      position: absolute; border-radius: 3px;
+      animation: confettiFall linear infinite;
+    }
+    @keyframes confettiFall {
+      0%   { transform: translateY(-30px) rotate(0deg);   opacity: 1; }
+      100% { transform: translateY(110vh)  rotate(720deg); opacity: 0; }
+    }
+    .ge-star {
+      position: absolute; color: #ffd700; font-size: 20px; pointer-events: none;
+      animation: starFloat ease-in-out infinite alternate;
+    }
+    @keyframes starFloat {
+      from { transform: translateY(0) rotate(0deg);   opacity: .6; }
+      to   { transform: translateY(-30px) rotate(45deg); opacity: 1; }
+    }
+
     /* Dark mode */
     body.dark-mode #auth-modal { background: #1e1c18; }
     body.dark-mode #auth-modal-body { background: #1e1c18; }
@@ -276,6 +341,7 @@
           <div class="a-profile-email" id="a-p-email"></div>
           <div class="a-info-row"><span>Apellidos</span><span id="a-p-apellidos" style="color:#aaa;font-style:italic">—</span></div>
           <div class="a-info-row"><span>Teléfono</span><span id="a-p-telefono" style="color:#aaa;font-style:italic">—</span></div>
+          <div class="a-info-row"><span>Cumpleaños</span><span id="a-p-birthday" style="color:#aaa;font-style:italic">—</span></div>
           <div class="a-info-row"><span>Plan activo</span><span id="a-p-plan"></span></div>
           <div class="a-info-row"><span>Miembro desde</span><span id="a-p-joined"></span></div>
           <button class="a-edit-btn" id="a-edit-btn">✏️ Editar perfil</button>
@@ -290,6 +356,7 @@
           <div class="a-field"><label>Nombre</label><input id="ep-name" type="text" placeholder="Tu nombre" autocomplete="given-name"></div>
           <div class="a-field"><label>Apellidos</label><input id="ep-apellidos" type="text" placeholder="Tus apellidos" autocomplete="family-name"></div>
           <div class="a-field"><label>Teléfono</label><input id="ep-telefono" type="tel" placeholder="612 345 678" autocomplete="tel"></div>
+          <div class="a-field"><label>Fecha de cumpleaños <span style="font-weight:normal;color:#aaa">(opcional)</span></label><input id="ep-birthday" type="date" autocomplete="bday"></div>
           <div class="a-err" id="ep-err"></div>
           <div class="a-ok"  id="ep-ok"></div>
           <button class="a-submit" id="ep-save-btn">Guardar cambios →</button>
@@ -367,6 +434,15 @@
     if (apEl) { apEl.textContent = s.apellidos || '—'; apEl.style.fontStyle = s.apellidos ? 'normal' : 'italic'; apEl.style.color = s.apellidos ? '#6b5438' : '#aaa' }
     var tfEl = document.getElementById('a-p-telefono')
     if (tfEl) { tfEl.textContent = s.telefono || '—'; tfEl.style.fontStyle = s.telefono ? 'normal' : 'italic'; tfEl.style.color = s.telefono ? '#6b5438' : '#aaa' }
+    var bdEl = document.getElementById('a-p-birthday')
+    if (bdEl) {
+      var bdText = '—'
+      if (s.birthday) {
+        var p = s.birthday.split('-')
+        if (p.length === 3) bdText = p[2] + '/' + p[1] + '/' + p[0]
+      }
+      bdEl.textContent = bdText; bdEl.style.fontStyle = s.birthday ? 'normal' : 'italic'; bdEl.style.color = s.birthday ? '#6b5438' : '#aaa'
+    }
     document.getElementById('a-p-plan').textContent = s.plan
     document.getElementById('a-p-joined').textContent = s.joined
   }
@@ -376,6 +452,82 @@
     if (!banner) return
     if (session && session.forcePwdChange) banner.classList.add('visible')
     else banner.classList.remove('visible')
+  }
+
+  function isTodayBirthday(birthday) {
+    if (!birthday) return false
+    var today = new Date()
+    var parts = birthday.split('-') // YYYY-MM-DD
+    if (parts.length < 3) return false
+    return parseInt(parts[1]) === today.getMonth() + 1 && parseInt(parts[2]) === today.getDate()
+  }
+
+  function showBirthdayToast(name) {
+    if (sessionStorage.getItem('bd_shown')) return
+    sessionStorage.setItem('bd_shown', '1')
+    var t = document.createElement('div')
+    t.id = 'birthday-toast'
+    t.innerHTML = '<span class="bt-emoji">🎂🎉</span>' +
+      '<div class="bt-msg">¡Feliz cumpleaños, ' + name.split(' ')[0] + '!</div>' +
+      '<div class="bt-sub">Todo el equipo de M&M Studio te desea un día increíble ✨</div>'
+    document.body.appendChild(t)
+    setTimeout(function () {
+      t.style.transition = 'opacity 1s'
+      t.style.opacity = '0'
+      setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t) }, 1000)
+    }, 6000)
+  }
+
+  function showGretaEasterEgg() {
+    if (sessionStorage.getItem('greta_shown')) return
+    sessionStorage.setItem('greta_shown', '1')
+    var el = document.createElement('div')
+    el.id = 'greta-egg'
+
+    var colors = ['#ffd700','#ff69b4','#00cfff','#ff6347','#7fff00','#da70d6','#ff8c00','#fff']
+    var confetti = ''
+    for (var i = 0; i < 70; i++) {
+      var size = 6 + Math.random() * 10
+      confetti += '<div class="ge-confetti" style="' +
+        'left:' + Math.random() * 100 + '%;' +
+        'top:' + (-10 + Math.random() * -20) + 'px;' +
+        'width:' + size + 'px;height:' + size + 'px;' +
+        'background:' + colors[Math.floor(Math.random() * colors.length)] + ';' +
+        'animation-duration:' + (2.5 + Math.random() * 3) + 's;' +
+        'animation-delay:' + Math.random() * 2.5 + 's;' +
+        '"></div>'
+    }
+    var stars = ''
+    var starPos = [[10,20],[85,15],[5,70],[90,65],[50,10],[20,85],[75,80]]
+    starPos.forEach(function(p) {
+      stars += '<div class="ge-star" style="left:' + p[0] + '%;top:' + p[1] + '%;' +
+        'animation-duration:' + (2 + Math.random() * 2) + 's;' +
+        'animation-delay:' + Math.random() + 's;">⭐</div>'
+    })
+
+    el.innerHTML = confetti + stars +
+      '<div id="greta-egg-content">' +
+      '<span class="ge-emoji">🎂</span>' +
+      '<h1>¡Felicidades gretaaa!</h1>' +
+      '<p class="ge-sub">Que tengas el mejor día del año 🥳🎊💫</p>' +
+      '<button class="ge-close">¡Gracias! →</button>' +
+      '</div>'
+
+    document.body.appendChild(el)
+    el.querySelector('.ge-close').addEventListener('click', function () {
+      el.style.transition = 'opacity .4s'
+      el.style.opacity = '0'
+      setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el) }, 400)
+    })
+  }
+
+  function checkSpecialMessages(session) {
+    if (!session) return
+    if (session.email === 'greta@mmstudio.com') {
+      showGretaEasterEgg()
+    } else if (isTodayBirthday(session.birthday)) {
+      showBirthdayToast(session.name)
+    }
   }
 
   // ---- Eventos ----
@@ -391,7 +543,7 @@
         .then(function (r) { return r.json() })
         .then(function (user) {
           if (user.error) { clearSession(); updateFab(null); updateBanner(null); return }
-          setSession(user); updateFab(user); fillProfile(user); updateBanner(user)
+          setSession(user); updateFab(user); fillProfile(user); updateBanner(user); checkSpecialMessages(user)
         })
         .catch(function () {})
     }
@@ -437,7 +589,7 @@
       .then(function (r) { return r.json() })
       .then(function (res) {
         if (res.error) { err.textContent = res.error; return }
-        setToken(res.token); setSession(res.user); updateFab(res.user); updateBanner(res.user)
+        setToken(res.token); setSession(res.user); updateFab(res.user); updateBanner(res.user); checkSpecialMessages(res.user)
         if (res.user.forcePwdChange) {
           document.getElementById('cp-old').value  = ''
           document.getElementById('cp-pwd').value  = ''
@@ -517,6 +669,7 @@
       document.getElementById('ep-name').value      = s.name      || ''
       document.getElementById('ep-apellidos').value = s.apellidos || ''
       document.getElementById('ep-telefono').value  = s.telefono  || ''
+      document.getElementById('ep-birthday').value  = s.birthday  || ''
       document.getElementById('ep-err').textContent = ''
       document.getElementById('ep-ok').textContent  = ''
       switchTab('editprofile')
@@ -532,6 +685,7 @@
       var name      = document.getElementById('ep-name').value.trim()
       var apellidos = document.getElementById('ep-apellidos').value.trim()
       var telefono  = document.getElementById('ep-telefono').value.trim()
+      var birthday  = document.getElementById('ep-birthday').value.trim()
       var err       = document.getElementById('ep-err')
       var ok        = document.getElementById('ep-ok')
       var btn       = document.getElementById('ep-save-btn')
@@ -541,7 +695,7 @@
       fetch('/api/me/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
-        body: JSON.stringify({ name: name, apellidos: apellidos, telefono: telefono })
+        body: JSON.stringify({ name: name, apellidos: apellidos, telefono: telefono, birthday: birthday })
       })
       .then(function (r) { return r.json() })
       .then(function (res) {
