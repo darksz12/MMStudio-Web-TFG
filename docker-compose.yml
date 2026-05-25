@@ -12,8 +12,8 @@ services:
     build: .
     container_name: mmstudio_nginx
     ports:
-      - "8080:80"    # HTTP (redirige a HTTPS)
-      - "8443:443"   # HTTPS con certificado autofirmado
+      - "80:80"      # HTTP (redirige a HTTPS)
+      - "443:443"    # HTTPS con certificado real
     volumes:
       - ./backups:/backups          # backups del sitio
       - ./logs:/var/log/nginx       # logs centralizados en el host
