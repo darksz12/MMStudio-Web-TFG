@@ -1002,27 +1002,6 @@
     if (!plan) {
       modal.innerHTML = buildLocked(session)
       modal.querySelector('#m-close-lk').addEventListener('click', cerrar)
-      modal.querySelectorAll('.mlk-plan-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-          var planName = btn.dataset.plan
-          var msg = document.getElementById('mlk-msg')
-          btn.disabled = true; btn.textContent = 'Enviando solicitud…'
-          fetch('/api/plan/request', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
-            body: JSON.stringify({ plan: planName })
-          })
-          .then(function(r) { return r.json() })
-          .then(function(res) {
-            if (res.error) { if (msg) msg.style.color = '#e74c3c'; if (msg) msg.textContent = res.error; btn.disabled = false; btn.textContent = planName; return }
-            setSession(res)
-            localStorage.setItem('mm_last_plan_status', 'pending:' + planName)
-            modal.innerHTML = buildLocked(res)
-            modal.querySelector('#m-close-lk').addEventListener('click', cerrar)
-          })
-          .catch(function() { if (msg) { msg.style.color='#e74c3c'; msg.textContent='Error de conexión.' } btn.disabled=false })
-        })
-      })
       ov.classList.add('open')
       return
     }
@@ -1136,9 +1115,9 @@
       : ''
     var planButtons = (!session || isPending) ? '' :
       '<div style="display:flex;flex-direction:column;gap:8px;width:100%;max-width:320px;margin:0 auto 20px;">' +
-      '<button class="mlk-plan-btn" data-plan="Plan Normal"   style="padding:12px;border-radius:10px;border:1.5px solid #8c6a32;background:#faf7f2;color:#6b5438;font-size:14px;font-weight:bold;cursor:pointer;">Plan Normal · 150€/mes</button>' +
-      '<button class="mlk-plan-btn" data-plan="Plan Premium"  style="padding:12px;border-radius:10px;border:2px solid #b99a5b;background:linear-gradient(135deg,#fdf6e3,#faf0d7);color:#6b5438;font-size:14px;font-weight:bold;cursor:pointer;">⭐ Plan Premium · 400€/mes</button>' +
-      '<button class="mlk-plan-btn" data-plan="Plan Exeltior" style="padding:12px;border-radius:10px;border:1.5px solid #3a3a3a;background:#1a1a1a;color:#ffd700;font-size:14px;font-weight:bold;cursor:pointer;">👑 Plan Exeltior · desde 1.500€/mes</button>' +
+      '<a href="solicitar-plan.html" class="mlk-plan-btn" data-plan="Plan Normal"   style="display:block;text-align:center;text-decoration:none;padding:12px;border-radius:10px;border:1.5px solid #8c6a32;background:#faf7f2;color:#6b5438;font-size:14px;font-weight:bold;cursor:pointer;">Plan Normal · 150€/mes</a>' +
+      '<a href="solicitar-plan.html" class="mlk-plan-btn" data-plan="Plan Premium"  style="display:block;text-align:center;text-decoration:none;padding:12px;border-radius:10px;border:2px solid #b99a5b;background:linear-gradient(135deg,#fdf6e3,#faf0d7);color:#6b5438;font-size:14px;font-weight:bold;cursor:pointer;">⭐ Plan Premium · 400€/mes</a>' +
+      '<a href="solicitar-plan.html" class="mlk-plan-btn" data-plan="Plan Exeltior" style="display:block;text-align:center;text-decoration:none;padding:12px;border-radius:10px;border:1.5px solid #3a3a3a;background:#1a1a1a;color:#ffd700;font-size:14px;font-weight:bold;cursor:pointer;">👑 Plan Exeltior · desde 1.500€/mes</a>' +
       '</div>'
     var noLoginMsg = !session
       ? '<p style="color:#888;font-size:14px;margin-bottom:20px;">Inicia sesión para solicitar un plan.</p>'

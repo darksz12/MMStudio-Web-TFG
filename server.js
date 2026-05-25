@@ -167,7 +167,7 @@ app.patch('/api/admin/plan-requests/:id/reject', authMiddleware, (req, res) => {
 app.patch('/api/admin/users/:id/plan', authMiddleware, (req, res) => {
   if (!req.user.isAdmin) return res.status(403).json({ error: 'Acceso denegado' })
   const { plan } = req.body
-  db.prepare('UPDATE users SET plan = ? WHERE id = ?').run(plan, req.params.id)
+  db.prepare('UPDATE users SET plan = ?, plan_requested = ? WHERE id = ?').run(plan, '', req.params.id)
   res.json({ ok: true })
 })
 
