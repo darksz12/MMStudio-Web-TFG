@@ -1,0 +1,61 @@
+# =============================================================
+#  Docker Compose - M&M Studio TFG ASIR
+#  Servicios: nginx, monitorización (prometheus + grafana), logs
+#  Arrancar:  docker compose up -d
+#  Ver logs:  docker compose logs -f
+# =============================================================
+
+services:
+
+  # ---- Servidor web ----
+  nginx:
+    build: .
+    container_name: mmstudio_nginx
+    ports:
+      - "8080:80"    # HTTP (redirige a HTTPS)
+      - "8443:443"   # HTTPS con certificado autofirmado
+    volumes:
+      - ./backups:/backups          # backups del sitio
+      - ./logs:/var/log/nginx       # logs centralizados en el host
+    restart: unless-stopped
+
+  # ---- Exportador de métricas de Nginx ----
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    container_name: mmstudio_nginx_exporter
+    command: --nginx.scrape-uri=http://nginx:80/stub_status
+    depends_on:
+      - nginx
+    restart: unless-stopped
+
+  # ---- Prometheus (recolector de métricas) ----
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: mmstudio_prometheus
+    ports:
+      - "9090:9090"   # Panel de Prometheus: http://localhost:9090
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    restart: unless-stopped
+
+  # ---- Grafana (dashboards visuales) ----
+  grafana:
+    image: grafana/grafana:latest
+    container_name: mmstudio_grafana
+    ports:
+      - "3000:3000"   # Panel de Grafana: http://localhost:3000
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning  # datasource y dashboards automáticos
+      - ./grafana/dashboards:/etc/grafana/dashboards      # dashboard de Nginx
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=mmstudio123
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+volumes:
+  prometheus_data:   # datos históricos de Prometheus
+  grafana_data:      # dashboards y configuración de Grafana

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="M&M Studio: asesoría de imagen para empresas y marcas.">
+<title>M&M Studio - Empresas y Marcas</title>
+<link rel="stylesheet" href="estilos.css">
+<script src="script.js" defer></script>
+<script src="auth.js" defer></script>
+<script src="asesor-ia.js" defer></script>
+<style>
+/* ---- MODAL ASESOR DE MARCA ---- */
+#marca-overlay{
+  position:fixed;inset:0;z-index:10001;
+  background:rgba(0,0,0,.72);backdrop-filter:blur(7px);
+  display:none;align-items:center;justify-content:center;
+}
+#marca-overlay.open{display:flex;}
+#marca-modal{
+  width:520px;max-width:96vw;height:600px;max-height:92vh;
+  background:#faf7f2;border-radius:22px;
+  box-shadow:0 28px 80px rgba(0,0,0,.5);
+  display:flex;flex-direction:column;overflow:hidden;
+  animation:marcaPop .28s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes marcaPop{from{opacity:0;transform:scale(.88) translateY(20px)}to{opacity:1;transform:none}}
+#marca-head{
+  background:linear-gradient(120deg,#0d0d0d 0%,#4a3520 50%,#8c6532 80%,#b99a5b 100%);
+  padding:18px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0;
+}
+#marca-head-icon{
+  width:46px;height:46px;border-radius:50%;
+  background:rgba(255,255,255,.18);
+  display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;
+}
+#marca-head-info{flex:1;}
+#marca-head-info strong{display:block;color:white;font-size:15px;}
+#marca-head-info small{color:rgba(255,255,255,.65);font-size:12px;}
+#marca-close{
+  background:rgba(255,255,255,.15)!important;border:none!important;
+  color:white!important;width:32px!important;height:32px!important;
+  border-radius:50%!important;cursor:pointer!important;font-size:15px!important;
+  display:flex;align-items:center;justify-content:center;
+  padding:0!important;margin:0!important;margin-top:0!important;
+  flex-shrink:0;transition:background .2s!important;line-height:1;
+}
+#marca-close:hover{background:rgba(255,255,255,.3)!important;}
+#marca-msgs{
+  flex:1;overflow-y:auto;padding:16px;
+  display:flex;flex-direction:column;gap:10px;
+  background:#faf7f2;
+}
+.mm-cmsg{max-width:84%;padding:10px 14px;border-radius:14px;font-size:14px;line-height:1.5;word-break:break-word;}
+.mm-cmsg.bot{align-self:flex-start;background:#eadfcf;color:#2b2b2b;border-bottom-left-radius:4px;}
+.mm-cmsg.user{align-self:flex-end;background:#8c6a32;color:white;border-bottom-right-radius:4px;}
+.mm-cmsg.typing{color:#aaa;font-style:italic;background:#f0ebe2;}
+#marca-input-area{
+  display:flex;padding:12px;gap:8px;border-top:1px solid #e8e0d5;
+  background:white;align-items:center;flex-shrink:0;
+}
+#marca-input{
+  flex:1;border:1.5px solid #e8e0d5;border-radius:20px;
+  padding:10px 14px;font-size:14px;outline:none;
+  margin:0!important;margin-top:0!important;width:auto!important;
+  transition:border-color .2s;
+}
+#marca-input:focus{border-color:#b99a5b;}
+#marca-send{
+  background:linear-gradient(135deg,#6b5438,#b99a5b)!important;
+  color:white!important;border:none!important;border-radius:20px!important;
+  padding:10px 18px!important;cursor:pointer!important;font-size:14px!important;
+  white-space:nowrap;width:auto!important;margin:0!important;margin-top:0!important;
+  transition:opacity .2s!important;
+}
+#marca-send:hover{opacity:.88!important;}
+#marca-footer-txt{
+  text-align:center;font-size:11px;color:#bbb;
+  padding:5px 0 10px;background:white;flex-shrink:0;
+}
+/* dark mode */
+body.dark-mode #marca-modal{background:#252118;}
+body.dark-mode #marca-msgs{background:#252118;}
+body.dark-mode .mm-cmsg.bot{background:#2d2318;color:#e0d5c5;}
+body.dark-mode .mm-cmsg.typing{background:#252118;color:#a0947d;}
+body.dark-mode #marca-input-area,body.dark-mode #marca-footer-txt{background:#1e1c18;border-color:#3a2f20;}
+body.dark-mode #marca-input{background:#141210!important;color:#e0d5c5!important;border-color:#3a2f20!important;}
+</style>
+</head>
+<body>
+<button class="scroll-top" onclick="scrollToTop()">↑</button>
+<header><h1 class="logo">M&M Studio</h1><p class="subtitulo">Identidad digital, imagen personal y marca profesional</p><nav><a href="inicio.html">Inicio</a><a href="servicios.html">Planes</a><a href="asesoria-personal.html">Imagen personal</a><a href="marca-personal.html">Empresas</a><a href="planes-asesoria.html">Redes y analítica</a><a href="sobre-nosotros.html">Proyecto</a></nav></header>
+
+<main class="contenedor">
+  <h2 class="titulo-seccion">Asesoría para empresas y marcas</h2>
+  <section class="hero">
+    <img src="images/shopping.webp" alt="Imagen de marca">
+    <div>
+      <p>Ayudamos a negocios y emprendedores a tener una imagen más profesional en redes sociales. El objetivo es que la marca sea fácil de reconocer y genere más confianza.</p>
+      <ul class="lista">
+        <li>Revisión de logo, colores y estilo visual.</li>
+        <li>Tono de comunicación adaptado al público objetivo.</li>
+        <li>Ideas de publicaciones para Instagram, TikTok y LinkedIn.</li>
+        <li>SEO básico y presencia digital.</li>
+        <li>Testimonios, casos de éxito y contenido antes/después.</li>
+      </ul>
+      <button class="boton" onclick="abrirAsesorMarca()" style="cursor:pointer;border:none;font-size:15px">
+        💼 Hablar con la asesora de marca
+      </button>
+    </div>
+  </section>
+
+  <div class="tarjetas">
+    <div class="tarjeta"><h3>Coherencia visual</h3><p>Los colores, imágenes y textos deben parecer parte de la misma marca en todos los canales.</p></div>
+    <div class="tarjeta"><h3>Mensaje claro</h3><p>El usuario debe entender rápido qué ofrece la empresa y por qué elegirla frente a la competencia.</p></div>
+    <div class="tarjeta"><h3>Confianza</h3><p>Una imagen cuidada ayuda a que los clientes se tomen la marca más en serio y conviertan mejor.</p></div>
+  </div>
+</main>
+
+<footer class="footer"><p>M&M Studio - Proyecto TFG ASIR</p><p>Web corporativa preparada para Docker, Nginx, backups, monitorización y HTTPS.</p></footer>
+
+<!-- ---- MODAL ASESOR DE MARCA ---- -->
+<div id="marca-overlay">
+  <div id="marca-modal">
+    <div id="marca-head">
+      <div id="marca-head-icon">💼</div>
+      <div id="marca-head-info">
+        <strong>Asesora de Imagen de Marca</strong>
+        <small>M&M Studio · Especialista en branding corporativo</small>
+      </div>
+      <button id="marca-close" title="Cerrar">✕</button>
+    </div>
+    <div id="marca-msgs"></div>
+    <div id="marca-input-area">
+      <input id="marca-input" type="text" placeholder="Pregunta sobre tu marca o empresa…" maxlength="500">
+      <button id="marca-send">Enviar</button>
+    </div>
+    <div id="marca-footer-txt">M&M Studio · Asesora especializada en branding</div>
+  </div>
+</div>
+
+<script>
+var GROQ_KEY = 'TU_API_KEY_GROQ_AQUI'
+
+var SYSTEM_MARCA = 'Eres la asesora de orientación de marca de M&M Studio, disponible para cualquier empresa o emprendedor que visite la web.' +
+' Tu rol es responder dudas generales sobre branding corporativo y orientar hacia el Plan Exeltior cuando haya interés.' +
+'\n\nRespondes preguntas sobre:' +
+'\n- Qué es la identidad visual y por qué importa (logo, colores, tipografía)' +
+'\n- Cómo mejorar la comunicación y el tono de marca en redes' +
+'\n- Ideas generales de contenido para Instagram, TikTok y LinkedIn empresarial' +
+'\n- SEO básico y presencia digital para negocios' +
+'\n- Cómo generar confianza con testimonios y casos de éxito' +
+'\n- Qué incluye el Plan Exeltior de M&M Studio (1.500-2.500€/mes): la solución completa para empresas' +
+'\n\nNormas:' +
+'\n- Español, tono profesional pero cercano' +
+'\n- Consejos orientativos y generales, no implementación detallada (eso es trabajo del plan contratado)' +
+'\n- Máximo 3-4 frases por respuesta' +
+'\n- Si la empresa quiere trabajar en profundidad sus recursos de marca, recuérdale que en el Área de Miembros (👑 arriba a la izquierda) tiene una gestora de cuenta privada dedicada a su plan' +
+'\n- No menciones que eres una IA'
+
+var marcaHistory = []
+var marcaInitialized = false
+
+function abrirAsesorMarca() {
+  document.getElementById('marca-overlay').classList.add('open')
+  document.getElementById('marca-input').focus()
+  if (!marcaInitialized) {
+    marcaInitialized = true
+    var welcome = '¡Hola! Soy tu asesora de imagen de marca en M&M Studio. Puedo ayudarte con la identidad visual de tu empresa, tu estrategia en redes, el tono de comunicación o cualquier aspecto del branding corporativo. ¿Con qué tipo de negocio trabajamos hoy?'
+    appendMarcaMsg(welcome, 'bot')
+    marcaHistory.push({ role: 'assistant', content: welcome })
+  }
+}
+
+function cerrarMarca() {
+  document.getElementById('marca-overlay').classList.remove('open')
+}
+
+function appendMarcaMsg(text, cls, id) {
+  var el = document.createElement('div')
+  el.className = 'mm-cmsg ' + cls
+  el.textContent = text
+  if (id) el.id = id
+  var box = document.getElementById('marca-msgs')
+  box.appendChild(el)
+  box.scrollTop = box.scrollHeight
+  return el
+}
+
+function enviarMarca() {
+  var input = document.getElementById('marca-input')
+  var text = input.value.trim()
+  if (!text) return
+  input.value = ''
+  input.disabled = true
+  document.getElementById('marca-send').disabled = true
+
+  appendMarcaMsg(text, 'user')
+  marcaHistory.push({ role: 'user', content: text })
+
+  var tId = 'mtyping-' + Date.now()
+  appendMarcaMsg('Escribiendo…', 'typing', tId)
+
+  var messages = [{ role: 'system', content: SYSTEM_MARCA }].concat(marcaHistory)
+
+  if (!GROQ_KEY) {
+    setTimeout(function() {
+      document.getElementById(tId) && document.getElementById(tId).remove()
+      var r = 'Para mejorar la imagen de tu marca lo primero es definir bien la identidad visual y el mensaje. ¿Cuéntame un poco más sobre tu negocio?'
+      appendMarcaMsg(r, 'bot')
+      marcaHistory.push({ role: 'assistant', content: r })
+      input.disabled = false
+      document.getElementById('marca-send').disabled = false
+    }, 700)
+    return
+  }
+
+  fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
+    body: JSON.stringify({ model: 'llama-3.3-70b-versatile', max_tokens: 280, messages: messages })
+  })
+  .then(function(r) { return r.json() })
+  .then(function(d) {
+    var el = document.getElementById(tId)
+    if (el) el.remove()
+    var reply = d.choices && d.choices[0] ? d.choices[0].message.content : 'Ha ocurrido un error. Por favor inténtalo de nuevo.'
+    appendMarcaMsg(reply, 'bot')
+    marcaHistory.push({ role: 'assistant', content: reply })
+  })
+  .catch(function() {
+    var el = document.getElementById(tId)
+    if (el) el.remove()
+    appendMarcaMsg('Error de conexión. Inténtalo de nuevo.', 'bot')
+  })
+  .finally(function() {
+    input.disabled = false
+    document.getElementById('marca-send').disabled = false
+    input.focus()
+  })
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('marca-close').addEventListener('click', cerrarMarca)
+  document.getElementById('marca-overlay').addEventListener('click', function(e) {
+    if (e.target === document.getElementById('marca-overlay')) cerrarMarca()
+  })
+  document.getElementById('marca-send').addEventListener('click', enviarMarca)
+  document.getElementById('marca-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') enviarMarca()
+  })
+})
+</script>
+</body>
+</html>

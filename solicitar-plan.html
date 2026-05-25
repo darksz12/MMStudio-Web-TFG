@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="M&M Studio: solicita tu plan de asesoría.">
+<title>M&M Studio - Solicitar Plan</title>
+<link rel="stylesheet" href="estilos.css">
+<script src="script.js" defer></script>
+<script src="auth.js" defer></script>
+<script src="asesor-ia.js" defer></script>
+</head>
+<body>
+<button class="scroll-top" onclick="scrollToTop()">↑</button>
+<header><h1 class="logo">M&M Studio</h1><p class="subtitulo">Identidad digital, imagen personal y marca profesional</p><nav><a href="inicio.html">Inicio</a><a href="servicios.html">Planes</a><a href="asesoria-personal.html">Imagen personal</a><a href="marca-personal.html">Empresas</a><a href="planes-asesoria.html">Redes y analítica</a><a href="sobre-nosotros.html">Proyecto</a></nav></header>
+<main class="contenedor">
+  <h2 class="titulo-seccion">Solicitar un plan</h2>
+  <p class="texto-centro">Rellena el formulario y nuestra asesora revisará tu caso en una consulta personalizada.</p>
+
+  <div id="login-aviso" class="alerta" style="display:none;text-align:center">
+    <strong>⚠️ Necesitas iniciar sesión</strong> para solicitar un plan.<br>
+    <button class="boton" style="margin-top:10px" onclick="document.getElementById('auth-fab').click()">Iniciar sesión / Registrarse</button>
+  </div>
+
+  <form id="solicitud-form" onsubmit="return enviarSolicitud(event)" style="display:none">
+    <label>Nombre completo</label>
+    <input id="f-nombre" type="text" required>
+    <label>Email</label>
+    <input id="f-email" type="email" required>
+    <label>Plan elegido</label>
+    <select id="f-plan">
+      <option value="Plan Normal - 150€/mes">Plan Normal — 150€/mes</option>
+      <option value="Plan Premium - 400€/mes">Plan Premium — 400€/mes</option>
+      <option value="Plan Exeltior - desde 1.500€/mes">Plan Exeltior — desde 1.500€/mes</option>
+    </select>
+    <label>Perfil o web a analizar</label>
+    <input id="f-perfil" type="text" placeholder="https://instagram.com/tu_perfil">
+    <label>Servicio que más te interesa</label>
+    <select id="f-servicio">
+      <option>Fotos y biografía</option>
+      <option>Analítica mensual</option>
+      <option>Backup de contenido</option>
+      <option>LinkedIn y reputación profesional</option>
+      <option>Imagen de empresa</option>
+    </select>
+    <label>Cuéntanos tu caso</label>
+    <textarea id="f-desc" placeholder="Describe qué quieres mejorar, cuál es tu situación actual y qué objetivo tienes..."></textarea>
+    <button type="submit">Continuar con la asesora →</button>
+  </form>
+</main>
+<footer class="footer"><p>M&M Studio - Proyecto TFG ASIR</p><p>Web corporativa preparada para Docker, Nginx, backups, monitorización y HTTPS.</p></footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var session = JSON.parse(localStorage.getItem('mm_session') || 'null')
+
+  var planMap = {
+    'normal':   'Plan Normal - 150€/mes',
+    'premium':  'Plan Premium - 400€/mes',
+    'exeltior': 'Plan Exeltior - desde 1.500€/mes'
+  }
+  var planParam = new URLSearchParams(window.location.search).get('plan')
+
+  if (!session) {
+    document.getElementById('login-aviso').style.display = 'block'
+  } else {
+    document.getElementById('solicitud-form').style.display = 'block'
+    document.getElementById('f-nombre').value = session.name || ''
+    document.getElementById('f-email').value = session.email || ''
+    if (planParam && planMap[planParam.toLowerCase()]) {
+      document.getElementById('f-plan').value = planMap[planParam.toLowerCase()]
+    }
+  }
+
+  // Si el usuario se loguea desde esta página, actualizar vista
+  var checkLogin = setInterval(function () {
+    var s = JSON.parse(localStorage.getItem('mm_session') || 'null')
+    if (s) {
+      clearInterval(checkLogin)
+      document.getElementById('login-aviso').style.display = 'none'
+      document.getElementById('solicitud-form').style.display = 'block'
+      document.getElementById('f-nombre').value = s.name || ''
+      document.getElementById('f-email').value = s.email || ''
+      if (planParam && planMap[planParam.toLowerCase()]) {
+        document.getElementById('f-plan').value = planMap[planParam.toLowerCase()]
+      }
+    }
+  }, 500)
+})
+
+function enviarSolicitud(e) {
+  e.preventDefault()
+  var data = {
+    nombre:   document.getElementById('f-nombre').value.trim(),
+    email:    document.getElementById('f-email').value.trim(),
+    plan:     document.getElementById('f-plan').value,
+    perfil:   document.getElementById('f-perfil').value.trim(),
+    servicio: document.getElementById('f-servicio').value,
+    desc:     document.getElementById('f-desc').value.trim(),
+    fecha:    new Date().toLocaleDateString('es-ES')
+  }
+  localStorage.setItem('mm_solicitud', JSON.stringify(data))
+  window.location.href = 'consulta.html'
+  return false
+}
+</script>
+</body>
+</html>

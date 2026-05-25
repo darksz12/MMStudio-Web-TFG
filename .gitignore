@@ -1,0 +1,12 @@
+# Variables de entorno (contienen claves y contraseñas)
+.env
+
+# Logs generados por Nginx
+logs/
+
+# Backups generados por el script
+backups/
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db

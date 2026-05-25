@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M&M Studio - Tu consulta</title>
+<link rel="stylesheet" href="estilos.css">
+<script src="script.js" defer></script>
+<script src="auth.js" defer></script>
+<style>
+/* ---- PROGRESO ---- */
+.consulta-steps{display:flex;align-items:center;justify-content:center;gap:0;margin:30px auto 36px;max-width:520px;}
+.cs{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:bold;color:#bbb;}
+.cs.active{color:#8c6a32;}
+.cs.done{color:#5a9e4e;}
+.cs-num{width:32px;height:32px;border-radius:50%;border:2px solid #ddd;display:flex;align-items:center;justify-content:center;font-size:14px;background:white;flex-shrink:0;}
+.cs.active .cs-num{border-color:#b99a5b;background:#b99a5b;color:white;}
+.cs.done .cs-num{border-color:#5a9e4e;background:#5a9e4e;color:white;}
+.cs-sep{flex:1;height:2px;background:#eee;max-width:60px;}
+.cs-sep.done{background:#5a9e4e;}
+
+/* ---- RESUMEN SOLICITUD ---- */
+.consulta-resumen{background:white;border-radius:14px;padding:18px 22px;box-shadow:0 2px 10px #0001;border-left:4px solid #b99a5b;margin-bottom:24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.cr-plan{background:linear-gradient(135deg,#111,#6b5438);color:white;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:bold;white-space:nowrap;}
+.cr-info{font-size:14px;color:#666;flex:1;}
+.cr-info strong{color:#3a2b16;}
+
+/* ---- CHAT ---- */
+.consulta-chat{background:white;border-radius:16px;box-shadow:0 4px 16px #0002;overflow:hidden;margin-bottom:20px;}
+.cc-header{background:linear-gradient(120deg,#111,#6b5438,#b99a5b);padding:14px 20px;color:white;display:flex;align-items:center;gap:10px;}
+.cc-avatar{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.cc-header-text strong{display:block;font-size:15px;}
+.cc-header-text small{color:rgba(255,255,255,.7);font-size:12px;}
+.cc-msgs{height:300px;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;}
+.cmsg{max-width:82%;padding:10px 14px;border-radius:14px;font-size:14px;line-height:1.5;word-break:break-word;}
+.cmsg.bot{align-self:flex-start;background:#f0ebe2;color:#2b2b2b;border-bottom-left-radius:4px;}
+.cmsg.user{align-self:flex-end;background:#8c6a32;color:white;border-bottom-right-radius:4px;}
+.cmsg.typing{color:#aaa;font-style:italic;background:#f5f1ea;}
+.cc-input{display:flex;padding:12px;gap:8px;border-top:1px solid #eee;align-items:center;}
+.cc-input input{flex:1;border:1.5px solid #e8e0d5;border-radius:20px;padding:9px 14px;font-size:14px;outline:none;margin:0!important;margin-top:0!important;width:auto!important;}
+.cc-input input:focus{border-color:#b99a5b;}
+.cc-input button{background:#8c6a32!important;color:white!important;border:none!important;border-radius:20px!important;padding:9px 18px!important;cursor:pointer!important;font-size:14px!important;white-space:nowrap;width:auto!important;margin:0!important;margin-top:0!important;}
+.cc-input button:hover{background:#5b421e!important;}
+
+/* ---- BOTÓN CONTINUAR ---- */
+.continuar-btn{text-align:center;margin:10px 0 30px;}
+
+/* ---- PAGO ---- */
+.pago-resumen{background:linear-gradient(135deg,#111,#6b5438);color:white;border-radius:16px;padding:24px;text-align:center;margin-bottom:28px;}
+.pago-resumen h3{margin:0 0 4px 0;font-size:22px;}
+.pago-resumen .pr-precio{font-size:36px;font-weight:bold;color:#f4d070;margin:8px 0 4px;}
+.pago-resumen small{color:rgba(255,255,255,.65);font-size:13px;}
+.pago-card-form{background:white;border-radius:16px;padding:28px;box-shadow:0 4px 16px #0002;}
+.pago-card-form label{display:block;font-size:12px;font-weight:700;color:#6b5438;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;margin-top:14px;}
+.pago-card-form input{width:100%!important;padding:12px 14px!important;border:1.5px solid #e8e0d5!important;border-radius:10px!important;font-size:15px!important;margin-top:0!important;outline:none;transition:border-color .2s!important;}
+.pago-card-form input:focus{border-color:#b99a5b!important;}
+.pago-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.pago-err{color:#c0392b;font-size:13px;font-weight:bold;margin-top:10px;min-height:18px;}
+.pago-btn{width:100%!important;padding:14px!important;background:linear-gradient(135deg,#6b5438,#b99a5b)!important;color:white!important;border:none!important;border-radius:12px!important;font-size:16px!important;font-weight:bold!important;cursor:pointer!important;margin-top:20px!important;box-shadow:0 4px 14px rgba(107,84,56,.35)!important;transition:opacity .2s!important;}
+.pago-btn:hover{opacity:.9!important;}
+.pago-btn:disabled{opacity:.6!important;cursor:not-allowed!important;}
+
+/* ---- ACTIVAR ---- */
+.activar-wrap{text-align:center;padding:20px 0;}
+.activar-check{width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#5a9e4e,#82c27a);color:white;font-size:44px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 6px 20px rgba(90,158,78,.3);animation:popIn .5s cubic-bezier(.34,1.56,.64,1);}
+@keyframes popIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+.activar-wrap h3{font-size:24px;color:#2b2b2b;margin-bottom:8px;}
+.activar-wrap p{color:#888;font-size:15px;margin-bottom:28px;}
+.activar-plan-card{background:linear-gradient(135deg,#111,#6b5438,#b99a5b);color:white;border-radius:16px;padding:22px;margin:0 auto 28px;max-width:380px;}
+.activar-plan-card h4{margin:0 0 6px 0;font-size:18px;}
+.activar-plan-card .apc-precio{font-size:28px;font-weight:bold;color:#f4d070;}
+.activar-btn{background:linear-gradient(135deg,#6b5438,#b99a5b)!important;color:white!important;border:none!important;border-radius:14px!important;padding:16px 32px!important;font-size:16px!important;font-weight:bold!important;cursor:pointer!important;box-shadow:0 6px 20px rgba(107,84,56,.4)!important;transition:transform .2s,opacity .2s!important;margin-top:0!important;}
+.activar-btn:hover{transform:translateY(-2px)!important;opacity:.95!important;}
+
+/* dark mode */
+body.dark-mode .consulta-resumen{background:#252118;border-color:#b99a5b;}
+body.dark-mode .cr-info{color:#a0947d;}
+body.dark-mode .cr-info strong{color:#d4a96a;}
+body.dark-mode .consulta-chat{background:#252118;}
+body.dark-mode .cmsg.bot{background:#2d2318;color:#e0d5c5;}
+body.dark-mode .cmsg.typing{background:#252118;color:#a0947d;}
+body.dark-mode .cc-input{border-color:#3a2f20;background:#252118;}
+body.dark-mode .cc-input input{background:#1a1714!important;color:#e0d5c5!important;border-color:#3a2f20!important;}
+body.dark-mode .pago-card-form{background:#252118;}
+body.dark-mode .pago-card-form input{background:#1a1714!important;color:#e0d5c5!important;border-color:#3a2f20!important;}
+body.dark-mode .pago-card-form label{color:#d4a96a;}
+body.dark-mode .activar-wrap h3{color:#e0d5c5;}
+@media(max-width:600px){.pago-row{grid-template-columns:1fr;}.consulta-steps{gap:4px;}.cs-sep{max-width:24px;}}
+</style>
+</head>
+<body>
+<button class="scroll-top" onclick="scrollToTop()">↑</button>
+<header><h1 class="logo">M&M Studio</h1><p class="subtitulo">Identidad digital, imagen personal y marca profesional</p><nav><a href="inicio.html">Inicio</a><a href="servicios.html">Planes</a><a href="asesoria-personal.html">Imagen personal</a><a href="marca-personal.html">Empresas</a><a href="planes-asesoria.html">Redes y analítica</a><a href="sobre-nosotros.html">Proyecto</a></nav></header>
+
+<main class="contenedor" style="max-width:740px">
+
+  <!-- Progreso -->
+  <div class="consulta-steps">
+    <div class="cs active" id="cs1"><div class="cs-num" id="csn1">1</div><span>Consulta</span></div>
+    <div class="cs-sep" id="csep1"></div>
+    <div class="cs" id="cs2"><div class="cs-num" id="csn2">2</div><span>Pago</span></div>
+    <div class="cs-sep" id="csep2"></div>
+    <div class="cs" id="cs3"><div class="cs-num" id="csn3">3</div><span>Activar plan</span></div>
+  </div>
+
+  <!-- PASO 1: CONSULTA -->
+  <div id="sec-consulta">
+    <div class="consulta-resumen" id="cr-box">
+      <span class="cr-plan" id="cr-plan-badge">—</span>
+      <div class="cr-info">
+        <strong id="cr-nombre">—</strong> · <span id="cr-servicio">—</span><br>
+        <span id="cr-perfil" style="font-size:13px"></span>
+      </div>
+    </div>
+
+    <div class="consulta-chat">
+      <div class="cc-header">
+        <div class="cc-avatar">✨</div>
+        <div class="cc-header-text">
+          <strong>Asesora M&M Studio</strong>
+          <small>Consulta personalizada · En línea</small>
+        </div>
+      </div>
+      <div class="cc-msgs" id="cc-msgs"></div>
+      <div class="cc-input">
+        <input id="cc-in" type="text" placeholder="Escribe tu mensaje..." maxlength="400">
+        <button id="cc-send">Enviar</button>
+      </div>
+    </div>
+
+    <div class="continuar-btn">
+      <button class="boton" style="font-size:16px;padding:14px 28px" onclick="irAPago()">Continuar al pago →</button>
+    </div>
+  </div>
+
+  <!-- PASO 2: PAGO -->
+  <div id="sec-pago" class="hidden">
+    <div class="pago-resumen">
+      <h3 id="pago-plan-nombre">—</h3>
+      <div class="pr-precio" id="pago-precio">—</div>
+      <small>Suscripción mensual · Cancela cuando quieras</small>
+    </div>
+    <div class="pago-card-form">
+      <h3 style="margin:0 0 4px 0;color:#3a2b16">Datos de pago</h3>
+      <p style="font-size:13px;color:#aaa;margin:0 0 6px">Simulación de pago seguro — ningún dato es real</p>
+      <label>Nombre del titular</label>
+      <input id="p-name" type="text" placeholder="Nombre Apellidos" autocomplete="cc-name">
+      <label>Número de tarjeta</label>
+      <input id="p-num" type="text" placeholder="1234 5678 9012 3456" maxlength="19" autocomplete="cc-number">
+      <div class="pago-row">
+        <div><label>Fecha de caducidad</label><input id="p-exp" type="text" placeholder="MM/AA" maxlength="5" autocomplete="cc-exp"></div>
+        <div><label>CVV</label><input id="p-cvv" type="text" placeholder="123" maxlength="3" autocomplete="cc-csc"></div>
+      </div>
+      <div class="pago-err" id="pago-err"></div>
+      <button class="pago-btn" id="btn-pagar">Pagar <span id="pago-btn-precio">—</span></button>
+    </div>
+  </div>
+
+  <!-- PASO 3: ACTIVAR -->
+  <div id="sec-activar" class="hidden">
+    <div class="activar-wrap">
+      <div class="activar-check">✓</div>
+      <h3>Pago procesado correctamente</h3>
+      <p>Tu suscripción está lista. Activa el plan para que aparezca en tu perfil.</p>
+      <div class="activar-plan-card">
+        <h4 id="act-plan-nombre">—</h4>
+        <div class="apc-precio" id="act-plan-precio">—</div>
+        <div style="font-size:13px;margin-top:6px;color:rgba(255,255,255,.7)">Suscripción activa desde hoy</div>
+      </div>
+      <button class="activar-btn" id="btn-activar">Activar mi plan →</button>
+    </div>
+  </div>
+
+</main>
+<footer class="footer"><p>M&M Studio - Proyecto TFG ASIR</p><p>Web corporativa preparada para Docker, Nginx, backups, monitorización y HTTPS.</p></footer>
+
+<script>
+// ---- Misma clave que en asesor-ia.js ----
+var GROQ_KEY = 'TU_API_KEY_GROQ_AQUI'
+
+var solicitud = null
+var session = null
+var chatHistory = []
+
+// ---- Precios por plan ----
+var PRECIO_MAP = {
+  'Plan Normal - 150€/mes':           { label: 'Plan Normal',   precio: '150€/mes',         key: 'Plan Normal'   },
+  'Plan Premium - 400€/mes':          { label: 'Plan Premium',  precio: '400€/mes',         key: 'Plan Premium'  },
+  'Plan Exeltior - desde 1.500€/mes': { label: 'Plan Exeltior', precio: 'desde 1.500€/mes', key: 'Plan Exeltior' }
+}
+
+window.addEventListener('DOMContentLoaded', function () {
+  session    = JSON.parse(localStorage.getItem('mm_session')  || 'null')
+  solicitud  = JSON.parse(localStorage.getItem('mm_solicitud')|| 'null')
+
+  if (!session)   { window.location.href = 'inicio.html'; return }
+  if (!solicitud) { window.location.href = 'solicitar-plan.html'; return }
+
+  var info = PRECIO_MAP[solicitud.plan] || { label: solicitud.plan, precio: '—', key: solicitud.plan }
+
+  // Rellenar resumen
+  document.getElementById('cr-plan-badge').textContent = info.label
+  document.getElementById('cr-nombre').textContent     = solicitud.nombre
+  document.getElementById('cr-servicio').textContent   = solicitud.servicio
+  if (solicitud.perfil) document.getElementById('cr-perfil').textContent = '🔗 ' + solicitud.perfil
+
+  // Rellenar pago
+  document.getElementById('pago-plan-nombre').textContent = info.label
+  document.getElementById('pago-precio').textContent      = info.precio
+  document.getElementById('pago-btn-precio').textContent  = info.precio
+  document.getElementById('p-name').value = solicitud.nombre
+
+  // Rellenar activar
+  document.getElementById('act-plan-nombre').textContent = info.label
+  document.getElementById('act-plan-precio').textContent = info.precio
+
+  // Primer mensaje IA
+  autoStart()
+
+  // Eventos chat
+  document.getElementById('cc-send').addEventListener('click', enviarMensaje)
+  document.getElementById('cc-in').addEventListener('keydown', function(e){
+    if (e.key === 'Enter') enviarMensaje()
+  })
+
+  // Formateo tarjeta
+  document.getElementById('p-num').addEventListener('input', function(){
+    var v = this.value.replace(/\D/g,'').substring(0,16)
+    this.value = v.replace(/(.{4})/g,'$1 ').trim()
+  })
+  document.getElementById('p-exp').addEventListener('input', function(){
+    var v = this.value.replace(/\D/g,'').substring(0,4)
+    if (v.length > 2) v = v.substring(0,2) + '/' + v.substring(2)
+    this.value = v
+  })
+  document.getElementById('p-cvv').addEventListener('input', function(){
+    this.value = this.value.replace(/\D/g,'').substring(0,3)
+  })
+
+  // Botón pagar
+  document.getElementById('btn-pagar').addEventListener('click', procesarPago)
+
+  // Botón activar
+  document.getElementById('btn-activar').addEventListener('click', activarPlan)
+})
+
+// ---- Paso 1: Chat ----
+function autoStart() {
+  var prompt = 'Hola ' + solicitud.nombre + ', he recibido tu solicitud del ' + solicitud.plan + '.' +
+    (solicitud.desc ? ' Describes tu caso así: "' + solicitud.desc + '".' : '') +
+    ' El servicio que más te interesa es: ' + solicitud.servicio + '.' +
+    (solicitud.perfil ? ' Perfil a analizar: ' + solicitud.perfil + '.' : '') +
+    ' Salúdame por mi nombre, comenta brevemente mi caso y hazme 1-2 preguntas relevantes para entender mejor qué necesito.'
+
+  appendMsg('Analizando tu solicitud…', 'typing', 'typing-init')
+
+  callGroq([{ role: 'user', content: prompt }], function(reply) {
+    removeTyping('typing-init')
+    var msg = reply || '¡Hola ' + solicitud.nombre + '! He revisado tu solicitud del ' + solicitud.plan + '. Estoy aquí para hablar de tu caso y resolver cualquier duda antes de continuar.'
+    appendMsg(msg, 'bot')
+    chatHistory.push({ role: 'assistant', content: msg })
+  })
+}
+
+function enviarMensaje() {
+  var input = document.getElementById('cc-in')
+  var text = input.value.trim()
+  if (!text) return
+  input.value = ''
+  input.disabled = true
+  document.getElementById('cc-send').disabled = true
+
+  appendMsg(text, 'user')
+  chatHistory.push({ role: 'user', content: text })
+
+  var tId = 'typing-' + Date.now()
+  appendMsg('Escribiendo…', 'typing', tId)
+
+  var systemPrompt = 'Eres la asesora de imagen de M&M Studio. Estás en una consulta personalizada con ' + solicitud.nombre + '.' +
+    ' Ha solicitado el ' + solicitud.plan + ', con interés en: ' + solicitud.servicio + '.' +
+    (solicitud.desc ? ' Su caso: "' + solicitud.desc + '".' : '') +
+    ' Responde de forma profesional y cercana. Máximo 3-4 frases en español. No menciones que eres una IA.'
+
+  var messages = [{ role: 'system', content: systemPrompt }].concat(chatHistory)
+
+  callGroq(messages, function(reply) {
+    removeTyping(tId)
+    var msg = reply || 'Entendido, gracias por contármelo. Tengo toda la información que necesito para avanzar.'
+    appendMsg(msg, 'bot')
+    chatHistory.push({ role: 'assistant', content: msg })
+    input.disabled = false
+    document.getElementById('cc-send').disabled = false
+    input.focus()
+  })
+}
+
+function appendMsg(text, cls, id) {
+  var el = document.createElement('div')
+  el.className = 'cmsg ' + cls
+  el.textContent = text
+  if (id) el.id = id
+  var box = document.getElementById('cc-msgs')
+  box.appendChild(el)
+  box.scrollTop = box.scrollHeight
+  return el
+}
+
+function removeTyping(id) {
+  var el = document.getElementById(id)
+  if (el) el.remove()
+}
+
+function callGroq(messages, cb) {
+  if (!GROQ_KEY) {
+    setTimeout(function(){ cb(null) }, 700)
+    return
+  }
+  fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
+    body: JSON.stringify({ model: 'llama-3.3-70b-versatile', max_tokens: 250, messages: messages })
+  })
+  .then(function(r){ return r.json() })
+  .then(function(d){ cb(d.choices && d.choices[0] ? d.choices[0].message.content : null) })
+  .catch(function(){ cb(null) })
+}
+
+// ---- Paso 2: Pago ----
+function irAPago() {
+  setStep(2)
+}
+
+function procesarPago() {
+  var name = document.getElementById('p-name').value.trim()
+  var num  = document.getElementById('p-num').value.replace(/\s/g,'')
+  var exp  = document.getElementById('p-exp').value.trim()
+  var cvv  = document.getElementById('p-cvv').value.trim()
+  var err  = document.getElementById('pago-err')
+
+  if (!name) { err.textContent = 'Introduce el nombre del titular.'; return }
+  if (num.length !== 16 || isNaN(num)) { err.textContent = 'Introduce un número de tarjeta válido (16 dígitos).'; return }
+  if (!/^\d{2}\/\d{2}$/.test(exp)) { err.textContent = 'Introduce la fecha en formato MM/AA.'; return }
+  if (cvv.length < 3) { err.textContent = 'Introduce el CVV (3 dígitos).'; return }
+  err.textContent = ''
+
+  var btn = document.getElementById('btn-pagar')
+  btn.disabled = true
+  btn.textContent = 'Procesando pago…'
+
+  setTimeout(function() {
+    btn.textContent = '✓ Pago completado'
+    setTimeout(function() { setStep(3) }, 700)
+  }, 2200)
+}
+
+// ---- Paso 3: Activar ----
+function activarPlan() {
+  var info = PRECIO_MAP[solicitud.plan] || { key: solicitud.plan }
+  var users   = JSON.parse(localStorage.getItem('mm_users')   || '[]')
+  var session = JSON.parse(localStorage.getItem('mm_session') || 'null')
+  if (!session) return
+
+  // Actualizar plan en la lista de usuarios
+  users = users.map(function(u) {
+    if (u.email.toLowerCase() === session.email.toLowerCase()) {
+      u.plan = info.key + ' (activo)'
+    }
+    return u
+  })
+  localStorage.setItem('mm_users', JSON.stringify(users))
+
+  // Actualizar sesión activa
+  session.plan = info.key + ' (activo)'
+  localStorage.setItem('mm_session', JSON.stringify(session))
+
+  // Limpiar solicitud
+  localStorage.removeItem('mm_solicitud')
+
+  // Redirigir con mensaje de éxito
+  window.location.href = 'inicio.html?plan_activado=1'
+}
+
+// ---- Gestión de pasos ----
+function setStep(n) {
+  document.getElementById('sec-consulta').classList.toggle('hidden', n !== 1)
+  document.getElementById('sec-pago').classList.toggle('hidden', n !== 2)
+  document.getElementById('sec-activar').classList.toggle('hidden', n !== 3)
+
+  for (var i = 1; i <= 3; i++) {
+    var cs  = document.getElementById('cs' + i)
+    var csn = document.getElementById('csn' + i)
+    cs.classList.remove('active','done')
+    if (i < n)  { cs.classList.add('done');  csn.textContent = '✓' }
+    if (i === n) { cs.classList.add('active'); csn.textContent = String(i) }
+    if (i > n)   { csn.textContent = String(i) }
+  }
+  for (var j = 1; j <= 2; j++) {
+    var sep = document.getElementById('csep' + j)
+    sep.classList.toggle('done', j < n)
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+</script>
+</body>
+</html>

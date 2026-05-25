@@ -1,0 +1,90 @@
+{
+  "title": "M&M Studio - Nginx",
+  "uid": "mmstudio-nginx",
+  "schemaVersion": 36,
+  "version": 1,
+  "refresh": "10s",
+  "time": { "from": "now-30m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Conexiones activas",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 50 }, { "color": "red", "value": 100 }] }
+        }
+      },
+      "targets": [{ "datasource": "Prometheus", "expr": "nginx_connections_active", "legendFormat": "Activas" }],
+      "datasource": "Prometheus"
+    },
+    {
+      "id": 2,
+      "title": "Peticiones totales",
+      "type": "stat",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "blue", "value": null }] } } },
+      "targets": [{ "datasource": "Prometheus", "expr": "nginx_http_requests_total", "legendFormat": "Total" }],
+      "datasource": "Prometheus"
+    },
+    {
+      "id": 3,
+      "title": "Conexiones aceptadas",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": null }] } } },
+      "targets": [{ "datasource": "Prometheus", "expr": "nginx_connections_accepted", "legendFormat": "Aceptadas" }],
+      "datasource": "Prometheus"
+    },
+    {
+      "id": 4,
+      "title": "Conexiones en espera",
+      "type": "stat",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 20 }] } } },
+      "targets": [{ "datasource": "Prometheus", "expr": "nginx_connections_waiting", "legendFormat": "Esperando" }],
+      "datasource": "Prometheus"
+    },
+    {
+      "id": 5,
+      "title": "Peticiones por segundo",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "options": { "tooltip": { "mode": "multi" } },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "lineWidth": 2, "fillOpacity": 15 }
+        }
+      },
+      "targets": [{ "datasource": "Prometheus", "expr": "rate(nginx_http_requests_total[1m])", "legendFormat": "req/s" }],
+      "datasource": "Prometheus"
+    },
+    {
+      "id": 6,
+      "title": "Estado de conexiones",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "options": { "tooltip": { "mode": "multi" } },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "lineWidth": 2, "fillOpacity": 10 }
+        }
+      },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "nginx_connections_active",  "legendFormat": "Activas" },
+        { "datasource": "Prometheus", "expr": "nginx_connections_reading", "legendFormat": "Leyendo" },
+        { "datasource": "Prometheus", "expr": "nginx_connections_writing", "legendFormat": "Escribiendo" },
+        { "datasource": "Prometheus", "expr": "nginx_connections_waiting", "legendFormat": "Esperando" }
+      ],
+      "datasource": "Prometheus"
+    }
+  ]
+}

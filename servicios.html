@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="M&M Studio: planes Normal, Premium y Exeltior con comparativa completa.">
+<title>M&M Studio - Planes</title>
+<link rel="stylesheet" href="estilos.css">
+<script src="script.js" defer></script>
+<script src="auth.js" defer></script>
+<script src="asesor-ia.js" defer></script>
+<style>
+.comp-wrap{background:white;border-radius:16px;box-shadow:0 4px 20px #0002;overflow:hidden;margin:30px 0 40px 0;}
+.comp-header{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:0;border-bottom:2px solid #eadfcf;}
+.comp-col-label{background:#f5f1ea;padding:20px 16px;font-weight:bold;color:#4a3821;display:flex;align-items:flex-end;}
+.comp-col{padding:22px 16px;text-align:center;}
+.comp-col.normal{background:#fff;}
+.comp-col.premium{background:#fdf8f0;border-left:3px solid #b99a5b;border-right:3px solid #b99a5b;border-top:3px solid #b99a5b;}
+.comp-col.exeltior{background:#fffdf8;}
+.comp-col h3{margin:0 0 4px 0;font-size:18px;}
+.comp-col .precio-small{font-size:20px;font-weight:bold;color:#8c6a32;margin:6px 0;}
+.comp-col.premium .precio-small{color:#b99a5b;}
+.comp-badge{display:inline-block;background:#b99a5b;color:white;font-size:11px;padding:3px 10px;border-radius:20px;margin-bottom:8px;font-weight:bold;}
+.comp-table{width:100%;border-collapse:collapse;}
+.comp-table tr:nth-child(even){background:#faf7f2;}
+.comp-table td{padding:11px 16px;border-bottom:1px solid #eadfcf;font-size:14px;}
+.comp-table td:first-child{font-weight:500;color:#3a2b16;width:40%;}
+.comp-table td:not(:first-child){text-align:center;width:20%;}
+.comp-table .seccion td{background:#3a2b16;color:white;font-weight:bold;font-size:13px;padding:8px 16px;}
+.check-si{color:#5a9e4e;font-size:18px;font-weight:bold;}
+.check-no{color:#ccc;font-size:18px;}
+.check-par{color:#b99a5b;font-size:13px;font-weight:bold;}
+.comp-footer{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;border-top:2px solid #eadfcf;background:#faf7f2;}
+.comp-footer-label{padding:20px 16px;}
+.comp-footer-btn{padding:20px 16px;text-align:center;}
+.comp-footer-btn.prem-f{border-left:3px solid #b99a5b;border-right:3px solid #b99a5b;border-bottom:3px solid #b99a5b;}
+body.dark-mode .comp-wrap{background:#252118;}
+body.dark-mode .comp-col-label{background:#1e1c18;color:#d4a96a;border-color:#3a2f20;}
+body.dark-mode .comp-col.normal{background:#1e1c18;}
+body.dark-mode .comp-col.premium{background:#252118;}
+body.dark-mode .comp-col.exeltior{background:#1e1c18;}
+body.dark-mode .comp-col h3{color:#e0d5c5;}
+body.dark-mode .comp-col small{color:#a0947d!important;}
+body.dark-mode .comp-table tr:nth-child(even){background:#1e1c18;}
+body.dark-mode .comp-table td{border-color:#3a2f20;color:#e0d5c5;}
+body.dark-mode .comp-table td:first-child{color:#d4a96a;}
+body.dark-mode .comp-table .seccion td{background:#1a130a;}
+body.dark-mode .comp-footer{background:#1e1c18;border-color:#3a2f20;}
+body.dark-mode .check-no{color:#444;}
+@media(max-width:700px){.comp-header,.comp-footer,.comp-table{display:none;}}
+</style>
+</head>
+<body>
+<button class="scroll-top" onclick="scrollToTop()">↑</button>
+<header><h1 class="logo">M&M Studio</h1><p class="subtitulo">Identidad digital, imagen personal y marca profesional</p><nav><a href="inicio.html">Inicio</a><a href="servicios.html">Planes</a><a href="asesoria-personal.html">Imagen personal</a><a href="marca-personal.html">Empresas</a><a href="planes-asesoria.html">Redes y analítica</a><a href="sobre-nosotros.html">Proyecto</a></nav></header>
+<main class="contenedor">
+<h2 class="titulo-seccion">Planes de asesoría</h2>
+<p class="texto-centro">Elige el plan que mejor se adapta a tu perfil. Si tienes dudas, consulta la comparativa completa o pregunta a la asesora virtual.</p>
+<div class="tarjetas">
+<div class="tarjeta"><h3>Plan Normal</h3><p class="mini">Profile Boost Básico</p><p class="precio">150€/mes</p><p>Para personas que quieren mejorar rápido su perfil en redes sociales o apps.</p><ul class="lista"><li>Selección de mejores fotos</li><li>Reescritura de biografía</li><li>Auditoría básica de privacidad</li><li>Consejos para Instagram, Tinder o LinkedIn</li><li>Informe inicial en PDF</li></ul><button class="boton" style="border:none;font-size:15px;cursor:pointer" onclick="solicitarPlan('normal')">Solicitar Normal</button></div>
+<div class="tarjeta destacado"><h3>Plan Premium</h3><p class="mini">Influencer Path</p><p class="precio">400€/mes</p><p>Para creadores de contenido o aspirantes a influencer que necesitan más estructura.</p><ul class="lista"><li>Todo lo incluido en Normal</li><li>Informe mensual de rendimiento</li><li>Estrategia de crecimiento</li><li>Copias de seguridad del contenido digital</li><li>Recomendaciones según mejores horarios</li></ul><button class="boton" style="border:none;font-size:15px;cursor:pointer" onclick="solicitarPlan('premium')">Solicitar Premium</button></div>
+<div class="tarjeta vip"><h3>Plan Exeltior</h3><p class="mini">Executive Personal Brand</p><p class="precio">1.500€ - 2.500€/mes</p><p>Para directivos, empresarios, figuras públicas y marcas que necesitan una imagen impecable.</p><ul class="lista"><li>Consultoría estratégica completa</li><li>Optimización de LinkedIn</li><li>Planificación de sesiones fotográficas</li><li>Gestión de reputación digital</li><li>Filtrado de contactos y oportunidades</li><li>Limpieza básica de huella digital</li></ul><button class="boton" style="border:none;font-size:15px;cursor:pointer" onclick="solicitarPlan('exeltior')">Solicitar Exeltior</button></div>
+</div>
+
+<h2 class="titulo-seccion" style="margin-top:40px">Comparativa completa</h2>
+<p class="texto-centro">¿No sabes cuál elegir? Aquí tienes todas las características de cada plan lado a lado.</p>
+
+<div class="comp-wrap">
+  <div class="comp-header">
+    <div class="comp-col-label">Característica</div>
+    <div class="comp-col normal"><h3>Normal</h3><div class="precio-small">150€/mes</div><small style="color:#888">Básico</small></div>
+    <div class="comp-col premium"><div class="comp-badge">MÁS POPULAR</div><h3>Premium</h3><div class="precio-small">400€/mes</div><small style="color:#888">Influencer</small></div>
+    <div class="comp-col exeltior"><h3>Exeltior</h3><div class="precio-small" style="font-size:16px">1.500–2.500€</div><small style="color:#888">Ejecutivo</small></div>
+  </div>
+  <table class="comp-table">
+    <tr class="seccion"><td colspan="4">Servicios básicos de imagen</td></tr>
+    <tr><td>Selección de mejores fotos</td><td><span class="check-si">✓</span></td><td><span class="check-si">✓</span></td><td><span class="check-si">✓</span></td></tr>
+    <tr><td>Reescritura de biografía</td><td><span class="check-si">✓</span></td><td><span class="check-si">✓</span></td><td><span class="check-si">✓</span></td></tr>
+    <tr><td>Auditoría básica de privacidad</td><td><span class="check-si">✓</span></td><td><span class="check-si">✓</span></td><td><span class="check-si">✓</span></td></tr>
+    <tr><td>Consejos para Instagram / LinkedIn / TikTok</td><td><span class="check-si">✓</span></td><td><span class="check-si">✓</span></td><td><span class="check-si">✓</span></td></tr>
+    <tr><td>Informe inicial en PDF</td><td><span class="check-si">✓</span></td><td><span class="check-si">✓</span></td><td><span class="check-si">✓</span></td></tr>
+    <tr class="seccion"><td colspan="4">Seguimiento y crecimiento</td></tr>
+    <tr><td>Informe mensual de rendimiento</td><td><span class="check-no">✗</span></td><td><span class="check-si">✓</span></td><td><span class="check-si">✓</span></td></tr>
+    <tr><td>Estrategia de crecimiento personalizada</td><td><span class="check-no">✗</span></td><td><span class="check-si">✓</span></td><td><span class="check-si">✓</span></td></tr>
+    <tr><td>Análisis de mejores horarios</td><td><span class="check-no">✗</span></td><td><span class="check-si">✓</span></td><td><span class="check-si">✓</span></td></tr>
+    <tr><td>Copias de seguridad del contenido</td><td><span class="check-no">✗</span></td><td><span class="check-si">✓</span></td><td><span class="check-si">✓</span></td></tr>
+    <tr class="seccion"><td colspan="4">Servicios ejecutivos</td></tr>
+    <tr><td>Consultoría estratégica completa</td><td><span class="check-no">✗</span></td><td><span class="check-no">✗</span></td><td><span class="check-si">✓</span></td></tr>
+    <tr><td>Optimización avanzada de LinkedIn</td><td><span class="check-no">✗</span></td><td><span class="check-no">✗</span></td><td><span class="check-si">✓</span></td></tr>
+    <tr><td>Planificación de sesiones fotográficas</td><td><span class="check-no">✗</span></td><td><span class="check-no">✗</span></td><td><span class="check-si">✓</span></td></tr>
+    <tr><td>Gestión de reputación digital</td><td><span class="check-no">✗</span></td><td><span class="check-no">✗</span></td><td><span class="check-si">✓</span></td></tr>
+    <tr><td>Limpieza de huella digital</td><td><span class="check-no">✗</span></td><td><span class="check-no">✗</span></td><td><span class="check-si">✓</span></td></tr>
+    <tr class="seccion"><td colspan="4">Soporte</td></tr>
+    <tr><td>Consultas por email</td><td><span class="check-si">✓</span></td><td><span class="check-si">✓</span></td><td><span class="check-si">✓</span></td></tr>
+    <tr><td>Reuniones de seguimiento</td><td><span class="check-no">✗</span></td><td><span class="check-par">1 al mes</span></td><td><span class="check-par">Ilimitadas</span></td></tr>
+    <tr><td>Tiempo de respuesta</td><td><span class="check-par">48h</span></td><td><span class="check-par">24h</span></td><td><span class="check-par">Mismo día</span></td></tr>
+  </table>
+  <div class="comp-footer">
+    <div class="comp-footer-label"></div>
+    <div class="comp-footer-btn"><button class="boton" style="border:none;cursor:pointer;background:#8c6a32" onclick="solicitarPlan('normal')">Solicitar Normal</button></div>
+    <div class="comp-footer-btn prem-f"><button class="boton" style="border:none;cursor:pointer" onclick="solicitarPlan('premium')">Solicitar Premium</button></div>
+    <div class="comp-footer-btn"><button class="boton" style="border:none;cursor:pointer;background:#111" onclick="solicitarPlan('exeltior')">Solicitar Exeltior</button></div>
+  </div>
+</div>
+
+<div class="alerta"><strong>Nota para el TFG:</strong> Los precios son orientativos y sirven para explicar el modelo de suscripción mensual y la estrategia de ingresos recurrentes. ¿Dudas? Usa la asesora virtual 💬</div>
+</main>
+<footer class="footer"><p>M&M Studio - Proyecto TFG ASIR</p><p>Web corporativa preparada para Docker, Nginx, backups, monitorización y HTTPS.</p></footer>
+
+<script>
+function solicitarPlan(plan) {
+  var session = JSON.parse(localStorage.getItem('mm_session') || 'null')
+  if (!session) {
+    var toast = document.createElement('div')
+    toast.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:99999;background:linear-gradient(135deg,#111,#6b5438);color:white;padding:16px 28px;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.4);font-size:15px;text-align:center;min-width:320px;'
+    toast.innerHTML = '🔐 Debes <strong>iniciar sesión</strong> o crear una cuenta para solicitar un plan.'
+    document.body.appendChild(toast)
+    setTimeout(function() {
+      toast.style.opacity = '0'; toast.style.transition = 'opacity .5s'
+      setTimeout(function() { toast.remove() }, 500)
+    }, 3500)
+    var fab = document.getElementById('auth-fab')
+    if (fab) setTimeout(function() { fab.click() }, 350)
+    return
+  }
+  window.location.href = 'solicitar-plan.html?plan=' + plan
+}
+</script>
+</body>
+</html>

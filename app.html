@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>M&M Studio — App</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold:   #b99a5b;
+      --brown:  #6b5438;
+      --dark:   #3a2b16;
+      --black:  #0d0d0d;
+      --cream:  #faf7f2;
+      --muted:  #888;
+      --border: #e8e0d5;
+
+      --plan-normal:   #8c6a32;
+      --plan-premium:  #b99a5b;
+      --plan-exeltior: #1a1a1a;
+      --plan-none:     #aaa;
+    }
+
+    html, body {
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(145deg, #0d0d0d 0%, #1c1509 40%, #2b1e0a 70%, #3a2b16 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    /* ---- BRANDING ---- */
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .brand-logo {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6b5438, #b99a5b);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: bold; color: white;
+      box-shadow: 0 4px 16px rgba(185,154,91,.4);
+    }
+    .brand-text { color: white; }
+    .brand-text strong { display: block; font-size: 20px; letter-spacing: 1px; }
+    .brand-text span { font-size: 12px; color: rgba(255,255,255,.55); }
+
+    /* ---- CARD ---- */
+    .card {
+      width: 100%;
+      max-width: 440px;
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 32px 80px rgba(0,0,0,.55);
+      overflow: hidden;
+      animation: popIn .3s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(.9) translateY(20px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    .card-head {
+      background: linear-gradient(135deg, #0d0d0d 0%, #6b5438 55%, #b99a5b 100%);
+      padding: 28px 28px 20px;
+    }
+    .card-head h2 { color: white; font-size: 20px; margin-bottom: 4px; }
+    .card-head p  { color: rgba(255,255,255,.6); font-size: 13px; }
+
+    .card-body { padding: 28px; }
+
+    /* ---- FORM ---- */
+    .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 16px; }
+    .field label {
+      font-size: 11px; font-weight: 700;
+      color: var(--brown); text-transform: uppercase; letter-spacing: .5px;
+    }
+    .field input {
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 14px; color: #2b2b2b;
+      background: var(--cream);
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .field input:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(185,154,91,.15);
+      background: white;
+    }
+
+    .msg-err {
+      display: none;
+      background: #fff0f0;
+      border: 1px solid #f5c6c6;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 13px; color: #c0392b; font-weight: 600;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+    .msg-err.show { display: block; }
+
+    .btn-primary {
+      width: 100%; padding: 14px;
+      background: linear-gradient(135deg, var(--brown), var(--gold));
+      color: white; border: none; border-radius: 12px;
+      font-size: 15px; font-weight: bold; cursor: pointer;
+      box-shadow: 0 4px 14px rgba(107,84,56,.35);
+      transition: opacity .2s, transform .15s;
+    }
+    .btn-primary:hover { opacity: .9; transform: translateY(-1px); }
+
+    .form-note {
+      margin-top: 16px;
+      text-align: center;
+      font-size: 12px; color: var(--muted); line-height: 1.6;
+    }
+    .form-note a { color: var(--brown); font-weight: 600; text-decoration: none; }
+    .form-note a:hover { text-decoration: underline; }
+
+    /* ---- DASHBOARD ---- */
+    #view-dashboard { display: none; }
+
+    .dash-avatar {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; font-weight: bold; color: white;
+      margin: 0 auto 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.25);
+    }
+    .dash-name  { text-align: center; font-size: 22px; font-weight: bold; color: #2b2b2b; }
+    .dash-email { text-align: center; font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+
+    .dash-plan-card {
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-bottom: 20px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .dash-plan-card.active {
+      background: linear-gradient(135deg, #0d0d0d 0%, #4a3520 50%, #b99a5b 100%);
+      box-shadow: 0 6px 20px rgba(0,0,0,.3);
+    }
+    .dash-plan-card.inactive {
+      background: #f5f0e8;
+      border: 1.5px dashed var(--border);
+    }
+    .plan-icon {
+      font-size: 28px;
+      flex-shrink: 0;
+    }
+    .plan-info { flex: 1; }
+    .plan-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px;
+      margin-bottom: 3px;
+    }
+    .plan-name  { font-size: 17px; font-weight: bold; }
+    .plan-badge {
+      display: inline-block;
+      font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: .5px;
+      padding: 3px 10px; border-radius: 20px;
+      margin-top: 5px;
+    }
+    .dash-plan-card.active .plan-label { color: rgba(255,255,255,.6); }
+    .dash-plan-card.active .plan-name  { color: white; }
+    .dash-plan-card.active .plan-badge {
+      background: rgba(255,255,255,.2);
+      border: 1px solid rgba(255,255,255,.35);
+      color: white;
+    }
+    .dash-plan-card.inactive .plan-label { color: var(--muted); }
+    .dash-plan-card.inactive .plan-name  { color: #aaa; }
+    .dash-plan-card.inactive .plan-badge {
+      background: #e8e0d5;
+      color: var(--muted);
+    }
+
+    .dash-info {
+      background: var(--cream);
+      border-radius: 12px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .info-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-row .label { color: var(--muted); }
+    .info-row .value { font-weight: 700; color: var(--brown); }
+
+    .btn-logout {
+      width: 100%; padding: 13px;
+      background: #f0ebe2; color: var(--brown);
+      border: none; border-radius: 12px;
+      font-size: 14px; font-weight: bold; cursor: pointer;
+      transition: background .2s;
+    }
+    .btn-logout:hover { background: #e0d9cc; }
+
+    /* ---- PLAN-SPECIFIC COLORS ---- */
+    .color-normal   { background: var(--plan-normal); }
+    .color-premium  { background: var(--plan-premium); }
+    .color-exeltior { background: var(--plan-exeltior); }
+    .color-none     { background: #ccc; }
+
+    /* ---- FOOTER ---- */
+    .page-footer {
+      margin-top: 24px;
+      text-align: center;
+      font-size: 11px;
+      color: rgba(255,255,255,.3);
+    }
+    .page-footer a { color: rgba(255,255,255,.45); text-decoration: none; }
+    .page-footer a:hover { color: var(--gold); }
+  </style>
+</head>
+<body>
+
+  <div class="brand">
+    <div class="brand-logo">M</div>
+    <div class="brand-text">
+      <strong>M&amp;M Studio</strong>
+      <span>Asesoría de imagen digital</span>
+    </div>
+  </div>
+
+  <!-- ======== VISTA LOGIN ======== -->
+  <div class="card" id="view-login">
+    <div class="card-head">
+      <h2>Acceder a la app</h2>
+      <p>Introduce tus credenciales de M&amp;M Studio</p>
+    </div>
+    <div class="card-body">
+      <div class="msg-err" id="login-err"></div>
+
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="l-email" placeholder="tu@email.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>Contraseña</label>
+        <input type="password" id="l-pwd" placeholder="••••••••" autocomplete="current-password">
+      </div>
+
+      <button class="btn-primary" id="btn-login">Entrar →</button>
+
+      <p class="form-note">
+        ¿No tienes cuenta? Para acceder a esta app es necesario
+        <a href="servicios.html">contratar un plan en M&amp;M Studio</a>.<br>
+        Las cuentas se gestionan desde la <a href="inicio.html">web principal</a>.
+      </p>
+    </div>
+  </div>
+
+  <!-- ======== VISTA DASHBOARD ======== -->
+  <div class="card" id="view-dashboard">
+    <div class="card-head">
+      <h2>Mi panel</h2>
+      <p>Bienvenido/a a tu área personal de M&amp;M Studio</p>
+    </div>
+    <div class="card-body">
+
+      <div class="dash-avatar" id="dash-avatar"></div>
+      <div class="dash-name"  id="dash-name"></div>
+      <div class="dash-email" id="dash-email"></div>
+
+      <!-- Plan card -->
+      <div class="dash-plan-card" id="dash-plan-card">
+        <div class="plan-icon" id="dash-plan-icon"></div>
+        <div class="plan-info">
+          <div class="plan-label">Plan activo</div>
+          <div class="plan-name"  id="dash-plan-name"></div>
+          <span class="plan-badge" id="dash-plan-badge"></span>
+        </div>
+      </div>
+
+      <!-- Info rows -->
+      <div class="dash-info">
+        <div class="info-row">
+          <span class="label">Miembro desde</span>
+          <span class="value" id="dash-joined"></span>
+        </div>
+        <div class="info-row">
+          <span class="label">Email de acceso</span>
+          <span class="value" id="dash-email2"></span>
+        </div>
+      </div>
+
+      <button class="btn-logout" id="btn-logout">Cerrar sesión</button>
+    </div>
+  </div>
+
+  <p class="page-footer">
+    <a href="inicio.html">← Volver a la web</a> &nbsp;·&nbsp; M&amp;M Studio © 2025
+  </p>
+
+  <script>
+  ;(function () {
+    'use strict'
+
+    var USERS_KEY   = 'mm_users'
+    var SESSION_KEY = 'mm_session'
+
+    function getUsers()   { return JSON.parse(localStorage.getItem(USERS_KEY)   || '[]')   }
+    function getSession() { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null') }
+    function setSession(u){ localStorage.setItem(SESSION_KEY, JSON.stringify(u)) }
+    function clearSession(){ localStorage.removeItem(SESSION_KEY) }
+    function hashPwd(s)   { return btoa(encodeURIComponent(s)) }
+
+    function getInitials(name) {
+      return name.trim().split(/\s+/).map(function(w){ return w[0] }).slice(0,2).join('').toUpperCase()
+    }
+
+    function getActivePlan(planStr) {
+      if (!planStr) return null
+      var plans = ['Plan Exeltior', 'Plan Premium', 'Plan Normal']
+      for (var i = 0; i < plans.length; i++) {
+        if (planStr.indexOf(plans[i]) !== -1 && planStr.indexOf('activo') !== -1) return plans[i]
+      }
+      return null
+    }
+
+    function planMeta(plan) {
+      if (plan === 'Plan Exeltior') return { icon: '🎯', colorClass: 'color-exeltior', badge: 'Ejecutivo' }
+      if (plan === 'Plan Premium')  return { icon: '🚀', colorClass: 'color-premium',  badge: 'Popular'   }
+      if (plan === 'Plan Normal')   return { icon: '⭐', colorClass: 'color-normal',   badge: 'Básico'    }
+      return { icon: '🔒', colorClass: 'color-none', badge: 'Sin plan' }
+    }
+
+    // ---- Renderizar dashboard ----
+    function showDashboard(user) {
+      document.getElementById('view-login').style.display     = 'none'
+      document.getElementById('view-dashboard').style.display = 'block'
+
+      var plan     = getActivePlan(user.plan)
+      var meta     = planMeta(plan)
+      var initials = getInitials(user.name)
+
+      var avatar = document.getElementById('dash-avatar')
+      avatar.textContent = initials
+      avatar.className   = 'dash-avatar ' + meta.colorClass
+
+      document.getElementById('dash-name').textContent   = user.name
+      document.getElementById('dash-email').textContent  = user.email
+      document.getElementById('dash-email2').textContent = user.email
+      document.getElementById('dash-joined').textContent = user.joined || '—'
+
+      var card     = document.getElementById('dash-plan-card')
+      var planName = document.getElementById('dash-plan-name')
+      var planBadge= document.getElementById('dash-plan-badge')
+      var planIcon = document.getElementById('dash-plan-icon')
+
+      if (plan) {
+        card.className     = 'dash-plan-card active'
+        planIcon.textContent = meta.icon
+        planName.textContent = plan
+        planBadge.textContent= meta.badge
+      } else {
+        card.className     = 'dash-plan-card inactive'
+        planIcon.textContent = '🔒'
+        planName.textContent = 'Sin plan activo'
+        planBadge.textContent= 'Sin suscripción'
+        document.querySelector('.plan-label').textContent = 'Estado'
+      }
+    }
+
+    // ---- Login ----
+    function attemptLogin() {
+      var email = document.getElementById('l-email').value.trim()
+      var pwd   = document.getElementById('l-pwd').value
+      var errEl = document.getElementById('login-err')
+
+      errEl.classList.remove('show')
+
+      if (!email || !pwd) {
+        errEl.textContent = 'Por favor, completa todos los campos.'
+        errEl.classList.add('show')
+        return
+      }
+
+      var users   = getUsers()
+      var matched = users.find(function(u){ return u.email.toLowerCase() === email.toLowerCase() })
+
+      if (!matched) {
+        errEl.innerHTML = '⚠️ No tienes una cuenta registrada en M&amp;M Studio.<br>No puedes continuar. Contacta con nosotros para crear tu cuenta.'
+        errEl.classList.add('show')
+        return
+      }
+
+      if (matched.password !== hashPwd(pwd)) {
+        errEl.textContent = 'Contraseña incorrecta. Inténtalo de nuevo.'
+        errEl.classList.add('show')
+        return
+      }
+
+      setSession(matched)
+      showDashboard(matched)
+    }
+
+    // ---- Logout ----
+    document.getElementById('btn-logout').addEventListener('click', function () {
+      clearSession()
+      document.getElementById('view-dashboard').style.display = 'none'
+      document.getElementById('view-login').style.display     = 'block'
+      document.getElementById('l-email').value = ''
+      document.getElementById('l-pwd').value   = ''
+      document.getElementById('login-err').classList.remove('show')
+    })
+
+    // ---- Botón login ----
+    document.getElementById('btn-login').addEventListener('click', attemptLogin)
+
+    // ---- Enter en inputs ----
+    ;['l-email', 'l-pwd'].forEach(function(id){
+      document.getElementById(id).addEventListener('keydown', function(e){
+        if (e.key === 'Enter') attemptLogin()
+      })
+    })
+
+    // ---- Auto-login si ya hay sesión ----
+    var session = getSession()
+    if (session) {
+      showDashboard(session)
+    }
+
+  })()
+  </script>
+</body>
+</html>
