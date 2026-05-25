@@ -510,7 +510,7 @@
       '<span class="ge-emoji">🎂</span>' +
       '<h1>¡Felicidades gretaaa!</h1>' +
       '<p class="ge-sub">Que tengas el mejor día del año 🥳🎊💫</p>' +
-      '<button class="ge-close">¡Gracias! →</button>' +
+      '<button class="ge-close">Aceptar</button>' +
       '</div>'
 
     document.body.appendChild(el)
