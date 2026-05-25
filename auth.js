@@ -178,6 +178,32 @@
       transition: background .2s !important;
     }
     .a-logout:hover { background: #e0d9cc !important; }
+    .a-edit-btn {
+      width: 100% !important; padding: 11px !important;
+      background: transparent !important; color: #6b5438 !important;
+      border: 1.5px solid #e0d5c5 !important; border-radius: 12px !important;
+      font-size: 14px !important; font-weight: bold !important;
+      cursor: pointer !important; margin-top: 12px !important;
+      transition: background .2s, border-color .2s !important;
+    }
+    .a-edit-btn:hover { background: #f5f0e8 !important; border-color: #b99a5b !important; }
+
+    /* Banner de contraseña temporal */
+    #mm-pwd-banner {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+      background: linear-gradient(90deg, #5a3e0a, #8c6a32);
+      color: white; padding: 10px 20px; font-size: 13px;
+      display: none; align-items: center; justify-content: center; gap: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.4);
+    }
+    #mm-pwd-banner.visible { display: flex; }
+    #mm-pwd-banner-btn {
+      background: rgba(255,255,255,.2) !important; border: 1px solid rgba(255,255,255,.4) !important;
+      color: white !important; padding: 5px 14px !important; border-radius: 6px !important;
+      cursor: pointer !important; font-size: 12px !important; font-weight: bold !important;
+      white-space: nowrap; margin: 0 !important; margin-top: 0 !important; width: auto !important;
+    }
+    #mm-pwd-banner-btn:hover { background: rgba(255,255,255,.35) !important; }
 
     /* Dark mode */
     body.dark-mode #auth-modal { background: #1e1c18; }
@@ -234,7 +260,8 @@
         </form>
 
         <form id="a-form-register" class="a-form" onsubmit="return false">
-          <div class="a-field"><label>Nombre completo</label><input id="r-name" type="text" placeholder="Tu nombre" autocomplete="name"></div>
+          <div class="a-field"><label>Nombre</label><input id="r-name" type="text" placeholder="Tu nombre" autocomplete="given-name"></div>
+          <div class="a-field"><label>Apellidos <span style="font-weight:normal;color:#aaa">(opcional)</span></label><input id="r-apellidos" type="text" placeholder="Tus apellidos" autocomplete="family-name"></div>
           <div class="a-field"><label>Email</label><input id="r-email" type="email" placeholder="tu@email.com" autocomplete="email"></div>
           <div class="a-field"><label>Contraseña</label><input id="r-pwd" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password"></div>
           <div class="a-err" id="r-err"></div>
@@ -247,9 +274,26 @@
           <div id="a-profile-av"></div>
           <div class="a-profile-name" id="a-p-name"></div>
           <div class="a-profile-email" id="a-p-email"></div>
+          <div class="a-info-row"><span>Apellidos</span><span id="a-p-apellidos" style="color:#aaa;font-style:italic">—</span></div>
+          <div class="a-info-row"><span>Teléfono</span><span id="a-p-telefono" style="color:#aaa;font-style:italic">—</span></div>
           <div class="a-info-row"><span>Plan activo</span><span id="a-p-plan"></span></div>
           <div class="a-info-row"><span>Miembro desde</span><span id="a-p-joined"></span></div>
+          <button class="a-edit-btn" id="a-edit-btn">✏️ Editar perfil</button>
           <button class="a-logout" id="a-logout">Cerrar sesión</button>
+        </div>
+
+        <div id="a-form-editprofile" class="a-form">
+          <div style="text-align:center;margin-bottom:16px;">
+            <div style="font-size:28px;margin-bottom:6px;">✏️</div>
+            <div style="font-weight:bold;color:#3a2b16;font-size:16px;">Editar perfil</div>
+          </div>
+          <div class="a-field"><label>Nombre</label><input id="ep-name" type="text" placeholder="Tu nombre" autocomplete="given-name"></div>
+          <div class="a-field"><label>Apellidos</label><input id="ep-apellidos" type="text" placeholder="Tus apellidos" autocomplete="family-name"></div>
+          <div class="a-field"><label>Teléfono</label><input id="ep-telefono" type="tel" placeholder="612 345 678" autocomplete="tel"></div>
+          <div class="a-err" id="ep-err"></div>
+          <div class="a-ok"  id="ep-ok"></div>
+          <button class="a-submit" id="ep-save-btn">Guardar cambios →</button>
+          <button class="a-logout" id="ep-cancel-btn">← Volver al perfil</button>
         </div>
 
         <div id="a-form-changepwd" class="a-form">
@@ -258,8 +302,9 @@
             <div style="font-weight:bold;color:#3a2b16;font-size:16px;">Cambia tu contraseña</div>
             <div style="font-size:13px;color:#aaa;margin-top:4px;">El administrador requiere que establezcas una nueva contraseña.</div>
           </div>
+          <div class="a-field"><label>Contraseña actual</label><input id="cp-old" type="password" placeholder="La contraseña temporal" autocomplete="current-password"></div>
           <div class="a-field"><label>Nueva contraseña</label><input id="cp-pwd" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password"></div>
-          <div class="a-field"><label>Confirmar contraseña</label><input id="cp-pwd2" type="password" placeholder="Repite la contraseña" autocomplete="new-password"></div>
+          <div class="a-field"><label>Confirmar contraseña</label><input id="cp-pwd2" type="password" placeholder="Repite la nueva contraseña" autocomplete="new-password"></div>
           <div class="a-err" id="cp-err"></div>
           <button class="a-submit" id="cp-btn">Establecer contraseña →</button>
         </div>
@@ -267,6 +312,13 @@
       </div>
     </div>
   `
+
+  // Banner contraseña temporal
+  var pwdBanner = document.createElement('div')
+  pwdBanner.id = 'mm-pwd-banner'
+  pwdBanner.innerHTML = '⚠️ Tu administrador ha establecido una contraseña temporal. Cámbiala antes de cerrar sesión.' +
+    '<button id="mm-pwd-banner-btn">Cambiar ahora →</button>'
+  document.body.appendChild(pwdBanner)
 
   document.body.appendChild(overlay)
   document.body.appendChild(fab)
@@ -304,15 +356,26 @@
     var tabBtn = overlay.querySelector('.a-tab[data-tab="' + tab + '"]')
     if (tabBtn) tabBtn.classList.add('active')
     var tabsRow = document.getElementById('auth-tabs')
-    if (tabsRow) tabsRow.style.display = tab === 'profile' ? 'none' : 'flex'
+    if (tabsRow) tabsRow.style.display = (tab === 'profile' || tab === 'changepwd' || tab === 'editprofile') ? 'none' : 'flex'
   }
 
   function fillProfile(s) {
     document.getElementById('a-profile-av').textContent = getInitials(s.name)
     document.getElementById('a-p-name').textContent = s.name
     document.getElementById('a-p-email').textContent = s.email
+    var apEl = document.getElementById('a-p-apellidos')
+    if (apEl) { apEl.textContent = s.apellidos || '—'; apEl.style.fontStyle = s.apellidos ? 'normal' : 'italic'; apEl.style.color = s.apellidos ? '#6b5438' : '#aaa' }
+    var tfEl = document.getElementById('a-p-telefono')
+    if (tfEl) { tfEl.textContent = s.telefono || '—'; tfEl.style.fontStyle = s.telefono ? 'normal' : 'italic'; tfEl.style.color = s.telefono ? '#6b5438' : '#aaa' }
     document.getElementById('a-p-plan').textContent = s.plan
     document.getElementById('a-p-joined').textContent = s.joined
+  }
+
+  function updateBanner(session) {
+    var banner = document.getElementById('mm-pwd-banner')
+    if (!banner) return
+    if (session && session.forcePwdChange) banner.classList.add('visible')
+    else banner.classList.remove('visible')
   }
 
   // ---- Eventos ----
@@ -320,17 +383,29 @@
     var session = getSession()
     var token   = getToken()
     updateFab(session)
-    if (session) fillProfile(session)
+    if (session) { fillProfile(session); updateBanner(session) }
 
     // Validar token con la API en segundo plano
     if (token) {
       fetch('/api/me', { headers: { 'Authorization': 'Bearer ' + token } })
         .then(function (r) { return r.json() })
         .then(function (user) {
-          if (user.error) { clearSession(); updateFab(null); return }
-          setSession(user); updateFab(user); fillProfile(user)
+          if (user.error) { clearSession(); updateFab(null); updateBanner(null); return }
+          setSession(user); updateFab(user); fillProfile(user); updateBanner(user)
         })
         .catch(function () {})
+    }
+
+    // Banner → abrir modal cambio de contraseña
+    var bannerBtn = document.getElementById('mm-pwd-banner-btn')
+    if (bannerBtn) {
+      bannerBtn.addEventListener('click', function () {
+        document.getElementById('cp-old').value = ''
+        document.getElementById('cp-pwd').value = ''
+        document.getElementById('cp-pwd2').value = ''
+        document.getElementById('cp-err').textContent = ''
+        openModal('changepwd')
+      })
     }
 
     fab.addEventListener('click', function () {
@@ -362,9 +437,10 @@
       .then(function (r) { return r.json() })
       .then(function (res) {
         if (res.error) { err.textContent = res.error; return }
-        setToken(res.token); setSession(res.user); updateFab(res.user)
+        setToken(res.token); setSession(res.user); updateFab(res.user); updateBanner(res.user)
         if (res.user.forcePwdChange) {
-          document.getElementById('cp-pwd').value = ''
+          document.getElementById('cp-old').value  = ''
+          document.getElementById('cp-pwd').value  = ''
           document.getElementById('cp-pwd2').value = ''
           document.getElementById('cp-err').textContent = ''
           switchTab('changepwd')
@@ -378,12 +454,13 @@
 
     // Register
     document.getElementById('r-btn').addEventListener('click', function () {
-      var name  = document.getElementById('r-name').value.trim()
-      var email = document.getElementById('r-email').value.trim()
-      var pwd   = document.getElementById('r-pwd').value
-      var err   = document.getElementById('r-err')
-      var ok    = document.getElementById('r-ok')
-      var btn   = document.getElementById('r-btn')
+      var name      = document.getElementById('r-name').value.trim()
+      var apellidos = document.getElementById('r-apellidos').value.trim()
+      var email     = document.getElementById('r-email').value.trim()
+      var pwd       = document.getElementById('r-pwd').value
+      var err       = document.getElementById('r-err')
+      var ok        = document.getElementById('r-ok')
+      var btn       = document.getElementById('r-btn')
       err.textContent = ''; ok.textContent = ''
       if (!name || !email || !pwd) { err.textContent = 'Completa todos los campos.'; return }
       if (pwd.length < 6) { err.textContent = 'La contraseña debe tener al menos 6 caracteres.'; return }
@@ -391,14 +468,14 @@
       fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name, email: email, password: pwd })
+        body: JSON.stringify({ name: name, apellidos: apellidos, email: email, password: pwd })
       })
       .then(function (r) { return r.json() })
       .then(function (res) {
         if (res.error) { err.textContent = res.error; return }
         ok.textContent = '¡Cuenta creada correctamente!'
         setTimeout(function () {
-          setToken(res.token); setSession(res.user); fillProfile(res.user); updateFab(res.user); closeModal()
+          setToken(res.token); setSession(res.user); fillProfile(res.user); updateFab(res.user); updateBanner(res.user); closeModal()
         }, 900)
       })
       .catch(function () { err.textContent = 'Error de conexión. Inténtalo de nuevo.' })
@@ -407,33 +484,79 @@
 
     // Cambio de contraseña forzado
     document.getElementById('cp-btn').addEventListener('click', function () {
-      var pwd  = document.getElementById('cp-pwd').value
-      var pwd2 = document.getElementById('cp-pwd2').value
-      var err  = document.getElementById('cp-err')
-      var btn  = document.getElementById('cp-btn')
+      var oldPwd = document.getElementById('cp-old').value
+      var pwd    = document.getElementById('cp-pwd').value
+      var pwd2   = document.getElementById('cp-pwd2').value
+      var err    = document.getElementById('cp-err')
+      var btn    = document.getElementById('cp-btn')
       err.textContent = ''
-      if (!pwd || pwd.length < 6) { err.textContent = 'La contraseña debe tener al menos 6 caracteres.'; return }
+      if (!oldPwd) { err.textContent = 'Introduce la contraseña actual (temporal).'; return }
+      if (!pwd || pwd.length < 6) { err.textContent = 'La nueva contraseña debe tener al menos 6 caracteres.'; return }
       if (pwd !== pwd2) { err.textContent = 'Las contraseñas no coinciden.'; return }
       btn.disabled = true; btn.textContent = 'Guardando…'
       fetch('/api/change-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
-        body: JSON.stringify({ password: pwd })
+        body: JSON.stringify({ oldPassword: oldPwd, password: pwd })
       })
       .then(function (r) { return r.json() })
       .then(function (res) {
         if (res.error) { err.textContent = res.error; return }
         var session = getSession()
         if (session) { session.forcePwdChange = false; setSession(session) }
-        fillProfile(session); switchTab('profile')
+        updateBanner(session); fillProfile(session); switchTab('profile')
       })
       .catch(function () { err.textContent = 'Error de conexión.' })
       .finally(function () { btn.disabled = false; btn.textContent = 'Establecer contraseña →' })
     })
 
+    // Editar perfil — abrir
+    document.getElementById('a-edit-btn').addEventListener('click', function () {
+      var s = getSession()
+      if (!s) return
+      document.getElementById('ep-name').value      = s.name      || ''
+      document.getElementById('ep-apellidos').value = s.apellidos || ''
+      document.getElementById('ep-telefono').value  = s.telefono  || ''
+      document.getElementById('ep-err').textContent = ''
+      document.getElementById('ep-ok').textContent  = ''
+      switchTab('editprofile')
+    })
+
+    // Editar perfil — cancelar
+    document.getElementById('ep-cancel-btn').addEventListener('click', function () {
+      switchTab('profile')
+    })
+
+    // Editar perfil — guardar
+    document.getElementById('ep-save-btn').addEventListener('click', function () {
+      var name      = document.getElementById('ep-name').value.trim()
+      var apellidos = document.getElementById('ep-apellidos').value.trim()
+      var telefono  = document.getElementById('ep-telefono').value.trim()
+      var err       = document.getElementById('ep-err')
+      var ok        = document.getElementById('ep-ok')
+      var btn       = document.getElementById('ep-save-btn')
+      err.textContent = ''; ok.textContent = ''
+      if (!name || name.length < 2) { err.textContent = 'El nombre debe tener al menos 2 caracteres.'; return }
+      btn.disabled = true; btn.textContent = 'Guardando…'
+      fetch('/api/me/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
+        body: JSON.stringify({ name: name, apellidos: apellidos, telefono: telefono })
+      })
+      .then(function (r) { return r.json() })
+      .then(function (res) {
+        if (res.error) { err.textContent = res.error; return }
+        setSession(res); updateFab(res); fillProfile(res)
+        ok.textContent = '¡Perfil actualizado!'
+        setTimeout(function () { switchTab('profile') }, 900)
+      })
+      .catch(function () { err.textContent = 'Error de conexión.' })
+      .finally(function () { btn.disabled = false; btn.textContent = 'Guardar cambios →' })
+    })
+
     // Logout
     document.getElementById('a-logout').addEventListener('click', function () {
-      clearSession(); updateFab(null); closeModal()
+      clearSession(); updateFab(null); updateBanner(null); closeModal()
       window._miembrosInit = false
       window._miembrosHistory = []
     })
@@ -785,8 +908,8 @@
       '<h3>Acceso exclusivo para miembros</h3><p>' + msg + '</p>' +
       '<a class="boton" href="servicios.html" style="display:inline-block;text-decoration:none">' +
       'Ver planes disponibles →</a></div>' +
-      '<div id="m-app-footer"><p><strong>M&M Studio App</strong>Para disfrutar de todas las ventajas, continúa en la aplicación</p>' +
-      '<div class="mapp-b"><span>App Store</span><span>Google Play</span></div></div>'
+      '<div id="m-app-footer"><p><strong>M&M Studio App</strong>Para disfrutar de todas las ventajas, contrata un plan y accede a tu app privada</p>' +
+      '<div class="mapp-b"></div></div>'
   }
 
   function buildModal(session, plan, nombre, ini, color, recursos) {
@@ -816,9 +939,10 @@
       '<div id="mtab-recursos">' + cards + '</div>' +
       '</div>' +
       '<div id="m-app-footer">' +
-      '<p><strong>M&M Studio App</strong>Para consultar todas las ventajas de tu ' + plan +
-      ', continúa en la aplicación y accede a tu panel completo</p>' +
-      '<div class="mapp-b"><span>App Store</span><span>Google Play</span></div></div>'
+      '<p><strong>M&M Studio App</strong>Accede a tu panel completo con todas las ventajas de tu ' + plan + '</p>' +
+      '<div class="mapp-b"><a href="app.html" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);' +
+      'color:white;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:bold;' +
+      'text-decoration:none;white-space:nowrap;">Ir a mi App →</a></div></div>'
   }
 
   fab.addEventListener('click', abrir)

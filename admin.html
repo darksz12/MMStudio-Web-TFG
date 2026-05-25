@@ -179,6 +179,8 @@
     </div>
     <div id="user-modal-body">
       <div class="um-row"><span class="lbl">Nombre</span><span class="val" id="um-name"></span></div>
+      <div class="um-row"><span class="lbl">Apellidos</span><span class="val" id="um-apellidos"></span></div>
+      <div class="um-row"><span class="lbl">Teléfono</span><span class="val" id="um-telefono"></span></div>
       <div class="um-row"><span class="lbl">Email</span><span class="val" id="um-email"></span></div>
       <div class="um-row"><span class="lbl">Contraseña</span><span class="val pwd">Cifrada — no visible por seguridad</span></div>
       <div class="um-row"><span class="lbl">Miembro desde</span><span class="val" id="um-joined"></span></div>
@@ -266,9 +268,13 @@ function openUserModal(id) {
   document.getElementById('um-avatar').textContent = initials(u.name)
   document.getElementById('um-title').querySelector('strong').textContent = u.name
   document.getElementById('um-title').querySelector('span').textContent   = u.email
-  document.getElementById('um-name').textContent   = u.name
-  document.getElementById('um-email').textContent  = u.email
-  document.getElementById('um-joined').textContent = u.joined
+  document.getElementById('um-name').textContent      = u.name
+  document.getElementById('um-apellidos').textContent = u.apellidos || '—'
+  document.getElementById('um-apellidos').style.color = u.apellidos ? '#e0d5c5' : '#555'
+  document.getElementById('um-telefono').textContent  = u.telefono  || '—'
+  document.getElementById('um-telefono').style.color  = u.telefono  ? '#e0d5c5' : '#555'
+  document.getElementById('um-email').textContent     = u.email
+  document.getElementById('um-joined').textContent    = u.joined
   document.getElementById('um-plan-current').innerHTML = planBadge(u.plan)
   document.getElementById('um-plan-select').value = u.plan || 'Sin plan activo'
   document.getElementById('um-msg').textContent     = ''
