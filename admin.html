@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Admin — M&M Studio</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0d0d0d; color: #e0d5c5; min-height: 100vh; }
+
+    /* Login */
+    #login-screen {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh;
+    }
+    #login-box {
+      background: #1a1814; border: 1px solid #3a2f20;
+      border-radius: 20px; padding: 40px; width: 380px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.6);
+    }
+    #login-box h2 { color: #b99a5b; font-size: 22px; margin-bottom: 6px; }
+    #login-box p  { color: #888; font-size: 13px; margin-bottom: 28px; }
+    .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+    .field label { font-size: 12px; font-weight: 700; color: #b99a5b; text-transform: uppercase; letter-spacing: .5px; }
+    .field input {
+      padding: 12px 14px; border: 1.5px solid #3a2f20; border-radius: 10px;
+      background: #141210; color: #e0d5c5; font-size: 14px; outline: none;
+    }
+    .field input:focus { border-color: #b99a5b; }
+    #login-err { color: #e74c3c; font-size: 13px; min-height: 18px; margin-bottom: 8px; }
+    #login-btn {
+      width: 100%; padding: 13px;
+      background: linear-gradient(135deg, #6b5438, #b99a5b);
+      color: white; border: none; border-radius: 12px;
+      font-size: 15px; font-weight: bold; cursor: pointer;
+    }
+    #login-btn:hover { opacity: .9; }
+
+    /* Panel */
+    #panel { display: none; }
+    header {
+      background: linear-gradient(135deg, #0d0d0d, #3a2b16);
+      border-bottom: 1px solid #3a2f20;
+      padding: 16px 32px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    header h1 { color: #b99a5b; font-size: 20px; }
+    header span { color: #888; font-size: 13px; }
+    #logout-btn {
+      background: #2d2318; border: 1px solid #3a2f20; color: #b99a5b;
+      padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px;
+    }
+    #logout-btn:hover { background: #3a2b16; }
+
+    main { padding: 32px; max-width: 1100px; margin: 0 auto; }
+
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .stat-card {
+      background: #1a1814; border: 1px solid #3a2f20; border-radius: 14px; padding: 20px;
+    }
+    .stat-card .num { font-size: 32px; font-weight: bold; color: #b99a5b; }
+    .stat-card .lbl { font-size: 13px; color: #888; margin-top: 4px; }
+
+    h2 { color: #b99a5b; font-size: 18px; margin-bottom: 16px; }
+
+    .table-wrap { background: #1a1814; border: 1px solid #3a2f20; border-radius: 14px; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      background: #141210; padding: 14px 16px; text-align: left;
+      font-size: 12px; font-weight: 700; color: #b99a5b; text-transform: uppercase; letter-spacing: .5px;
+    }
+    tbody tr { border-top: 1px solid #2d2318; }
+    tbody tr:hover { background: #1e1c18; }
+    tbody td { padding: 14px 16px; font-size: 14px; color: #e0d5c5; }
+    .plan-badge {
+      display: inline-block; padding: 4px 12px; border-radius: 20px;
+      font-size: 12px; font-weight: bold;
+    }
+    .plan-normal   { background: #2d2318; color: #b99a5b; }
+    .plan-premium  { background: #3a2b16; color: #d4a96a; }
+    .plan-exeltior { background: #1a1814; color: #fff; border: 1px solid #b99a5b; }
+    .plan-sin      { background: #222; color: #666; }
+    .empty { text-align: center; padding: 40px; color: #555; }
+  </style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="login-screen">
+  <div id="login-box">
+    <h2>Panel de Administración</h2>
+    <p>M&M Studio — acceso restringido</p>
+    <div class="field"><label>Email</label><input id="a-email" type="email" placeholder="admin@mmstudio.com"></div>
+    <div class="field"><label>Contraseña</label><input id="a-pwd" type="password" placeholder="••••••••"></div>
+    <div id="login-err"></div>
+    <button id="login-btn">Entrar →</button>
+  </div>
+</div>
+
+<!-- Panel -->
+<div id="panel">
+  <header>
+    <h1>M&M Studio · Admin</h1>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <span id="admin-name"></span>
+      <button id="logout-btn">Cerrar sesión</button>
+    </div>
+  </header>
+  <main>
+    <div class="stats">
+      <div class="stat-card"><div class="num" id="s-total">—</div><div class="lbl">Usuarios registrados</div></div>
+      <div class="stat-card"><div class="num" id="s-normal">—</div><div class="lbl">Plan Normal</div></div>
+      <div class="stat-card"><div class="num" id="s-premium">—</div><div class="lbl">Plan Premium</div></div>
+      <div class="stat-card"><div class="num" id="s-exeltior">—</div><div class="lbl">Plan Exeltior</div></div>
+    </div>
+    <h2>Usuarios</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>Plan</th>
+            <th>Miembro desde</th>
+          </tr>
+        </thead>
+        <tbody id="users-tbody"></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<script>
+var token = null
+
+function planBadge(plan) {
+  if (!plan || plan === 'Sin plan activo') return '<span class="plan-badge plan-sin">Sin plan</span>'
+  if (plan.indexOf('Exeltior') !== -1) return '<span class="plan-badge plan-exeltior">Exeltior</span>'
+  if (plan.indexOf('Premium') !== -1)  return '<span class="plan-badge plan-premium">Premium</span>'
+  if (plan.indexOf('Normal') !== -1)   return '<span class="plan-badge plan-normal">Normal</span>'
+  return '<span class="plan-badge plan-sin">' + plan + '</span>'
+}
+
+function loadUsers() {
+  fetch('/api/admin/users', { headers: { 'Authorization': 'Bearer ' + token } })
+    .then(function(r) { return r.json() })
+    .then(function(users) {
+      var tbody = document.getElementById('users-tbody')
+      if (!users.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">No hay usuarios registrados aún.</td></tr>'; return }
+
+      document.getElementById('s-total').textContent = users.length
+      document.getElementById('s-normal').textContent   = users.filter(function(u){ return u.plan && u.plan.indexOf('Normal') !== -1 }).length
+      document.getElementById('s-premium').textContent  = users.filter(function(u){ return u.plan && u.plan.indexOf('Premium') !== -1 }).length
+      document.getElementById('s-exeltior').textContent = users.filter(function(u){ return u.plan && u.plan.indexOf('Exeltior') !== -1 }).length
+
+      tbody.innerHTML = users.map(function(u, i) {
+        return '<tr>' +
+          '<td>' + (i + 1) + '</td>' +
+          '<td>' + u.name + '</td>' +
+          '<td>' + u.email + '</td>' +
+          '<td>' + planBadge(u.plan) + '</td>' +
+          '<td>' + u.joined + '</td>' +
+          '</tr>'
+      }).join('')
+    })
+}
+
+document.getElementById('login-btn').addEventListener('click', function() {
+  var email = document.getElementById('a-email').value.trim()
+  var pwd   = document.getElementById('a-pwd').value
+  var err   = document.getElementById('login-err')
+  var btn   = document.getElementById('login-btn')
+  if (!email || !pwd) { err.textContent = 'Completa todos los campos.'; return }
+  err.textContent = ''; btn.disabled = true; btn.textContent = 'Entrando…'
+  fetch('/api/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email, password: pwd })
+  })
+  .then(function(r) { return r.json() })
+  .then(function(res) {
+    if (res.error) { err.textContent = res.error; return }
+    if (!res.user.isAdmin) { err.textContent = 'Esta cuenta no tiene permisos de administrador.'; return }
+    token = res.token
+    document.getElementById('admin-name').textContent = res.user.name
+    document.getElementById('login-screen').style.display = 'none'
+    document.getElementById('panel').style.display = 'block'
+    loadUsers()
+  })
+  .catch(function() { err.textContent = 'Error de conexión.' })
+  .finally(function() { btn.disabled = false; btn.textContent = 'Entrar →' })
+})
+
+document.getElementById('a-pwd').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') document.getElementById('login-btn').click()
+})
+
+document.getElementById('logout-btn').addEventListener('click', function() {
+  token = null
+  document.getElementById('login-screen').style.display = 'flex'
+  document.getElementById('panel').style.display = 'none'
+})
+</script>
+</body>
+</html>

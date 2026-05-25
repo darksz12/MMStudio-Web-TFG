@@ -20,6 +20,18 @@ services:
       - /etc/letsencrypt:/etc/letsencrypt:ro  # certificado SSL real
     restart: unless-stopped
 
+  # ---- API backend (Node.js + SQLite) ----
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: mmstudio_api
+    volumes:
+      - api_data:/data
+    environment:
+      - JWT_SECRET=mmstudio-jwt-secret-2025
+    restart: unless-stopped
+
   # ---- Exportador de métricas de Nginx ----
   nginx-exporter:
     image: nginx/nginx-prometheus-exporter:latest
@@ -60,3 +72,4 @@ services:
 volumes:
   prometheus_data:   # datos históricos de Prometheus
   grafana_data:      # dashboards y configuración de Grafana
+  api_data:          # base de datos SQLite de usuarios

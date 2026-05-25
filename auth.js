@@ -1,38 +1,15 @@
 ;(function () {
   'use strict'
 
-  // ---- Datos (localStorage) ----
-  var USERS_KEY = 'mm_users'
+  // ---- Datos (localStorage + API) ----
   var SESSION_KEY = 'mm_session'
+  var TOKEN_KEY   = 'mm_token'
 
-  function getUsers() { return JSON.parse(localStorage.getItem(USERS_KEY) || '[]') }
-  function saveUsers(u) { localStorage.setItem(USERS_KEY, JSON.stringify(u)) }
   function getSession() { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null') }
   function setSession(u) { localStorage.setItem(SESSION_KEY, JSON.stringify(u)) }
-  function clearSession() { localStorage.removeItem(SESSION_KEY) }
-  function hashPwd(s) { return btoa(encodeURIComponent(s)) }
-
-  function register(name, email, password) {
-    var users = getUsers()
-    if (users.find(function (u) { return u.email.toLowerCase() === email.toLowerCase() }))
-      return { error: 'Ya existe una cuenta con ese email.' }
-    var user = {
-      name: name, email: email, password: hashPwd(password),
-      plan: 'Sin plan activo', joined: new Date().toLocaleDateString('es-ES')
-    }
-    users.push(user)
-    saveUsers(users)
-    return { ok: true, user: user }
-  }
-
-  function login(email, password) {
-    var users = getUsers()
-    var user = users.find(function (u) {
-      return u.email.toLowerCase() === email.toLowerCase() && u.password === hashPwd(password)
-    })
-    if (!user) return { error: 'Email o contraseña incorrectos.' }
-    return { ok: true, user: user }
-  }
+  function clearSession() { localStorage.removeItem(SESSION_KEY); localStorage.removeItem(TOKEN_KEY) }
+  function getToken() { return localStorage.getItem(TOKEN_KEY) }
+  function setToken(t) { localStorage.setItem(TOKEN_KEY, t) }
 
   function getInitials(name) {
     return name.trim().split(/\s+/).map(function (w) { return w[0] }).slice(0, 2).join('').toUpperCase()
@@ -328,8 +305,20 @@
   // ---- Eventos ----
   document.addEventListener('DOMContentLoaded', function () {
     var session = getSession()
+    var token   = getToken()
     updateFab(session)
     if (session) fillProfile(session)
+
+    // Validar token con la API en segundo plano
+    if (token) {
+      fetch('/api/me', { headers: { 'Authorization': 'Bearer ' + token } })
+        .then(function (r) { return r.json() })
+        .then(function (user) {
+          if (user.error) { clearSession(); updateFab(null); return }
+          setSession(user); updateFab(user); fillProfile(user)
+        })
+        .catch(function () {})
+    }
 
     fab.addEventListener('click', function () {
       openModal(getSession() ? 'profile' : 'login')
@@ -349,10 +338,21 @@
       var email = document.getElementById('l-email').value.trim()
       var pwd   = document.getElementById('l-pwd').value
       var err   = document.getElementById('l-err')
+      var btn   = document.getElementById('l-btn')
       if (!email || !pwd) { err.textContent = 'Completa todos los campos.'; return }
-      var res = login(email, pwd)
-      if (res.error) { err.textContent = res.error; return }
-      setSession(res.user); fillProfile(res.user); updateFab(res.user); closeModal()
+      err.textContent = ''; btn.disabled = true; btn.textContent = 'Entrando…'
+      fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, password: pwd })
+      })
+      .then(function (r) { return r.json() })
+      .then(function (res) {
+        if (res.error) { err.textContent = res.error; return }
+        setToken(res.token); setSession(res.user); fillProfile(res.user); updateFab(res.user); closeModal()
+      })
+      .catch(function () { err.textContent = 'Error de conexión. Inténtalo de nuevo.' })
+      .finally(function () { btn.disabled = false; btn.textContent = 'Entrar →' })
     })
 
     // Register
@@ -362,21 +362,31 @@
       var pwd   = document.getElementById('r-pwd').value
       var err   = document.getElementById('r-err')
       var ok    = document.getElementById('r-ok')
+      var btn   = document.getElementById('r-btn')
       err.textContent = ''; ok.textContent = ''
       if (!name || !email || !pwd) { err.textContent = 'Completa todos los campos.'; return }
       if (pwd.length < 6) { err.textContent = 'La contraseña debe tener al menos 6 caracteres.'; return }
-      var res = register(name, email, pwd)
-      if (res.error) { err.textContent = res.error; return }
-      ok.textContent = '¡Cuenta creada correctamente!'
-      setTimeout(function () {
-        setSession(res.user); fillProfile(res.user); updateFab(res.user); closeModal()
-      }, 900)
+      btn.disabled = true; btn.textContent = 'Creando cuenta…'
+      fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name, email: email, password: pwd })
+      })
+      .then(function (r) { return r.json() })
+      .then(function (res) {
+        if (res.error) { err.textContent = res.error; return }
+        ok.textContent = '¡Cuenta creada correctamente!'
+        setTimeout(function () {
+          setToken(res.token); setSession(res.user); fillProfile(res.user); updateFab(res.user); closeModal()
+        }, 900)
+      })
+      .catch(function () { err.textContent = 'Error de conexión. Inténtalo de nuevo.' })
+      .finally(function () { btn.disabled = false; btn.textContent = 'Crear cuenta →' })
     })
 
     // Logout
     document.getElementById('a-logout').addEventListener('click', function () {
       clearSession(); updateFab(null); closeModal()
-      // Reset members area on logout
       window._miembrosInit = false
       window._miembrosHistory = []
     })
@@ -431,6 +441,7 @@
   window._miembrosInit    = window._miembrosInit    || false
 
   function getSession() { return JSON.parse(localStorage.getItem('mm_session') || 'null') }
+  function getToken() { return localStorage.getItem('mm_token') }
 
   function getActivePlan(session) {
     if (!session || !session.plan) return null
