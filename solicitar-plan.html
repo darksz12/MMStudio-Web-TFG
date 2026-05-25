@@ -45,8 +45,19 @@
     </select>
     <label>Cuéntanos tu caso</label>
     <textarea id="f-desc" placeholder="Describe qué quieres mejorar, cuál es tu situación actual y qué objetivo tienes..."></textarea>
-    <button type="submit">Continuar con la asesora →</button>
+    <div id="solicitud-err" style="color:#c0392b;font-size:13px;margin-top:8px;"></div>
+    <button type="submit">Enviar solicitud →</button>
   </form>
+
+  <div id="solicitud-ok" style="display:none;text-align:center;padding:40px 20px;">
+    <div style="font-size:56px;margin-bottom:16px;">⏳</div>
+    <h3 style="font-size:22px;margin-bottom:12px;">¡Solicitud enviada!</h3>
+    <p style="color:#666;font-size:15px;max-width:420px;margin:0 auto 24px;line-height:1.7;">
+      Tu solicitud está <strong>pendiente de revisión</strong>. Nuestro equipo la activará en las próximas horas.<br>
+      Recibirás una notificación en la plataforma cuando esté lista.
+    </p>
+    <a href="inicio.html" class="boton">Volver al inicio →</a>
+  </div>
 </main>
 <footer class="footer"><p>M&M Studio - Proyecto TFG ASIR</p><p>Web corporativa preparada para Docker, Nginx, backups, monitorización y HTTPS.</p></footer>
 
@@ -90,17 +101,38 @@ document.addEventListener('DOMContentLoaded', function () {
 
 function enviarSolicitud(e) {
   e.preventDefault()
-  var data = {
-    nombre:   document.getElementById('f-nombre').value.trim(),
-    email:    document.getElementById('f-email').value.trim(),
-    plan:     document.getElementById('f-plan').value,
-    perfil:   document.getElementById('f-perfil').value.trim(),
-    servicio: document.getElementById('f-servicio').value,
-    desc:     document.getElementById('f-desc').value.trim(),
-    fecha:    new Date().toLocaleDateString('es-ES')
+  var token = localStorage.getItem('mm_token')
+  var planSelect = document.getElementById('f-plan').value
+  var planMap = {
+    'Plan Normal - 150€/mes':          'Plan Normal',
+    'Plan Premium - 400€/mes':         'Plan Premium',
+    'Plan Exeltior - desde 1.500€/mes':'Plan Exeltior'
   }
-  localStorage.setItem('mm_solicitud', JSON.stringify(data))
-  window.location.href = 'consulta.html'
+  var planName = planMap[planSelect] || 'Plan Normal'
+  var btn = document.querySelector('#solicitud-form button[type="submit"]')
+  btn.disabled = true; btn.textContent = 'Enviando solicitud…'
+
+  fetch('/api/plan/request', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({ plan: planName })
+  })
+  .then(function(r) { return r.json() })
+  .then(function(res) {
+    if (res.error) {
+      btn.disabled = false; btn.textContent = 'Continuar con la asesora →'
+      var err = document.getElementById('solicitud-err')
+      if (err) err.textContent = res.error
+      return
+    }
+    localStorage.setItem('mm_session', JSON.stringify(res))
+    localStorage.setItem('mm_last_plan_status', 'pending:' + planName)
+    document.getElementById('solicitud-form').style.display = 'none'
+    document.getElementById('solicitud-ok').style.display = 'block'
+  })
+  .catch(function() {
+    btn.disabled = false; btn.textContent = 'Continuar con la asesora →'
+  })
   return false
 }
 </script>

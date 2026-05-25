@@ -544,7 +544,8 @@
     var currentStatus = 'none'
     if (session.plan && session.plan !== 'Sin plan activo') currentStatus = 'active:' + session.plan
     else if (session.planRequested) currentStatus = 'pending:' + session.planRequested
-    if (lastStatus.startsWith('pending:') && currentStatus.startsWith('active:')) {
+    // Solo celebrar si la transición fue pendiente→activo Y no hay planRequested (ya fue limpiado por el servidor)
+    if (lastStatus.startsWith('pending:') && currentStatus.startsWith('active:') && !session.planRequested) {
       showPlanActivated(session.plan)
     }
     localStorage.setItem('mm_last_plan_status', currentStatus)
