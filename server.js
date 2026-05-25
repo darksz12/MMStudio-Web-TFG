@@ -185,7 +185,7 @@ app.patch('/api/admin/users/:id/password', authMiddleware, (req, res) => {
 
 // POST /api/groq  — proxy autenticado hacia Groq
 app.post('/api/groq', authMiddleware, (req, res) => {
-  if (!GROQ_KEY || GROQ_KEY === 'TU_API_KEY_GROQ_AQUI') {
+  if (!GROQ_KEY) {
     return res.status(503).json({ error: 'Servicio de IA no configurado.' })
   }
   const payload = JSON.stringify({
