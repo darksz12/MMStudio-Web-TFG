@@ -847,16 +847,15 @@
   function systemPrompt(session, plan) {
     var nombre = session.name.split(' ')[0]
     var recursos = (PLAN_RECURSOS[plan] || []).map(function (r) { return r.titulo }).join(', ')
-    return 'Eres la gestora de cuenta privada y exclusiva de ' + nombre + ' en M&M Studio.' +
-      ' Tu única función es acompañar a ' + nombre + ' en el aprovechamiento de su ' + plan + '.' +
-      ' Trátale siempre por su nombre y con un trato premium, como si fuera tu único cliente.' +
-      '\n\nSu plan incluye exactamente estos recursos: ' + recursos + '.' +
+    return 'Eres la asesora privada y personal de ' + nombre + ' en M&M Studio.' +
+      ' Tienes una relación cercana y de confianza con ' + nombre + ', trátale siempre por su nombre.' +
+      ' Eres experta en imagen personal, marca profesional, redes sociales, moda, estilo, fotografía, LinkedIn, Instagram, TikTok y todo lo relacionado con la presencia digital.' +
+      '\n\nSu plan es ' + plan + ' e incluye: ' + recursos + '.' +
       '\n\nCómo debes responder:' +
-      '\n- Centra TODAS tus respuestas en los recursos de su ' + plan + ': cómo usarlos, qué esperar, próximos pasos' +
-      '\n- Si te hace una pregunta general de imagen, relaciónala siempre con alguno de sus recursos del plan' +
-      '\n- Usa un lenguaje exclusivo: "en tu plan tienes acceso a...", "vamos a trabajar juntos en...", "tu próximo paso es..."' +
-      '\n- Si pregunta algo que no cubre su plan, indícale qué plan lo incluiría (sin presionar)' +
-      '\n- Máximo 4 frases por respuesta. En español. No menciones que eres una IA.'
+      '\n- Puedes hablar de cualquier tema relacionado con imagen, estilo, redes, marca personal, comunicación o presencia digital' +
+      '\n- Cuando sea relevante, menciona cómo sus recursos del plan pueden ayudarle' +
+      '\n- Si te pregunta algo muy alejado de la imagen o la marca personal, responde de forma breve y redirige la conversación con naturalidad' +
+      '\n- Trato cercano, premium y personalizado. Máximo 4-5 frases por respuesta. En español. No menciones que eres una IA.'
   }
 
   // ---- ESTILOS ----
@@ -1086,7 +1085,7 @@
     fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
-      body: JSON.stringify({ model: 'llama-3.1-8b-instant', max_tokens: 300, messages: msgs })
+      body: JSON.stringify({ model: 'llama-3.3-70b-versatile', max_tokens: 300, messages: msgs })
     })
     .then(function (r) { return r.json() })
     .then(function (d) {
@@ -1116,9 +1115,9 @@
       : ''
     var planButtons = (!session || isPending) ? '' :
       '<div style="display:flex;flex-direction:column;gap:8px;width:100%;max-width:320px;margin:0 auto 20px;">' +
-      '<a href="solicitar-plan.html" class="mlk-plan-btn" data-plan="Plan Normal"   style="display:block;text-align:center;text-decoration:none;padding:12px;border-radius:10px;border:1.5px solid #8c6a32;background:#faf7f2;color:#6b5438;font-size:14px;font-weight:bold;cursor:pointer;">Plan Normal · 150€/mes</a>' +
-      '<a href="solicitar-plan.html" class="mlk-plan-btn" data-plan="Plan Premium"  style="display:block;text-align:center;text-decoration:none;padding:12px;border-radius:10px;border:2px solid #b99a5b;background:linear-gradient(135deg,#fdf6e3,#faf0d7);color:#6b5438;font-size:14px;font-weight:bold;cursor:pointer;">⭐ Plan Premium · 400€/mes</a>' +
-      '<a href="solicitar-plan.html" class="mlk-plan-btn" data-plan="Plan Exeltior" style="display:block;text-align:center;text-decoration:none;padding:12px;border-radius:10px;border:1.5px solid #3a3a3a;background:#1a1a1a;color:#ffd700;font-size:14px;font-weight:bold;cursor:pointer;">👑 Plan Exeltior · desde 1.500€/mes</a>' +
+      '<a href="solicitar-plan.html?plan=normal"   class="mlk-plan-btn" style="display:block;text-align:center;text-decoration:none;padding:12px;border-radius:10px;border:1.5px solid #8c6a32;background:#faf7f2;color:#6b5438;font-size:14px;font-weight:bold;cursor:pointer;">Plan Normal · 150€/mes</a>' +
+      '<a href="solicitar-plan.html?plan=premium"  class="mlk-plan-btn" style="display:block;text-align:center;text-decoration:none;padding:12px;border-radius:10px;border:2px solid #b99a5b;background:linear-gradient(135deg,#fdf6e3,#faf0d7);color:#6b5438;font-size:14px;font-weight:bold;cursor:pointer;">⭐ Plan Premium · 400€/mes</a>' +
+      '<a href="solicitar-plan.html?plan=exeltior" class="mlk-plan-btn" style="display:block;text-align:center;text-decoration:none;padding:12px;border-radius:10px;border:1.5px solid #3a3a3a;background:#1a1a1a;color:#ffd700;font-size:14px;font-weight:bold;cursor:pointer;">👑 Plan Exeltior · desde 1.500€/mes</a>' +
       '</div>'
     var noLoginMsg = !session
       ? '<p style="color:#888;font-size:14px;margin-bottom:20px;">Inicia sesión para solicitar un plan.</p>'
