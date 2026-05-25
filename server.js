@@ -1,6 +1,7 @@
 'use strict'
 
 const express = require('express')
+const https   = require('https')
 const Database = require('better-sqlite3')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
@@ -8,6 +9,7 @@ const cors = require('cors')
 
 const app = express()
 const JWT_SECRET = process.env.JWT_SECRET || 'mmstudio-secret-2025'
+const GROQ_KEY   = process.env.GROQ_KEY   || 'TU_API_KEY_GROQ_AQUI'
 const db = new Database('/data/mmstudio.db')
 
 app.use(express.json())
@@ -179,6 +181,42 @@ app.patch('/api/admin/users/:id/password', authMiddleware, (req, res) => {
   db.prepare('UPDATE users SET password = ?, force_pwd_change = ? WHERE id = ?')
     .run(bcrypt.hashSync(password, 10), forceChange ? 1 : 0, req.params.id)
   res.json({ ok: true })
+})
+
+// POST /api/groq  — proxy autenticado hacia Groq
+app.post('/api/groq', authMiddleware, (req, res) => {
+  if (!GROQ_KEY || GROQ_KEY === 'TU_API_KEY_GROQ_AQUI') {
+    return res.status(503).json({ error: 'Servicio de IA no configurado.' })
+  }
+  const payload = JSON.stringify({
+    model: 'llama-3.3-70b-versatile',
+    max_tokens: Number(req.body.max_tokens) || 500,
+    messages: req.body.messages
+  })
+  const opts = {
+    hostname: 'api.groq.com',
+    path: '/openai/v1/chat/completions',
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + GROQ_KEY,
+      'Content-Length': Buffer.byteLength(payload)
+    }
+  }
+  const pr = https.request(opts, gr => {
+    let data = ''
+    gr.on('data', c => { data += c })
+    gr.on('end', () => {
+      try { res.json(JSON.parse(data)) }
+      catch (e) { res.status(500).json({ error: 'Respuesta inválida de Groq.' }) }
+    })
+  })
+  pr.on('error', e => {
+    console.error('Groq proxy error:', e.message)
+    res.status(502).json({ error: 'No se pudo conectar con el servicio de IA.' })
+  })
+  pr.write(payload)
+  pr.end()
 })
 
 app.listen(3001, () => console.log('API MMStudio en puerto 3001'))

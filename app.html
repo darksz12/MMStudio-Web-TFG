@@ -401,8 +401,6 @@ body{background:linear-gradient(145deg,#0d0d0d 0%,#1c1509 40%,#2b1e0a 70%,#3a2b1
 ;(function(){
 'use strict'
 
-var GROQ_KEY = 'TU_API_KEY_GROQ_AQUI'
-
 var _conHistory = []
 var _conInit    = false
 var _repHistory = []
@@ -569,24 +567,30 @@ function enviarConsultoria() {
     ' Tu objetivo es entender su situación y metas para construir un plan estratégico de imagen personalizado.' +
     ' Haz preguntas una por una. Cuando tengas suficiente información (unas 4-5 respuestas) presenta un "Plan Estratégico" con 3-5 acciones concretas y priorizadas.' +
     ' Tono profesional y cercano. Máximo 4 frases por respuesta. En español. No menciones que eres IA.'
-  fetch('https://api.groq.com/openai/v1/chat/completions', {
+  fetch('/api/groq', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
-    body: JSON.stringify({ model: 'llama-3.3-70b-versatile', max_tokens: 450,
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
+    body: JSON.stringify({ max_tokens: 450,
       messages: [{ role: 'system', content: sys }].concat(_conHistory) })
   })
   .then(function(r){ return r.json() })
   .then(function(d){
     var el = document.getElementById(tId); if (el) el.remove()
-    var reply = (d.choices && d.choices[0]) ? d.choices[0].message.content : 'Cuéntame más sobre tu situación.'
+    if (d.error) {
+      addConMsg('⚠️ ' + (typeof d.error === 'string' ? d.error : (d.error.message || 'Error de IA')), 'bot')
+      inp.disabled = false; send.disabled = false; inp.focus(); return
+    }
+    var reply = d.choices && d.choices[0] && d.choices[0].message.content
+    if (!reply) { addConMsg('Sin respuesta. Inténtalo de nuevo.', 'bot'); inp.disabled = false; send.disabled = false; inp.focus(); return }
     addConMsg(reply, 'bot')
     _conHistory.push({ role: 'assistant', content: reply })
+    inp.disabled = false; send.disabled = false; inp.focus()
   })
   .catch(function(){
     var el = document.getElementById(tId); if (el) el.remove()
     addConMsg('Error de conexión. Inténtalo de nuevo.', 'bot')
+    inp.disabled = false; send.disabled = false; inp.focus()
   })
-  .finally(function(){ inp.disabled = false; send.disabled = false; inp.focus() })
 }
 
 // ---- LINKEDIN ----
@@ -626,25 +630,26 @@ function generarLinkedin() {
     '\nResponde EXACTAMENTE con este formato (sin texto extra):\n' +
     'HEADLINE: [máx 120 caracteres, con keywords relevantes, sin clichés]\n' +
     'ABOUT: [150-200 palabras, primera persona, gancho inicial, propuesta de valor y llamada a la acción]'
-  fetch('https://api.groq.com/openai/v1/chat/completions', {
+  fetch('/api/groq', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
-    body: JSON.stringify({ model: 'llama-3.3-70b-versatile', max_tokens: 700,
-      messages: [{ role: 'user', content: prompt }] })
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
+    body: JSON.stringify({ max_tokens: 700, messages: [{ role: 'user', content: prompt }] })
   })
   .then(function(r){ return r.json() })
   .then(function(d){
-    var text = (d.choices && d.choices[0]) ? d.choices[0].message.content : ''
+    if (d.error) { err.textContent = '⚠️ ' + (typeof d.error === 'string' ? d.error : (d.error.message || 'Error de IA')); btn.disabled = false; btn.textContent = '✨ Generar perfil LinkedIn'; return }
+    var text = d.choices && d.choices[0] && d.choices[0].message.content
+    if (!text) { err.textContent = 'Sin respuesta. Inténtalo de nuevo.'; btn.disabled = false; btn.textContent = '✨ Generar perfil LinkedIn'; return }
     var hm = text.match(/HEADLINE:\s*(.+)/i)
     var am = text.match(/ABOUT:\s*([\s\S]+)/i)
     document.getElementById('li-res-h').textContent = hm ? hm[1].trim() : text
-    document.getElementById('li-res-a').textContent = am ? am[1].trim() : ''
+    document.getElementById('li-res-a').textContent = am ? am[1].trim() : text
     document.getElementById('li-results').style.display = 'block'
     document.getElementById('li-body').scrollTop = 9999
     btn.disabled = false; btn.textContent = '✨ Generar perfil LinkedIn'
   })
   .catch(function(){
-    err.textContent = 'Error al generar. Inténtalo de nuevo.'
+    err.textContent = 'Error de conexión. Inténtalo de nuevo.'
     btn.disabled = false; btn.textContent = '✨ Generar perfil LinkedIn'
   })
 }
@@ -699,22 +704,23 @@ function generarFoto() {
     '\nIncluye: lista de tomas recomendadas, consejos de vestuario (colores, prendas, lo que evitar), ' +
     'recomendaciones de localización/fondo, iluminación, posados y expresión facial, y 3 tips de preparación previa. ' +
     'Formato claro con secciones, en español, tono profesional y práctico.'
-  fetch('https://api.groq.com/openai/v1/chat/completions', {
+  fetch('/api/groq', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
-    body: JSON.stringify({ model: 'llama-3.3-70b-versatile', max_tokens: 900,
-      messages: [{ role: 'user', content: prompt }] })
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
+    body: JSON.stringify({ max_tokens: 900, messages: [{ role: 'user', content: prompt }] })
   })
   .then(function(r){ return r.json() })
   .then(function(d){
-    var text = (d.choices && d.choices[0]) ? d.choices[0].message.content : ''
+    if (d.error) { err.textContent = '⚠️ ' + (typeof d.error === 'string' ? d.error : (d.error.message || 'Error de IA')); btn.disabled = false; btn.textContent = '📷 Generar brief de sesión'; return }
+    var text = d.choices && d.choices[0] && d.choices[0].message.content
+    if (!text) { err.textContent = 'Sin respuesta. Inténtalo de nuevo.'; btn.disabled = false; btn.textContent = '📷 Generar brief de sesión'; return }
     document.getElementById('foto-res-txt').textContent = text
     document.getElementById('foto-results').style.display = 'block'
     document.getElementById('foto-body').scrollTop = 9999
     btn.disabled = false; btn.textContent = '📷 Generar brief de sesión'
   })
   .catch(function(){
-    err.textContent = 'Error al generar. Inténtalo de nuevo.'
+    err.textContent = 'Error de conexión. Inténtalo de nuevo.'
     btn.disabled = false; btn.textContent = '📷 Generar brief de sesión'
   })
 }
@@ -768,24 +774,30 @@ function enviarReputacion() {
     ' Haz preguntas focalizadas una a una para entender su situación: presencia actual, crisis activas o pasadas, sectores de riesgo, objetivos.' +
     ' Cuando tengas suficiente contexto (3-4 respuestas) presenta un "Plan de Reputación" con acciones concretas: qué monitorizar, qué reforzar y cómo responder ante situaciones negativas.' +
     ' Tono profesional y directo. Máximo 4 frases por respuesta. En español. No menciones que eres IA.'
-  fetch('https://api.groq.com/openai/v1/chat/completions', {
+  fetch('/api/groq', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
-    body: JSON.stringify({ model: 'llama-3.3-70b-versatile', max_tokens: 450,
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
+    body: JSON.stringify({ max_tokens: 450,
       messages: [{ role: 'system', content: sys }].concat(_repHistory) })
   })
   .then(function(r){ return r.json() })
   .then(function(d){
     var el = document.getElementById(tId); if (el) el.remove()
-    var reply = (d.choices && d.choices[0]) ? d.choices[0].message.content : 'Cuéntame más sobre tu situación.'
+    if (d.error) {
+      addRepMsg('⚠️ ' + (typeof d.error === 'string' ? d.error : (d.error.message || 'Error de IA')), 'bot')
+      inp.disabled = false; send.disabled = false; inp.focus(); return
+    }
+    var reply = d.choices && d.choices[0] && d.choices[0].message.content
+    if (!reply) { addRepMsg('Sin respuesta. Inténtalo de nuevo.', 'bot'); inp.disabled = false; send.disabled = false; inp.focus(); return }
     addRepMsg(reply, 'bot')
     _repHistory.push({ role: 'assistant', content: reply })
+    inp.disabled = false; send.disabled = false; inp.focus()
   })
   .catch(function(){
     var el = document.getElementById(tId); if (el) el.remove()
     addRepMsg('Error de conexión. Inténtalo de nuevo.', 'bot')
+    inp.disabled = false; send.disabled = false; inp.focus()
   })
-  .finally(function(){ inp.disabled = false; send.disabled = false; inp.focus() })
 }
 
 // ---- LIMPIEZA HUELLA DIGITAL ----
@@ -837,24 +849,30 @@ function enviarLimpieza() {
     ' Guía la conversación haciendo preguntas concretas sobre qué plataformas usa, qué contenido quiere eliminar y cuál es su situación.' +
     ' Cuando tengas suficiente información da instrucciones paso a paso específicas y accionables para cada caso.' +
     ' Tono práctico y empático. Máximo 4-5 frases por respuesta. En español. No menciones que eres IA.'
-  fetch('https://api.groq.com/openai/v1/chat/completions', {
+  fetch('/api/groq', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
-    body: JSON.stringify({ model: 'llama-3.3-70b-versatile', max_tokens: 500,
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
+    body: JSON.stringify({ max_tokens: 500,
       messages: [{ role: 'system', content: sys }].concat(_limHistory) })
   })
   .then(function(r){ return r.json() })
   .then(function(d){
     var el = document.getElementById(tId); if (el) el.remove()
-    var reply = (d.choices && d.choices[0]) ? d.choices[0].message.content : 'Cuéntame qué contenido quieres eliminar.'
+    if (d.error) {
+      addLimMsg('⚠️ ' + (typeof d.error === 'string' ? d.error : (d.error.message || 'Error de IA')), 'bot')
+      inp.disabled = false; send.disabled = false; inp.focus(); return
+    }
+    var reply = d.choices && d.choices[0] && d.choices[0].message.content
+    if (!reply) { addLimMsg('Sin respuesta. Inténtalo de nuevo.', 'bot'); inp.disabled = false; send.disabled = false; inp.focus(); return }
     addLimMsg(reply, 'bot')
     _limHistory.push({ role: 'assistant', content: reply })
+    inp.disabled = false; send.disabled = false; inp.focus()
   })
   .catch(function(){
     var el = document.getElementById(tId); if (el) el.remove()
     addLimMsg('Error de conexión. Inténtalo de nuevo.', 'bot')
+    inp.disabled = false; send.disabled = false; inp.focus()
   })
-  .finally(function(){ inp.disabled = false; send.disabled = false; inp.focus() })
 }
 
 // ---- FILTRADO DE OPORTUNIDADES ----
@@ -893,22 +911,23 @@ function generarFiltrado() {
     'ANÁLISIS: [2-3 frases explicando el razonamiento: alineación con imagen, riesgos, beneficios]\n' +
     'CONDICIONES: [si aplica, qué negociar o exigir antes de aceptar]\n' +
     'ALTERNATIVA: [si no recomendada, qué tipo de oportunidad buscar en su lugar]'
-  fetch('https://api.groq.com/openai/v1/chat/completions', {
+  fetch('/api/groq', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
-    body: JSON.stringify({ model: 'llama-3.3-70b-versatile', max_tokens: 500,
-      messages: [{ role: 'user', content: prompt }] })
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
+    body: JSON.stringify({ max_tokens: 500, messages: [{ role: 'user', content: prompt }] })
   })
   .then(function(r){ return r.json() })
   .then(function(d){
-    var text = (d.choices && d.choices[0]) ? d.choices[0].message.content : ''
+    if (d.error) { err.textContent = '⚠️ ' + (typeof d.error === 'string' ? d.error : (d.error.message || 'Error de IA')); btn.disabled = false; btn.textContent = '🤝 Evaluar oportunidad'; return }
+    var text = d.choices && d.choices[0] && d.choices[0].message.content
+    if (!text) { err.textContent = 'Sin respuesta. Inténtalo de nuevo.'; btn.disabled = false; btn.textContent = '🤝 Evaluar oportunidad'; return }
     document.getElementById('fil-res-txt').textContent = text
     document.getElementById('fil-results').style.display = 'block'
     document.getElementById('fil-body').scrollTop = 9999
     btn.disabled = false; btn.textContent = '🤝 Evaluar oportunidad'
   })
   .catch(function(){
-    err.textContent = 'Error al evaluar. Inténtalo de nuevo.'
+    err.textContent = 'Error de conexión. Inténtalo de nuevo.'
     btn.disabled = false; btn.textContent = '🤝 Evaluar oportunidad'
   })
 }
