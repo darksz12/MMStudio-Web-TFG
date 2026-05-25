@@ -336,6 +336,62 @@ body{background:linear-gradient(145deg,#0d0d0d 0%,#1c1509 40%,#2b1e0a 70%,#3a2b1
     </div>
   </div>
 
+  <!-- ===== LIMPIEZA HUELLA DIGITAL ===== -->
+  <div class="card" id="view-limpieza">
+    <div class="card-head">
+      <h2>Limpieza Huella Digital</h2>
+      <p>Identificación y eliminación de contenido no deseado</p>
+    </div>
+    <div class="serv-topbar">
+      <button class="back-btn" id="back-lim">← Mis servicios</button>
+      <span class="serv-topbar-title">🧹 Asesora de limpieza digital</span>
+    </div>
+    <div class="con-msgs" id="lim-msgs"></div>
+    <div class="con-inp-row">
+      <input class="con-inp" id="lim-inp" type="text" placeholder="¿Qué quieres eliminar o limpiar?" maxlength="500">
+      <button class="con-send" id="lim-send">Enviar</button>
+    </div>
+  </div>
+
+  <!-- ===== FILTRADO DE OPORTUNIDADES ===== -->
+  <div class="card" id="view-filtrado">
+    <div class="card-head">
+      <h2>Filtrado de Oportunidades</h2>
+      <p>Evaluación estratégica de colaboraciones y apariciones</p>
+    </div>
+    <div class="serv-topbar">
+      <button class="back-btn" id="back-fil">← Mis servicios</button>
+      <span class="serv-topbar-title">🤝 Evaluador de oportunidades</span>
+    </div>
+    <div class="li-body" id="fil-body">
+      <p style="font-size:13px;color:#888;margin-bottom:4px;">Describe la oportunidad y te diremos si encaja con tu imagen.</p>
+      <label class="li-lbl">Tipo de oportunidad</label>
+      <select class="li-fld" id="fil-tipo">
+        <option>Colaboración con marca</option>
+        <option>Aparición en medios (podcast, entrevista, prensa)</option>
+        <option>Ponencia o evento</option>
+        <option>Patrocinio o embajada de marca</option>
+        <option>Proyecto conjunto con otra persona</option>
+        <option>Otro</option>
+      </select>
+      <label class="li-lbl">Describe la oportunidad</label>
+      <textarea class="li-fld" id="fil-desc" rows="3" placeholder="¿Quién la ofrece, qué implica, condiciones, alcance…?" style="resize:vertical;"></textarea>
+      <label class="li-lbl">Tu objetivo de imagen</label>
+      <input class="li-fld" id="fil-obj" type="text" placeholder="ej. posicionarme como experta, llegar a más clientes B2B…">
+      <label class="li-lbl">Tu tono de marca (opcional)</label>
+      <input class="li-fld" id="fil-tono" type="text" placeholder="ej. formal y sofisticado, cercano y auténtico…">
+      <div class="li-err" id="fil-err"></div>
+      <button class="li-gen-btn" id="fil-gen" style="background:linear-gradient(135deg,#1b4332,#2d6a4f,#40916c)">🤝 Evaluar oportunidad</button>
+      <div id="fil-results" style="display:none;">
+        <div class="li-res-card">
+          <div class="li-res-lbl">📊 Evaluación estratégica</div>
+          <div class="li-res-txt" id="fil-res-txt"></div>
+          <button class="li-copy" data-copy="fil-res-txt">Copiar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <p class="page-footer">
     <a href="inicio.html">← Volver a la web</a> &nbsp;·&nbsp; M&amp;M Studio © 2025
   </p>
@@ -351,6 +407,8 @@ var _conHistory = []
 var _conInit    = false
 var _repHistory = []
 var _repInit    = false
+var _limHistory = []
+var _limInit    = false
 var _user       = null
 
 var SERVICIOS = {
@@ -373,8 +431,8 @@ var SERVICIOS = {
     { icon:'💼', titulo:'LinkedIn premium',           desc:'Headline y "Acerca de" reescritos con IA para posicionarte mejor.',              accion:'linkedin',     btn:'💼 Optimizar perfil →' },
     { icon:'📷', titulo:'Sesión fotográfica',         desc:'Brief completo y coordinación con fotógrafo profesional.',              accion:'foto',       btn:'📷 Crear brief →' },
     { icon:'🛡️', titulo:'Gestión de reputación',     desc:'Monitorización de menciones y estrategia ante crisis.',                    accion:'reputacion',  btn:'🛡️ Gestionar →' },
-    { icon:'🧹', titulo:'Limpieza huella digital',    desc:'Identificación y eliminación de contenido no deseado.' },
-    { icon:'🤝', titulo:'Filtrado de oportunidades',  desc:'Evaluación estratégica de colaboraciones y apariciones.' },
+    { icon:'🧹', titulo:'Limpieza huella digital',    desc:'Identificación y eliminación de contenido no deseado.',                  accion:'limpieza',   btn:'🧹 Limpiar huella →' },
+    { icon:'🤝', titulo:'Filtrado de oportunidades',  desc:'Evaluación estratégica de colaboraciones y apariciones.',                  accion:'filtrado',   btn:'🤝 Evaluar →' },
     { icon:'⚡', titulo:'Acceso prioritario',         desc:'Tu asesora responde en menos de 24 h, cualquier día.' }
   ]
 }
@@ -398,7 +456,7 @@ function initials(name) {
 }
 
 function showView(id) {
-  ['view-login','view-dashboard','view-consultoria','view-linkedin','view-foto','view-reputacion'].forEach(function(v){
+  ['view-login','view-dashboard','view-consultoria','view-linkedin','view-foto','view-reputacion','view-limpieza','view-filtrado'].forEach(function(v){
     document.getElementById(v).style.display = v === id ? 'block' : 'none'
   })
 }
@@ -429,6 +487,8 @@ function showDashboard(user) {
       if (btn.dataset.action === 'linkedin')    openLinkedin()
       if (btn.dataset.action === 'foto')        openFoto()
       if (btn.dataset.action === 'reputacion')  openReputacion()
+      if (btn.dataset.action === 'limpieza')    openLimpieza()
+      if (btn.dataset.action === 'filtrado')    openFiltrado()
     })
   })
   showView('view-dashboard')
@@ -474,6 +534,7 @@ function openConsultoria() {
     var nombre = _user.name.split(' ')[0]
     var w = '¡Hola ' + nombre + '! Vamos a empezar tu consultoría estratégica. Te haré unas preguntas para entender tu situación y construiremos juntos tu plan de imagen personalizado. Para empezar: ¿cuál es tu objetivo principal ahora mismo?'
     addConMsg(w, 'bot')
+    _conHistory = [{ role:'user', content:'Hola' }, { role:'assistant', content:w }]
   }
   var inp  = document.getElementById('con-inp')
   var send = document.getElementById('con-send')
@@ -533,7 +594,7 @@ function openLinkedin() {
   showView('view-linkedin')
   document.getElementById('li-gen').onclick   = generarLinkedin
   document.getElementById('li-regen').onclick = generarLinkedin
-  document.querySelectorAll('.li-copy').forEach(function(btn){
+  document.querySelectorAll('#view-linkedin .li-copy').forEach(function(btn){
     btn.onclick = function(){
       var el = document.getElementById(btn.dataset.copy)
       if (!el) return
@@ -671,6 +732,7 @@ function openReputacion() {
     var nombre = _user.name.split(' ')[0]
     var w = '¡Hola ' + nombre + '! Soy tu asesora de reputación digital. Estoy aquí para ayudarte a proteger y mejorar tu imagen online. Cuéntame: ¿cuál es tu situación actual? ¿Hay algo que te preocupe o quieras mejorar en tu reputación digital?'
     addRepMsg(w, 'bot')
+    _repHistory = [{ role:'user', content:'Hola' }, { role:'assistant', content:w }]
   }
   var inp  = document.getElementById('rep-inp')
   var send = document.getElementById('rep-send')
@@ -726,11 +788,138 @@ function enviarReputacion() {
   .finally(function(){ inp.disabled = false; send.disabled = false; inp.focus() })
 }
 
+// ---- LIMPIEZA HUELLA DIGITAL ----
+function openLimpieza() {
+  showView('view-limpieza')
+  var box = document.getElementById('lim-msgs')
+  box.innerHTML = ''
+  _limHistory.forEach(function(m){
+    addLimMsg(m.content, m.role === 'assistant' ? 'bot' : 'user')
+  })
+  if (!_limInit) {
+    _limInit = true
+    var nombre = _user.name.split(' ')[0]
+    var w = '¡Hola ' + nombre + '! Vamos a limpiar tu huella digital. Te guiaré paso a paso para identificar y eliminar contenido no deseado de la red. Para empezar: ¿qué tipo de contenido te preocupa? (fotos antiguas, comentarios, perfiles en plataformas que ya no usas…)'
+    addLimMsg(w, 'bot')
+    _limHistory = [{ role:'user', content:'Hola' }, { role:'assistant', content:w }]
+  }
+  var inp  = document.getElementById('lim-inp')
+  var send = document.getElementById('lim-send')
+  send.onclick  = enviarLimpieza
+  inp.onkeydown = function(e){ if (e.key === 'Enter') enviarLimpieza() }
+  inp.focus()
+}
+
+function addLimMsg(text, cls, id) {
+  var box = document.getElementById('lim-msgs')
+  if (!box) return
+  var el = document.createElement('div')
+  el.className = 'cmsg ' + cls
+  el.textContent = text
+  if (id) el.id = id
+  box.appendChild(el)
+  box.scrollTop = box.scrollHeight
+}
+
+function enviarLimpieza() {
+  var inp  = document.getElementById('lim-inp')
+  var send = document.getElementById('lim-send')
+  var text = inp.value.trim()
+  if (!text) return
+  inp.value = ''; inp.disabled = true; send.disabled = true
+  addLimMsg(text, 'user')
+  _limHistory.push({ role: 'user', content: text })
+  var tId = 'lt' + Date.now()
+  addLimMsg('Buscando…', 'typing', tId)
+  var nombre = _user.name.split(' ')[0]
+  var sys = 'Eres una experta en limpieza y gestión de huella digital de M&M Studio, en sesión 1 a 1 con ' + nombre + '.' +
+    ' Tu especialidad es ayudar a identificar, auditar y eliminar contenido no deseado en internet: fotos antiguas, perfiles olvidados, comentarios, menciones, datos personales expuestos.' +
+    ' Guía la conversación haciendo preguntas concretas sobre qué plataformas usa, qué contenido quiere eliminar y cuál es su situación.' +
+    ' Cuando tengas suficiente información da instrucciones paso a paso específicas y accionables para cada caso.' +
+    ' Tono práctico y empático. Máximo 4-5 frases por respuesta. En español. No menciones que eres IA.'
+  fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
+    body: JSON.stringify({ model: 'llama-3.3-70b-versatile', max_tokens: 500,
+      messages: [{ role: 'system', content: sys }].concat(_limHistory) })
+  })
+  .then(function(r){ return r.json() })
+  .then(function(d){
+    var el = document.getElementById(tId); if (el) el.remove()
+    var reply = (d.choices && d.choices[0]) ? d.choices[0].message.content : 'Cuéntame qué contenido quieres eliminar.'
+    addLimMsg(reply, 'bot')
+    _limHistory.push({ role: 'assistant', content: reply })
+  })
+  .catch(function(){
+    var el = document.getElementById(tId); if (el) el.remove()
+    addLimMsg('Error de conexión. Inténtalo de nuevo.', 'bot')
+  })
+  .finally(function(){ inp.disabled = false; send.disabled = false; inp.focus() })
+}
+
+// ---- FILTRADO DE OPORTUNIDADES ----
+function openFiltrado() {
+  showView('view-filtrado')
+  document.getElementById('fil-gen').onclick = generarFiltrado
+  document.querySelectorAll('#view-filtrado .li-copy').forEach(function(btn){
+    btn.onclick = function(){
+      var el = document.getElementById(btn.dataset.copy)
+      if (!el) return
+      var txt = el.textContent
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(txt).then(function(){ flashCopy(btn) }).catch(function(){ fallbackCopy(txt, btn) })
+      } else { fallbackCopy(txt, btn) }
+    }
+  })
+}
+
+function generarFiltrado() {
+  var tipo  = (document.getElementById('fil-tipo').value  || '').trim()
+  var desc  = (document.getElementById('fil-desc').value  || '').trim()
+  var obj   = (document.getElementById('fil-obj').value   || '').trim()
+  var tono  = (document.getElementById('fil-tono').value  || '').trim()
+  var err   = document.getElementById('fil-err')
+  if (!desc || !obj) { err.textContent = 'Describe la oportunidad y tu objetivo de imagen.'; return }
+  err.textContent = ''
+  var btn = document.getElementById('fil-gen')
+  btn.disabled = true; btn.textContent = '🤝 Evaluando…'
+  var prompt = 'Evalúa esta oportunidad para una persona con imagen profesional:\n' +
+    '- Tipo: ' + tipo + '\n' +
+    '- Descripción: ' + desc + '\n' +
+    '- Objetivo de imagen: ' + obj + '\n' +
+    (tono ? '- Tono de marca personal: ' + tono + '\n' : '') +
+    '\nResponde con este formato exacto:\n' +
+    'VEREDICTO: [✅ Recomendada / ⚠️ Con condiciones / ❌ No recomendada]\n' +
+    'ANÁLISIS: [2-3 frases explicando el razonamiento: alineación con imagen, riesgos, beneficios]\n' +
+    'CONDICIONES: [si aplica, qué negociar o exigir antes de aceptar]\n' +
+    'ALTERNATIVA: [si no recomendada, qué tipo de oportunidad buscar en su lugar]'
+  fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
+    body: JSON.stringify({ model: 'llama-3.3-70b-versatile', max_tokens: 500,
+      messages: [{ role: 'user', content: prompt }] })
+  })
+  .then(function(r){ return r.json() })
+  .then(function(d){
+    var text = (d.choices && d.choices[0]) ? d.choices[0].message.content : ''
+    document.getElementById('fil-res-txt').textContent = text
+    document.getElementById('fil-results').style.display = 'block'
+    document.getElementById('fil-body').scrollTop = 9999
+    btn.disabled = false; btn.textContent = '🤝 Evaluar oportunidad'
+  })
+  .catch(function(){
+    err.textContent = 'Error al evaluar. Inténtalo de nuevo.'
+    btn.disabled = false; btn.textContent = '🤝 Evaluar oportunidad'
+  })
+}
+
 // Back buttons
 document.getElementById('back-con').addEventListener('click',  function(){ showView('view-dashboard') })
 document.getElementById('back-li').addEventListener('click',   function(){ showView('view-dashboard') })
 document.getElementById('back-foto').addEventListener('click', function(){ showView('view-dashboard') })
 document.getElementById('back-rep').addEventListener('click',  function(){ showView('view-dashboard') })
+document.getElementById('back-lim').addEventListener('click',  function(){ showView('view-dashboard') })
+document.getElementById('back-fil').addEventListener('click',  function(){ showView('view-dashboard') })
 
 // Login
 function attemptLogin() {
