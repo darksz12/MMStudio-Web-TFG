@@ -821,8 +821,6 @@
 
   window._miembrosHistory = window._miembrosHistory || []
   window._miembrosInit    = window._miembrosInit    || false
-  window._conHistory      = window._conHistory      || []
-  window._conInit         = window._conInit         || false
 
   function getSession() { return JSON.parse(localStorage.getItem('mm_session') || 'null') }
   function getToken() { return localStorage.getItem('mm_token') }
@@ -961,67 +959,6 @@
     '#m-locked h3{color:#3a2b16;font-size:21px;margin:0 0 10px;}',
     '#m-locked p{color:#888;font-size:15px;max-width:340px;margin:0 auto 24px;line-height:1.6;}',
 
-    '.mrec-action{display:block;width:100%!important;margin-top:10px!important;padding:9px!important;',
-    'background:linear-gradient(135deg,#111,#4a3520)!important;color:#ffd700!important;',
-    'border:none!important;border-radius:9px!important;font-size:12px!important;font-weight:bold!important;',
-    'cursor:pointer!important;letter-spacing:.3px;transition:opacity .2s!important;text-align:center;}',
-    '.mrec-action:hover{opacity:.8!important;}',
-
-    '#serv-consultoria,#serv-linkedin{display:none;flex-direction:column;height:340px;}',
-    '.serv-hdr{display:flex;align-items:center;gap:10px;padding:10px 14px;',
-    'border-bottom:1px solid #e8e0d5;background:white;flex-shrink:0;}',
-    '.serv-back{background:#f0ebe2!important;border:none!important;border-radius:8px!important;',
-    'padding:6px 12px!important;font-size:12px!important;cursor:pointer!important;',
-    'color:#6b5438!important;font-weight:bold!important;margin:0!important;width:auto!important;}',
-    '.serv-title{font-weight:bold;color:#3a2b16;font-size:14px;}',
-    '.serv-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:#faf7f2;}',
-    '.serv-inp-row{display:flex;padding:10px 12px;gap:8px;border-top:1px solid #e8e0d5;',
-    'background:white;align-items:center;flex-shrink:0;}',
-    '.serv-inp{flex:1;border:1.5px solid #e8e0d5!important;border-radius:20px!important;',
-    'padding:9px 14px!important;font-size:14px!important;outline:none;',
-    'margin:0!important;width:auto!important;transition:border-color .2s!important;}',
-    '.serv-inp:focus{border-color:#b99a5b!important;}',
-    '.serv-send{background:linear-gradient(135deg,#6b5438,#b99a5b)!important;color:white!important;',
-    'border:none!important;border-radius:20px!important;padding:9px 18px!important;',
-    'cursor:pointer!important;font-size:14px!important;white-space:nowrap;',
-    'width:auto!important;margin:0!important;transition:opacity .2s!important;}',
-    '.serv-send:hover{opacity:.88!important;}',
-
-    '#serv-li-body{flex:1;overflow-y:auto;padding:14px;}',
-    '.li-lbl{display:block;font-size:11px;font-weight:700;color:#0077b5;',
-    'text-transform:uppercase;letter-spacing:.5px;margin:10px 0 4px;}',
-    '.li-fld{width:100%!important;padding:9px 12px!important;border:1.5px solid #dde8f2!important;',
-    'border-radius:9px!important;font-size:14px!important;margin:0!important;',
-    'outline:none;transition:border-color .2s!important;box-sizing:border-box!important;}',
-    '.li-fld:focus{border-color:#0077b5!important;}',
-    '.li-gen-btn{width:100%!important;padding:12px!important;',
-    'background:linear-gradient(135deg,#0062a3,#0a66c2)!important;color:white!important;',
-    'border:none!important;border-radius:11px!important;font-size:15px!important;',
-    'font-weight:bold!important;cursor:pointer!important;margin-top:14px!important;transition:opacity .2s!important;}',
-    '.li-gen-btn:hover{opacity:.9!important;}.li-gen-btn:disabled{opacity:.55!important;cursor:not-allowed!important;}',
-    '.li-res-card{background:white;border:1.5px solid #dde8f2;border-radius:11px;padding:12px 14px;margin-top:12px;}',
-    '.li-res-lbl{font-size:11px;font-weight:bold;color:#0077b5;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}',
-    '.li-res-txt{font-size:13px;color:#2b2b2b;line-height:1.6;white-space:pre-wrap;}',
-    '.li-copy{margin-top:8px!important;background:rgba(0,119,181,.1)!important;color:#0077b5!important;',
-    'border:1px solid rgba(0,119,181,.3)!important;border-radius:7px!important;',
-    'padding:5px 12px!important;font-size:12px!important;cursor:pointer!important;width:auto!important;}',
-    '.li-copy:hover{background:rgba(0,119,181,.18)!important;}',
-    '.li-regen-btn{width:100%!important;padding:10px!important;background:rgba(0,119,181,.07)!important;',
-    'color:#0077b5!important;border:1.5px solid rgba(0,119,181,.25)!important;',
-    'border-radius:11px!important;font-size:14px!important;font-weight:bold!important;',
-    'cursor:pointer!important;margin-top:10px!important;}',
-
-    'body.dark-mode .serv-hdr{background:#1e1c18!important;border-color:#3a2f20;}',
-    'body.dark-mode .serv-back{background:#2d2318!important;color:#d4a96a!important;}',
-    'body.dark-mode .serv-title{color:#e0d5c5;}',
-    'body.dark-mode .serv-msgs{background:#252118;}',
-    'body.dark-mode .serv-inp-row{background:#1e1c18;border-color:#3a2f20;}',
-    'body.dark-mode .serv-inp{background:#141210!important;color:#e0d5c5!important;border-color:#3a2f20!important;}',
-    'body.dark-mode #serv-li-body{background:#252118;}',
-    'body.dark-mode .li-res-card{background:#2d2318;border-color:#3a2f20;}',
-    'body.dark-mode .li-res-txt{color:#e0d5c5;}',
-    'body.dark-mode .li-fld{background:#141210!important;color:#e0d5c5!important;border-color:#3a2f20!important;}',
-
     'body.dark-mode #miembros-modal{background:#252118;}',
     'body.dark-mode #m-msgs{background:#252118;}',
     'body.dark-mode .mpm.bot{background:#2d2318;color:#e0d5c5;}',
@@ -1085,20 +1022,12 @@
         t.classList.add('mon')
         var chat = document.getElementById('mtab-chat')
         var rec  = document.getElementById('mtab-recursos')
-        ;['serv-consultoria', 'serv-linkedin'].forEach(function (id) {
-          var el = document.getElementById(id); if (el) el.style.display = 'none'
-        })
         if (t.dataset.tab === 'chat') {
           chat.style.display = 'flex'; rec.style.display = 'none'
         } else {
           chat.style.display = 'none'; rec.style.display = 'grid'
         }
       })
-    })
-
-    // Botones de servicios (Plan Exeltior)
-    modal.querySelectorAll('.mrec-action').forEach(function (btn) {
-      btn.addEventListener('click', function () { abrirServicio(btn.dataset.service, session, modal) })
     })
 
     // Renderizar historial previo
@@ -1211,52 +1140,11 @@
   }
 
   function buildModal(session, plan, nombre, ini, color, recursos) {
-    var cards = recursos.map(function (r, idx) {
-      var btn = ''
-      if (plan === 'Plan Exeltior' && idx === 0)
-        btn = '<button class="mrec-action" data-service="consultoria">🎯 Iniciar consulta →</button>'
-      if (plan === 'Plan Exeltior' && idx === 1)
-        btn = '<button class="mrec-action" data-service="linkedin">💼 Optimizar perfil →</button>'
+    var cards = recursos.map(function (r) {
       return '<div class="mrec"><div class="mrec-i">' + r.icon + '</div>' +
         '<div class="mrec-t">' + r.titulo + '</div>' +
-        '<div class="mrec-d">' + r.desc + '</div>' + btn + '</div>'
+        '<div class="mrec-d">' + r.desc + '</div></div>'
     }).join('')
-
-    var servPanels = plan !== 'Plan Exeltior' ? '' :
-      '<div id="serv-consultoria">' +
-      '<div class="serv-hdr"><button class="serv-back" id="back-consultoria">← Recursos</button>' +
-      '<span class="serv-title">🎯 Consultoría Estratégica</span></div>' +
-      '<div id="serv-con-msgs" class="serv-msgs"></div>' +
-      '<div class="serv-inp-row">' +
-      '<input class="serv-inp" id="serv-con-inp" type="text" placeholder="Escribe tu respuesta…" maxlength="500">' +
-      '<button class="serv-send" id="serv-con-send">Enviar</button></div></div>' +
-
-      '<div id="serv-linkedin">' +
-      '<div class="serv-hdr"><button class="serv-back" id="back-linkedin">← Recursos</button>' +
-      '<span class="serv-title">💼 LinkedIn Premium</span></div>' +
-      '<div id="serv-li-body">' +
-      '<p style="font-size:13px;color:#888;margin:0 0 2px;">Rellena los datos y la IA genera tu perfil optimizado.</p>' +
-      '<label class="li-lbl">Cargo actual</label>' +
-      '<input class="li-fld" id="li-cargo" type="text" placeholder="ej. Directora de Marketing">' +
-      '<label class="li-lbl">Empresa / Sector</label>' +
-      '<input class="li-fld" id="li-empresa" type="text" placeholder="ej. Startup tecnológica B2B">' +
-      '<label class="li-lbl">Especialidad / puntos fuertes</label>' +
-      '<input class="li-fld" id="li-especialidad" type="text" placeholder="ej. growth hacking, SaaS, equipos remotos">' +
-      '<label class="li-lbl">¿Qué quieres conseguir en LinkedIn?</label>' +
-      '<input class="li-fld" id="li-objetivo" type="text" placeholder="ej. Atraer clientes, cambiar de trabajo…">' +
-      '<label class="li-lbl">Trayectoria breve (opcional)</label>' +
-      '<textarea class="li-fld" id="li-trayec" rows="2" placeholder="ej. 8 años en marketing digital, ex-Google…" style="resize:vertical;font-family:inherit;"></textarea>' +
-      '<div id="li-err" style="color:#c0392b;font-size:12px;min-height:14px;margin-top:4px;"></div>' +
-      '<button class="li-gen-btn" id="li-gen-btn">✨ Generar perfil LinkedIn</button>' +
-      '<div id="li-results" style="display:none;">' +
-      '<div class="li-res-card"><div class="li-res-lbl">📌 Headline</div>' +
-      '<div class="li-res-txt" id="li-res-headline"></div>' +
-      '<button class="li-copy" data-copy="li-res-headline">Copiar</button></div>' +
-      '<div class="li-res-card"><div class="li-res-lbl">📝 Acerca de</div>' +
-      '<div class="li-res-txt" id="li-res-about"></div>' +
-      '<button class="li-copy" data-copy="li-res-about">Copiar</button></div>' +
-      '<button class="li-regen-btn" id="li-regen-btn">↺ Regenerar</button>' +
-      '</div></div></div>'
 
     return '<div id="m-head">' +
       '<div id="m-head-top">' +
@@ -1276,180 +1164,12 @@
       '<input id="m-inp" type="text" placeholder="Pregunta a tu asesora privada…" maxlength="500">' +
       '<button id="m-send">Enviar</button></div></div>' +
       '<div id="mtab-recursos">' + cards + '</div>' +
-      servPanels +
       '</div>' +
       '<div id="m-app-footer">' +
       '<p><strong>M&M Studio App</strong>Accede a tu panel completo con todas las ventajas de tu ' + plan + '</p>' +
       '<div class="mapp-b"><a href="app.html" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);' +
       'color:white;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:bold;' +
       'text-decoration:none;white-space:nowrap;">Ir a mi App →</a></div></div>'
-  }
-
-  // ---- SERVICIOS ----
-  function abrirServicio(id, session, modal) {
-    document.getElementById('mtab-chat').style.display = 'none'
-    document.getElementById('mtab-recursos').style.display = 'none'
-    ;['serv-consultoria', 'serv-linkedin'].forEach(function (x) {
-      var el = document.getElementById(x); if (el) el.style.display = 'none'
-    })
-    var panel = document.getElementById('serv-' + id)
-    if (!panel) return
-    panel.style.display = 'flex'
-
-    if (id === 'consultoria') {
-      // Re-renderizar historial
-      var box = document.getElementById('serv-con-msgs')
-      box.innerHTML = ''
-      window._conHistory.forEach(function (m) {
-        addConMsg(m.role === 'assistant' ? m.content : m.content,
-                  m.role === 'assistant' ? 'bot' : 'user')
-      })
-      // Primer mensaje solo una vez
-      if (!window._conInit) {
-        window._conInit = true
-        var nombre = session.name.split(' ')[0]
-        var w = '¡Hola ' + nombre + '! Empecemos tu consultoría estratégica. Voy a hacerte unas preguntas para entender bien tu situación y construir tu plan de imagen personalizado. ¿Cuál es tu objetivo principal ahora mismo, en una frase?'
-        addConMsg(w, 'bot')
-        window._conHistory.push({ role: 'assistant', content: w })
-      }
-      var inp = document.getElementById('serv-con-inp')
-      var send = document.getElementById('serv-con-send')
-      send.onclick = function () { enviarConsultoria(session) }
-      inp.onkeydown = function (e) { if (e.key === 'Enter') enviarConsultoria(session) }
-      document.getElementById('back-consultoria').onclick = function () { cerrarServicio(modal) }
-      inp.focus()
-    }
-
-    if (id === 'linkedin') {
-      document.getElementById('back-linkedin').onclick = function () { cerrarServicio(modal) }
-      document.getElementById('li-gen-btn').onclick = generarLinkedin
-      var regen = document.getElementById('li-regen-btn')
-      if (regen) regen.onclick = generarLinkedin
-      document.querySelectorAll('.li-copy').forEach(function (btn) {
-        btn.onclick = function () {
-          var el = document.getElementById(btn.dataset.copy)
-          if (!el) return
-          var txt = el.textContent
-          if (navigator.clipboard) {
-            navigator.clipboard.writeText(txt).then(function () { flashCopy(btn) }).catch(function () { fallbackCopy(txt, btn) })
-          } else { fallbackCopy(txt, btn) }
-        }
-      })
-    }
-  }
-
-  function cerrarServicio(modal) {
-    ;['serv-consultoria', 'serv-linkedin'].forEach(function (id) {
-      var el = document.getElementById(id); if (el) el.style.display = 'none'
-    })
-    document.getElementById('mtab-chat').style.display = 'none'
-    document.getElementById('mtab-recursos').style.display = 'grid'
-    modal.querySelectorAll('.mtab').forEach(function (t) {
-      t.classList.toggle('mon', t.dataset.tab === 'recursos')
-    })
-  }
-
-  function addConMsg(text, cls, id) {
-    var box = document.getElementById('serv-con-msgs')
-    if (!box) return
-    var el = document.createElement('div')
-    el.className = 'mpm ' + cls
-    el.textContent = text
-    if (id) el.id = id
-    box.appendChild(el)
-    box.scrollTop = box.scrollHeight
-  }
-
-  function enviarConsultoria(session) {
-    var inp  = document.getElementById('serv-con-inp')
-    var send = document.getElementById('serv-con-send')
-    var text = inp.value.trim()
-    if (!text) return
-    inp.value = ''; inp.disabled = true; send.disabled = true
-    addConMsg(text, 'user')
-    window._conHistory.push({ role: 'user', content: text })
-    var tId = 'ct' + Date.now()
-    addConMsg('Analizando…', 'typing', tId)
-    var nombre = session.name.split(' ')[0]
-    var sys = 'Eres una consultora de imagen y marca personal senior de M&M Studio, en una sesión de consultoría estratégica 1 a 1 con ' + nombre + '.' +
-      ' Tu objetivo es entender su situación actual y metas para construir su plan estratégico de imagen personalizado.' +
-      ' Haz preguntas una por una, escucha activamente, y cuando tengas suficiente información (unas 4-5 respuestas) ofrece un "Plan Estratégico" resumido con 3-5 acciones concretas y priorizadas.' +
-      ' Tono profesional y cercano. Máximo 4 frases por respuesta. En español. No menciones que eres IA.'
-    fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
-      body: JSON.stringify({ model: 'llama-3.3-70b-versatile', max_tokens: 450,
-        messages: [{ role: 'system', content: sys }].concat(window._conHistory) })
-    })
-    .then(function (r) { return r.json() })
-    .then(function (d) {
-      var el = document.getElementById(tId); if (el) el.remove()
-      var reply = (d.choices && d.choices[0]) ? d.choices[0].message.content : 'Cuéntame más sobre tu situación.'
-      addConMsg(reply, 'bot')
-      window._conHistory.push({ role: 'assistant', content: reply })
-    })
-    .catch(function () {
-      var el = document.getElementById(tId); if (el) el.remove()
-      addConMsg('Error de conexión. Inténtalo de nuevo.', 'bot')
-    })
-    .finally(function () { inp.disabled = false; send.disabled = false; inp.focus() })
-  }
-
-  function generarLinkedin() {
-    var cargo        = (document.getElementById('li-cargo')        || {}).value || ''
-    var empresa      = (document.getElementById('li-empresa')      || {}).value || ''
-    var especialidad = (document.getElementById('li-especialidad') || {}).value || ''
-    var objetivo     = (document.getElementById('li-objetivo')     || {}).value || ''
-    var trayec       = (document.getElementById('li-trayec')       || {}).value || ''
-    var errEl        = document.getElementById('li-err')
-    cargo = cargo.trim(); objetivo = objetivo.trim()
-    if (!cargo || !objetivo) { errEl.textContent = 'Introduce al menos el cargo y el objetivo.'; return }
-    errEl.textContent = ''
-    var genBtn = document.getElementById('li-gen-btn')
-    genBtn.disabled = true; genBtn.textContent = '✨ Generando…'
-    var prompt = 'Genera un perfil de LinkedIn optimizado para esta persona:\n' +
-      '- Cargo: ' + cargo + '\n' +
-      (empresa.trim()      ? '- Empresa/Sector: ' + empresa.trim()           + '\n' : '') +
-      (especialidad.trim() ? '- Especialidad: '   + especialidad.trim()      + '\n' : '') +
-      '- Objetivo en LinkedIn: ' + objetivo + '\n' +
-      (trayec.trim()       ? '- Trayectoria: '    + trayec.trim()            + '\n' : '') +
-      '\nResponde EXACTAMENTE con este formato (sin texto extra):\n' +
-      'HEADLINE: [titular de máximo 120 caracteres, con keywords relevantes, sin clichés como "apasionado" o "experto"]\n' +
-      'ABOUT: [sección Acerca de de 150-200 palabras, primera persona, con gancho inicial potente, propuesta de valor clara y llamada a la acción al final]'
-    fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
-      body: JSON.stringify({ model: 'llama-3.3-70b-versatile', max_tokens: 700,
-        messages: [{ role: 'user', content: prompt }] })
-    })
-    .then(function (r) { return r.json() })
-    .then(function (d) {
-      var text = (d.choices && d.choices[0]) ? d.choices[0].message.content : ''
-      var hm = text.match(/HEADLINE:\s*(.+)/i)
-      var am = text.match(/ABOUT:\s*([\s\S]+)/i)
-      document.getElementById('li-res-headline').textContent = hm ? hm[1].trim() : text
-      document.getElementById('li-res-about').textContent    = am ? am[1].trim() : ''
-      document.getElementById('li-results').style.display = 'block'
-      document.getElementById('serv-li-body').scrollTop = 9999
-      genBtn.disabled = false; genBtn.textContent = '✨ Generar perfil LinkedIn'
-    })
-    .catch(function () {
-      errEl.textContent = 'Error al generar. Inténtalo de nuevo.'
-      genBtn.disabled = false; genBtn.textContent = '✨ Generar perfil LinkedIn'
-    })
-  }
-
-  function flashCopy(btn) {
-    var orig = btn.textContent
-    btn.textContent = '✓ Copiado'
-    setTimeout(function () { btn.textContent = orig }, 2000)
-  }
-  function fallbackCopy(text, btn) {
-    var ta = document.createElement('textarea')
-    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'
-    document.body.appendChild(ta); ta.select()
-    try { document.execCommand('copy'); flashCopy(btn) } catch (e) {}
-    ta.remove()
   }
 
   fab.addEventListener('click', abrir)
