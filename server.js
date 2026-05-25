@@ -5,7 +5,6 @@ const Database = require('better-sqlite3')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const cors = require('cors')
-const path = require('path')
 
 const app = express()
 const JWT_SECRET = process.env.JWT_SECRET || 'mmstudio-secret-2025'
@@ -16,17 +15,20 @@ app.use(cors())
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
-    id       INTEGER PRIMARY KEY AUTOINCREMENT,
-    name     TEXT    NOT NULL,
-    email    TEXT    UNIQUE NOT NULL,
-    password TEXT    NOT NULL,
-    plan     TEXT    NOT NULL DEFAULT 'Sin plan activo',
-    joined   TEXT    NOT NULL,
-    is_admin INTEGER NOT NULL DEFAULT 0
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    name             TEXT    NOT NULL,
+    email            TEXT    UNIQUE NOT NULL,
+    password         TEXT    NOT NULL,
+    plan             TEXT    NOT NULL DEFAULT 'Sin plan activo',
+    joined           TEXT    NOT NULL,
+    is_admin         INTEGER NOT NULL DEFAULT 0,
+    force_pwd_change INTEGER NOT NULL DEFAULT 0
   )
 `)
 
-// Crear admin por defecto si no hay ningún usuario
+// Migración: añadir columna si la BD ya existía sin ella
+try { db.exec('ALTER TABLE users ADD COLUMN force_pwd_change INTEGER NOT NULL DEFAULT 0') } catch(e) {}
+
 const count = db.prepare('SELECT COUNT(*) as c FROM users').get()
 if (count.c === 0) {
   db.prepare('INSERT INTO users (name, email, password, plan, joined, is_admin) VALUES (?,?,?,?,?,?)')
@@ -44,6 +46,14 @@ function authMiddleware(req, res, next) {
   }
 }
 
+function userPublic(u) {
+  return {
+    name: u.name, email: u.email, plan: u.plan,
+    joined: u.joined, isAdmin: u.is_admin,
+    forcePwdChange: u.force_pwd_change === 1
+  }
+}
+
 // POST /api/register
 app.post('/api/register', (req, res) => {
   const { name, email, password } = req.body
@@ -53,9 +63,9 @@ app.post('/api/register', (req, res) => {
     const joined = new Date().toLocaleDateString('es-ES')
     db.prepare('INSERT INTO users (name, email, password, joined) VALUES (?,?,?,?)')
       .run(name.trim(), email.trim().toLowerCase(), bcrypt.hashSync(password, 10), joined)
-    const user = db.prepare('SELECT id, name, email, plan, joined, is_admin FROM users WHERE email = ?').get(email.trim().toLowerCase())
+    const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email.trim().toLowerCase())
     const token = jwt.sign({ id: user.id, email: user.email, isAdmin: user.is_admin }, JWT_SECRET, { expiresIn: '7d' })
-    res.json({ token, user: { name: user.name, email: user.email, plan: user.plan, joined: user.joined, isAdmin: user.is_admin } })
+    res.json({ token, user: userPublic(user) })
   } catch (e) {
     if (e.message.includes('UNIQUE')) return res.status(409).json({ error: 'Ya existe una cuenta con ese email.' })
     res.status(500).json({ error: 'Error del servidor.' })
@@ -70,20 +80,29 @@ app.post('/api/login', (req, res) => {
   if (!user) return res.status(401).json({ error: 'Email no encontrado.' })
   if (!bcrypt.compareSync(password, user.password)) return res.status(401).json({ error: 'Contraseña incorrecta.' })
   const token = jwt.sign({ id: user.id, email: user.email, isAdmin: user.is_admin }, JWT_SECRET, { expiresIn: '7d' })
-  res.json({ token, user: { name: user.name, email: user.email, plan: user.plan, joined: user.joined, isAdmin: user.is_admin } })
+  res.json({ token, user: userPublic(user) })
 })
 
 // GET /api/me
 app.get('/api/me', authMiddleware, (req, res) => {
-  const user = db.prepare('SELECT name, email, plan, joined, is_admin FROM users WHERE id = ?').get(req.user.id)
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id)
   if (!user) return res.status(404).json({ error: 'Usuario no encontrado' })
-  res.json({ name: user.name, email: user.email, plan: user.plan, joined: user.joined, isAdmin: user.is_admin })
+  res.json(userPublic(user))
+})
+
+// POST /api/change-password (usuario cambia su propia contraseña)
+app.post('/api/change-password', authMiddleware, (req, res) => {
+  const { password } = req.body
+  if (!password || password.length < 6) return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres.' })
+  db.prepare('UPDATE users SET password = ?, force_pwd_change = 0 WHERE id = ?')
+    .run(bcrypt.hashSync(password, 10), req.user.id)
+  res.json({ ok: true })
 })
 
 // GET /api/admin/users
 app.get('/api/admin/users', authMiddleware, (req, res) => {
   if (!req.user.isAdmin) return res.status(403).json({ error: 'Acceso denegado' })
-  const users = db.prepare('SELECT id, name, email, plan, joined FROM users ORDER BY id DESC').all()
+  const users = db.prepare('SELECT id, name, email, plan, joined, force_pwd_change FROM users ORDER BY id DESC').all()
   res.json(users)
 })
 
@@ -92,6 +111,16 @@ app.patch('/api/admin/users/:id/plan', authMiddleware, (req, res) => {
   if (!req.user.isAdmin) return res.status(403).json({ error: 'Acceso denegado' })
   const { plan } = req.body
   db.prepare('UPDATE users SET plan = ? WHERE id = ?').run(plan, req.params.id)
+  res.json({ ok: true })
+})
+
+// PATCH /api/admin/users/:id/password
+app.patch('/api/admin/users/:id/password', authMiddleware, (req, res) => {
+  if (!req.user.isAdmin) return res.status(403).json({ error: 'Acceso denegado' })
+  const { password, forceChange } = req.body
+  if (!password || password.length < 6) return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres.' })
+  db.prepare('UPDATE users SET password = ?, force_pwd_change = ? WHERE id = ?')
+    .run(bcrypt.hashSync(password, 10), forceChange ? 1 : 0, req.params.id)
   res.json({ ok: true })
 })
 

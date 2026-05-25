@@ -191,8 +191,21 @@
           <option value="Plan Premium activo">Plan Premium</option>
           <option value="Plan Exeltior activo">Plan Exeltior</option>
         </select>
-        <button id="um-save-btn">Guardar cambio</button>
+        <button id="um-save-btn">Guardar plan</button>
         <div id="um-msg"></div>
+      </div>
+      <div class="plan-select-wrap" style="margin-top:16px;padding-top:16px;border-top:1px solid #2d2318;">
+        <label>Establecer nueva contraseña</label>
+        <input id="um-new-pwd" type="password" placeholder="Nueva contraseña (mín. 6 caracteres)"
+          style="width:100%;padding:11px 14px;border:1.5px solid #3a2f20;border-radius:10px;background:#141210;color:#e0d5c5;font-size:14px;outline:none;margin-bottom:10px;">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:10px;font-size:13px;text-transform:none;letter-spacing:0;color:#e0d5c5;">
+          <input type="checkbox" id="um-force-change" style="width:16px;height:16px;accent-color:#b99a5b;">
+          Obligar cambio en el siguiente inicio de sesión
+        </label>
+        <button id="um-pwd-btn" style="width:100%;padding:12px;background:#2d2318;border:1px solid #b99a5b;color:#b99a5b;border-radius:12px;font-size:14px;font-weight:bold;cursor:pointer;">
+          Cambiar contraseña
+        </button>
+        <div id="um-pwd-msg" style="text-align:center;font-size:13px;min-height:18px;margin-top:8px;color:#27ae60;"></div>
       </div>
     </div>
   </div>
@@ -250,8 +263,7 @@ function openUserModal(id) {
   var u = allUsers.find(function(x){ return x.id === id })
   if (!u) return
   currentUserId = id
-  var ini = initials(u.name)
-  document.getElementById('um-avatar').textContent = ini
+  document.getElementById('um-avatar').textContent = initials(u.name)
   document.getElementById('um-title').querySelector('strong').textContent = u.name
   document.getElementById('um-title').querySelector('span').textContent   = u.email
   document.getElementById('um-name').textContent   = u.name
@@ -259,9 +271,40 @@ function openUserModal(id) {
   document.getElementById('um-joined').textContent = u.joined
   document.getElementById('um-plan-current').innerHTML = planBadge(u.plan)
   document.getElementById('um-plan-select').value = u.plan || 'Sin plan activo'
-  document.getElementById('um-msg').textContent = ''
+  document.getElementById('um-msg').textContent     = ''
+  document.getElementById('um-new-pwd').value       = ''
+  document.getElementById('um-force-change').checked = u.force_pwd_change === 1
+  document.getElementById('um-pwd-msg').textContent  = ''
   document.getElementById('user-overlay').classList.add('open')
 }
+
+document.getElementById('um-pwd-btn').addEventListener('click', function() {
+  var pwd  = document.getElementById('um-new-pwd').value
+  var force = document.getElementById('um-force-change').checked
+  var msg  = document.getElementById('um-pwd-msg')
+  var btn  = document.getElementById('um-pwd-btn')
+  if (!pwd || pwd.length < 6) { msg.style.color = '#e74c3c'; msg.textContent = 'La contraseña debe tener al menos 6 caracteres.'; return }
+  btn.disabled = true; btn.textContent = 'Guardando…'
+  fetch('/api/admin/users/' + currentUserId + '/password', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({ password: pwd, forceChange: force })
+  })
+  .then(function(r) { return r.json() })
+  .then(function(res) {
+    if (res.ok) {
+      msg.style.color = '#27ae60'
+      msg.textContent = force ? '✓ Contraseña cambiada — el usuario deberá cambiarla al iniciar sesión' : '✓ Contraseña cambiada correctamente'
+      document.getElementById('um-new-pwd').value = ''
+      var u = allUsers.find(function(x){ return x.id === currentUserId })
+      if (u) u.force_pwd_change = force ? 1 : 0
+    } else {
+      msg.style.color = '#e74c3c'; msg.textContent = res.error || 'Error al guardar.'
+    }
+  })
+  .catch(function() { msg.style.color = '#e74c3c'; msg.textContent = 'Error de conexión.' })
+  .finally(function() { btn.disabled = false; btn.textContent = 'Cambiar contraseña' })
+})
 
 document.getElementById('um-close').addEventListener('click', function() {
   document.getElementById('user-overlay').classList.remove('open')

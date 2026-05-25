@@ -182,6 +182,7 @@
     /* Dark mode */
     body.dark-mode #auth-modal { background: #1e1c18; }
     body.dark-mode #auth-modal-body { background: #1e1c18; }
+    body.dark-mode #a-form-changepwd div[style*="color:#3a2b16"] { color: #d4a96a !important; }
     body.dark-mode .a-field label { color: #d4a96a; }
     body.dark-mode .a-field input { background: #141210 !important; color: #e0d5c5 !important; border-color: #3a2f20 !important; }
     body.dark-mode .a-field input:focus { background: #1e1c18 !important; border-color: #b99a5b !important; }
@@ -249,6 +250,18 @@
           <div class="a-info-row"><span>Plan activo</span><span id="a-p-plan"></span></div>
           <div class="a-info-row"><span>Miembro desde</span><span id="a-p-joined"></span></div>
           <button class="a-logout" id="a-logout">Cerrar sesión</button>
+        </div>
+
+        <div id="a-form-changepwd" class="a-form">
+          <div style="text-align:center;margin-bottom:16px;">
+            <div style="font-size:32px;margin-bottom:8px;">🔑</div>
+            <div style="font-weight:bold;color:#3a2b16;font-size:16px;">Cambia tu contraseña</div>
+            <div style="font-size:13px;color:#aaa;margin-top:4px;">El administrador requiere que establezcas una nueva contraseña.</div>
+          </div>
+          <div class="a-field"><label>Nueva contraseña</label><input id="cp-pwd" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password"></div>
+          <div class="a-field"><label>Confirmar contraseña</label><input id="cp-pwd2" type="password" placeholder="Repite la contraseña" autocomplete="new-password"></div>
+          <div class="a-err" id="cp-err"></div>
+          <button class="a-submit" id="cp-btn">Establecer contraseña →</button>
         </div>
 
       </div>
@@ -349,7 +362,15 @@
       .then(function (r) { return r.json() })
       .then(function (res) {
         if (res.error) { err.textContent = res.error; return }
-        setToken(res.token); setSession(res.user); fillProfile(res.user); updateFab(res.user); closeModal()
+        setToken(res.token); setSession(res.user); updateFab(res.user)
+        if (res.user.forcePwdChange) {
+          document.getElementById('cp-pwd').value = ''
+          document.getElementById('cp-pwd2').value = ''
+          document.getElementById('cp-err').textContent = ''
+          switchTab('changepwd')
+        } else {
+          fillProfile(res.user); closeModal()
+        }
       })
       .catch(function () { err.textContent = 'Error de conexión. Inténtalo de nuevo.' })
       .finally(function () { btn.disabled = false; btn.textContent = 'Entrar →' })
@@ -382,6 +403,32 @@
       })
       .catch(function () { err.textContent = 'Error de conexión. Inténtalo de nuevo.' })
       .finally(function () { btn.disabled = false; btn.textContent = 'Crear cuenta →' })
+    })
+
+    // Cambio de contraseña forzado
+    document.getElementById('cp-btn').addEventListener('click', function () {
+      var pwd  = document.getElementById('cp-pwd').value
+      var pwd2 = document.getElementById('cp-pwd2').value
+      var err  = document.getElementById('cp-err')
+      var btn  = document.getElementById('cp-btn')
+      err.textContent = ''
+      if (!pwd || pwd.length < 6) { err.textContent = 'La contraseña debe tener al menos 6 caracteres.'; return }
+      if (pwd !== pwd2) { err.textContent = 'Las contraseñas no coinciden.'; return }
+      btn.disabled = true; btn.textContent = 'Guardando…'
+      fetch('/api/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
+        body: JSON.stringify({ password: pwd })
+      })
+      .then(function (r) { return r.json() })
+      .then(function (res) {
+        if (res.error) { err.textContent = res.error; return }
+        var session = getSession()
+        if (session) { session.forcePwdChange = false; setSession(session) }
+        fillProfile(session); switchTab('profile')
+      })
+      .catch(function () { err.textContent = 'Error de conexión.' })
+      .finally(function () { btn.disabled = false; btn.textContent = 'Establecer contraseña →' })
     })
 
     // Logout
