@@ -161,13 +161,13 @@ body.dark-mode .activar-wrap h3{color:#e0d5c5;}
     <div class="activar-wrap">
       <div class="activar-check">✓</div>
       <h3>Pago procesado correctamente</h3>
-      <p>Tu suscripción está lista. Activa el plan para que aparezca en tu perfil.</p>
+      <p>Tu solicitud será revisada por nuestro equipo y tu plan quedará activo en las próximas horas.</p>
       <div class="activar-plan-card">
         <h4 id="act-plan-nombre">—</h4>
         <div class="apc-precio" id="act-plan-precio">—</div>
-        <div style="font-size:13px;margin-top:6px;color:rgba(255,255,255,.7)">Suscripción activa desde hoy</div>
+        <div style="font-size:13px;margin-top:6px;color:rgba(255,255,255,.7)">Pendiente de activación</div>
       </div>
-      <button class="activar-btn" id="btn-activar">Activar mi plan →</button>
+      <button class="activar-btn" id="btn-activar">Enviar solicitud de activación →</button>
     </div>
   </div>
 
@@ -355,29 +355,36 @@ function procesarPago() {
 
 // ---- Paso 3: Activar ----
 function activarPlan() {
-  var info = PRECIO_MAP[solicitud.plan] || { key: solicitud.plan }
-  var users   = JSON.parse(localStorage.getItem('mm_users')   || '[]')
-  var session = JSON.parse(localStorage.getItem('mm_session') || 'null')
-  if (!session) return
+  var info  = PRECIO_MAP[solicitud.plan] || { key: solicitud.plan }
+  var token = localStorage.getItem('mm_token')
+  var btn   = document.getElementById('btn-activar')
+  if (!token) { window.location.href = 'inicio.html'; return }
 
-  // Actualizar plan en la lista de usuarios
-  users = users.map(function(u) {
-    if (u.email.toLowerCase() === session.email.toLowerCase()) {
-      u.plan = info.key + ' (activo)'
-    }
-    return u
+  btn.disabled = true
+  btn.textContent = 'Enviando…'
+
+  fetch('/api/plan/request', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({ plan: info.key })
   })
-  localStorage.setItem('mm_users', JSON.stringify(users))
-
-  // Actualizar sesión activa
-  session.plan = info.key + ' (activo)'
-  localStorage.setItem('mm_session', JSON.stringify(session))
-
-  // Limpiar solicitud
-  localStorage.removeItem('mm_solicitud')
-
-  // Redirigir con mensaje de éxito
-  window.location.href = 'inicio.html?plan_activado=1'
+  .then(function(r) { return r.json() })
+  .then(function(res) {
+    if (res.error) {
+      btn.disabled = false
+      btn.textContent = 'Enviar solicitud de activación →'
+      document.getElementById('pago-err').textContent = res.error
+      return
+    }
+    localStorage.setItem('mm_session', JSON.stringify(res))
+    localStorage.setItem('mm_last_plan_status', 'pending:' + info.key)
+    localStorage.removeItem('mm_solicitud')
+    window.location.href = 'inicio.html'
+  })
+  .catch(function() {
+    btn.disabled = false
+    btn.textContent = 'Enviar solicitud de activación →'
+  })
 }
 
 // ---- Gestión de pasos ----
