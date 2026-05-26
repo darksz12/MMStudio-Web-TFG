@@ -195,6 +195,24 @@
     }
     #um-save-btn:hover { opacity: .9; }
     #um-msg { text-align: center; font-size: 13px; min-height: 18px; margin-top: 8px; color: #27ae60; }
+
+    /* Actividad usuario */
+    #um-activity-list .act-row { padding: 8px 0; border-bottom: 1px solid #2d2318; }
+    #um-activity-list .act-row:last-child { border-bottom: none; }
+    #um-activity-list .act-svc { color: #b99a5b; font-weight: bold; font-size: 13px; }
+    #um-activity-list .act-date { color: #555; font-size: 11px; float: right; }
+    #um-activity-list .act-sum { color: #aaa; font-size: 12px; line-height: 1.4; margin-top: 2px; }
+
+    /* Reseñas */
+    .rev-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+    .rev-card { background: #1a1814; border: 1px solid #3a2f20; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+    .rev-card.pending  { border-left: 3px solid #f39c12; }
+    .rev-card.approved { border-left: 3px solid #27ae60; }
+    .rev-stars { color: #f4b942; font-size: 18px; letter-spacing: 2px; }
+    .rev-body { font-size: 13px; color: #e0d5c5; line-height: 1.5; }
+    .rev-meta { font-size: 12px; color: #666; }
+    .rev-meta strong { color: #b99a5b; }
+    .rev-actions { display: flex; gap: 8px; }
   </style>
 </head>
 <body>
@@ -225,6 +243,7 @@
       <div class="stat-card"><div class="num" id="s-pending">—</div><div class="lbl">Solicitudes pendientes</div></div>
       <div class="stat-card"><div class="num" id="s-active">—</div><div class="lbl">Con plan activo</div></div>
       <div class="stat-card"><div class="num" id="s-noplan">—</div><div class="lbl">Sin plan</div></div>
+      <div class="stat-card"><div class="num" id="s-reviews">—</div><div class="lbl">Reseñas pendientes</div></div>
     </div>
 
     <!-- Solicitudes pendientes -->
@@ -257,6 +276,17 @@
           <thead><tr><th>#</th><th>Nombre</th><th>Email</th><th>Estado</th><th>Miembro desde</th></tr></thead>
           <tbody id="tbody-noplan"></tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- Reseñas -->
+    <div class="section-wrap">
+      <div class="section-title">
+        📝 Reseñas de usuarios
+        <span class="badge" id="rev-pending-badge" style="display:none">0</span>
+      </div>
+      <div class="rev-grid" id="rev-grid">
+        <p class="empty-state">No hay reseñas.</p>
       </div>
     </div>
   </main>
@@ -301,6 +331,10 @@
           Cambiar contraseña
         </button>
         <div id="um-pwd-msg" style="text-align:center;font-size:13px;min-height:18px;margin-top:8px;color:#27ae60;"></div>
+      </div>
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid #2d2318;">
+        <div style="font-size:12px;font-weight:700;color:#b99a5b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">Actividad reciente</div>
+        <div id="um-activity-list"><div style="color:#555;font-size:13px;font-style:italic;">Sin actividad registrada.</div></div>
       </div>
     </div>
   </div>
@@ -416,6 +450,57 @@ function loadUsers() {
     })
 }
 
+function loadReviews() {
+  fetch('/api/admin/reviews', { headers: { 'Authorization': 'Bearer ' + token } })
+    .then(function(r) { return r.json() })
+    .then(function(reviews) {
+      var pending = reviews.filter(function(r) { return !r.approved })
+      document.getElementById('s-reviews').textContent = pending.length
+      var badge = document.getElementById('rev-pending-badge')
+      badge.style.display = pending.length > 0 ? 'inline' : 'none'
+      badge.textContent = pending.length
+
+      var grid = document.getElementById('rev-grid')
+      if (reviews.length === 0) {
+        grid.innerHTML = '<p class="empty-state">No hay reseñas.</p>'
+        return
+      }
+      grid.innerHTML = reviews.map(function(r) {
+        var stars = ''
+        for (var i = 1; i <= 5; i++) stars += i <= r.stars ? '★' : '☆'
+        var statusBadge = r.approved
+          ? '<span style="font-size:11px;color:#27ae60;font-weight:bold;">✓ Publicada</span>'
+          : '<span style="font-size:11px;color:#f39c12;font-weight:bold;">⏳ Pendiente</span>'
+        var actions = r.approved
+          ? '<button class="btn-reject" data-id="' + r.id + '" data-action="delete">🗑 Eliminar</button>'
+          : '<button class="btn-approve" data-id="' + r.id + '" data-action="approve">✓ Publicar</button>' +
+            '<button class="btn-reject"  data-id="' + r.id + '" data-action="delete">✕ Rechazar</button>'
+        return '<div class="rev-card ' + (r.approved ? 'approved' : 'pending') + '" id="rev-' + r.id + '">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+          '<span class="rev-stars">' + stars + '</span>' + statusBadge + '</div>' +
+          '<div class="rev-body">"' + r.body + '"</div>' +
+          '<div class="rev-meta"><strong>' + r.user_name + '</strong> · ' + r.plan + ' · ' + r.created + '</div>' +
+          '<div class="rev-actions">' + actions + '</div></div>'
+      }).join('')
+
+      grid.querySelectorAll('[data-action="approve"]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          fetch('/api/admin/reviews/' + btn.dataset.id + '/approve', {
+            method: 'PATCH', headers: { 'Authorization': 'Bearer ' + token }
+          }).then(function() { loadReviews() })
+        })
+      })
+      grid.querySelectorAll('[data-action="delete"]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          if (!confirm('¿Eliminar esta reseña?')) return
+          fetch('/api/admin/reviews/' + btn.dataset.id, {
+            method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token }
+          }).then(function() { loadReviews() })
+        })
+      })
+    })
+}
+
 function approveRequest(id) {
   fetch('/api/admin/plan-requests/' + id + '/approve', {
     method: 'PATCH', headers: { 'Authorization': 'Bearer ' + token }
@@ -450,6 +535,24 @@ function openUserModal(id) {
   document.getElementById('um-new-pwd').value         = ''
   document.getElementById('um-force-change').checked  = u.force_pwd_change === 1
   document.getElementById('um-pwd-msg').textContent   = ''
+
+  var actList = document.getElementById('um-activity-list')
+  actList.innerHTML = '<div style="color:#555;font-size:13px;">Cargando…</div>'
+  fetch('/api/admin/users/' + id + '/activity', { headers: { 'Authorization': 'Bearer ' + token } })
+    .then(function(r) { return r.json() })
+    .then(function(logs) {
+      if (!logs || logs.length === 0) {
+        actList.innerHTML = '<div style="color:#555;font-size:13px;font-style:italic;">Sin actividad registrada.</div>'
+        return
+      }
+      actList.innerHTML = logs.slice(0, 20).map(function(l) {
+        return '<div class="act-row"><span class="act-svc">' + l.service + '</span>' +
+          '<span class="act-date">' + l.created + '</span>' +
+          (l.summary ? '<div class="act-sum">' + l.summary + '</div>' : '') + '</div>'
+      }).join('')
+    })
+    .catch(function() { actList.innerHTML = '<div style="color:#e74c3c;font-size:13px;">Error al cargar la actividad.</div>' })
+
   document.getElementById('user-overlay').classList.add('open')
 }
 
@@ -479,7 +582,7 @@ document.getElementById('um-save-btn').addEventListener('click', function() {
   .then(function(res) {
     if (res.ok) {
       msg.textContent = '✓ Plan actualizado correctamente'
-      loadUsers()
+      loadUsers(); loadReviews()
     }
   })
   .catch(function() { msg.style.color = '#e74c3c'; msg.textContent = 'Error al guardar.' })
@@ -533,6 +636,7 @@ document.getElementById('login-btn').addEventListener('click', function() {
     document.getElementById('login-screen').style.display = 'none'
     document.getElementById('panel').style.display = 'block'
     loadUsers()
+    loadReviews()
   })
   .catch(function() { err.textContent = 'Error de conexión.' })
   .finally(function() { btn.disabled = false; btn.textContent = 'Entrar →' })

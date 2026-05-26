@@ -41,6 +41,29 @@ db.exec(`
   'ALTER TABLE users ADD COLUMN force_pwd_change INTEGER NOT NULL DEFAULT 0'
 ].forEach(function(sql) { try { db.exec(sql) } catch(e) {} })
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS activity_logs (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id   INTEGER NOT NULL,
+    service   TEXT NOT NULL,
+    summary   TEXT NOT NULL DEFAULT '',
+    created   TEXT NOT NULL
+  )
+`)
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS reviews (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id   INTEGER NOT NULL,
+    user_name TEXT NOT NULL,
+    plan      TEXT NOT NULL,
+    stars     INTEGER NOT NULL DEFAULT 5,
+    body      TEXT NOT NULL,
+    approved  INTEGER NOT NULL DEFAULT 0,
+    created   TEXT NOT NULL
+  )
+`)
+
 const count = db.prepare('SELECT COUNT(*) as c FROM users').get()
 if (count.c === 0) {
   db.prepare('INSERT INTO users (name, email, password, plan, joined, is_admin) VALUES (?,?,?,?,?,?)')
@@ -217,6 +240,66 @@ app.post('/api/groq', authMiddleware, (req, res) => {
   })
   pr.write(payload)
   pr.end()
+})
+
+// POST /api/activity
+app.post('/api/activity', authMiddleware, (req, res) => {
+  const { service, summary } = req.body
+  if (!service) return res.status(400).json({ error: 'Falta el servicio.' })
+  const user = db.prepare('SELECT plan FROM users WHERE id = ?').get(req.user.id)
+  if (!user || user.plan === 'Sin plan activo') return res.status(403).json({ error: 'Sin plan activo.' })
+  db.prepare('INSERT INTO activity_logs (user_id, service, summary, created) VALUES (?,?,?,?)')
+    .run(req.user.id, service, (summary || '').substring(0, 300), new Date().toLocaleDateString('es-ES'))
+  res.json({ ok: true })
+})
+
+// GET /api/admin/users/:id/activity
+app.get('/api/admin/users/:id/activity', authMiddleware, (req, res) => {
+  if (!req.user.isAdmin) return res.status(403).json({ error: 'Acceso denegado' })
+  const logs = db.prepare('SELECT * FROM activity_logs WHERE user_id = ? ORDER BY id DESC LIMIT 50').all(req.params.id)
+  res.json(logs)
+})
+
+// POST /api/reviews
+app.post('/api/reviews', authMiddleware, (req, res) => {
+  const { stars, body } = req.body
+  if (!body || body.trim().length < 10) return res.status(400).json({ error: 'La reseña debe tener al menos 10 caracteres.' })
+  const s = parseInt(stars)
+  if (!s || s < 1 || s > 5) return res.status(400).json({ error: 'Valoración no válida.' })
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id)
+  if (!user || user.plan === 'Sin plan activo') return res.status(403).json({ error: 'Solo los usuarios con plan activo pueden publicar reseñas.' })
+  const existing = db.prepare('SELECT id FROM reviews WHERE user_id = ?').get(req.user.id)
+  if (existing) return res.status(409).json({ error: 'Ya tienes una reseña enviada.' })
+  db.prepare('INSERT INTO reviews (user_id, user_name, plan, stars, body, created) VALUES (?,?,?,?,?,?)')
+    .run(req.user.id, user.name, user.plan, s, body.trim(), new Date().toLocaleDateString('es-ES'))
+  res.json({ ok: true })
+})
+
+// GET /api/reviews — público, solo aprobadas
+app.get('/api/reviews', (req, res) => {
+  const reviews = db.prepare('SELECT user_name, plan, stars, body, created FROM reviews WHERE approved = 1 ORDER BY id DESC').all()
+  res.json(reviews)
+})
+
+// GET /api/admin/reviews
+app.get('/api/admin/reviews', authMiddleware, (req, res) => {
+  if (!req.user.isAdmin) return res.status(403).json({ error: 'Acceso denegado' })
+  const reviews = db.prepare('SELECT * FROM reviews ORDER BY approved ASC, id DESC').all()
+  res.json(reviews)
+})
+
+// PATCH /api/admin/reviews/:id/approve
+app.patch('/api/admin/reviews/:id/approve', authMiddleware, (req, res) => {
+  if (!req.user.isAdmin) return res.status(403).json({ error: 'Acceso denegado' })
+  db.prepare('UPDATE reviews SET approved = 1 WHERE id = ?').run(req.params.id)
+  res.json({ ok: true })
+})
+
+// DELETE /api/admin/reviews/:id
+app.delete('/api/admin/reviews/:id', authMiddleware, (req, res) => {
+  if (!req.user.isAdmin) return res.status(403).json({ error: 'Acceso denegado' })
+  db.prepare('DELETE FROM reviews WHERE id = ?').run(req.params.id)
+  res.json({ ok: true })
 })
 
 app.listen(3001, () => console.log('API MMStudio en puerto 3001'))

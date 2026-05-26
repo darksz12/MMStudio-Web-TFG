@@ -1022,10 +1022,13 @@
         t.classList.add('mon')
         var chat = document.getElementById('mtab-chat')
         var rec  = document.getElementById('mtab-recursos')
+        var rev  = document.getElementById('mtab-resena')
         if (t.dataset.tab === 'chat') {
-          chat.style.display = 'flex'; rec.style.display = 'none'
+          chat.style.display = 'flex'; rec.style.display = 'none'; if (rev) rev.style.display = 'none'
+        } else if (t.dataset.tab === 'recursos') {
+          chat.style.display = 'none'; rec.style.display = 'grid'; if (rev) rev.style.display = 'none'
         } else {
-          chat.style.display = 'none'; rec.style.display = 'grid'
+          chat.style.display = 'none'; rec.style.display = 'none'; if (rev) rev.style.display = 'block'
         }
       })
     })
@@ -1043,6 +1046,49 @@
         'Tienes activo el ' + plan + ', así que estoy aquí para ayudarte con todo lo que incluye. ¿Por dónde quieres empezar?'
       addMsg(bienvenida, 'bot')
       window._miembrosHistory.push({ role: 'assistant', content: bienvenida })
+    }
+
+    // Reseña — estrellas y envío
+    var selectedStars = 5
+    var mstars = modal.querySelectorAll('.mstar')
+    function updateStarDisplay() {
+      mstars.forEach(function (s) {
+        s.style.color = parseInt(s.dataset.v) <= selectedStars ? '#f4b942' : '#ccc'
+      })
+    }
+    updateStarDisplay()
+    mstars.forEach(function (s) {
+      s.addEventListener('click', function () { selectedStars = parseInt(s.dataset.v); updateStarDisplay() })
+      s.addEventListener('mouseover', function () {
+        var v = parseInt(s.dataset.v)
+        mstars.forEach(function (x) { x.style.color = parseInt(x.dataset.v) <= v ? '#f4b942' : '#ccc' })
+      })
+      s.addEventListener('mouseout', updateStarDisplay)
+    })
+    var revBtn = document.getElementById('m-rev-btn')
+    if (revBtn) {
+      revBtn.addEventListener('click', function () {
+        var txt = (document.getElementById('m-review-txt').value || '').trim()
+        var revErr = document.getElementById('m-rev-err')
+        if (txt.length < 10) { revErr.textContent = 'La reseña debe tener al menos 10 caracteres.'; return }
+        revErr.textContent = ''
+        revBtn.disabled = true; revBtn.textContent = 'Enviando…'
+        fetch('/api/reviews', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
+          body: JSON.stringify({ stars: selectedStars, body: txt })
+        })
+        .then(function (r) { return r.json() })
+        .then(function (d) {
+          if (d.error) { revErr.textContent = d.error; revBtn.disabled = false; revBtn.textContent = 'Enviar reseña →'; return }
+          var wrap = document.getElementById('mtab-resena')
+          if (wrap) wrap.innerHTML = '<div style="text-align:center;padding:32px 16px;">' +
+            '<div style="font-size:44px;margin-bottom:12px;">✅</div>' +
+            '<div style="font-weight:bold;color:#3a2b16;font-size:16px;margin-bottom:8px;">¡Gracias por tu reseña!</div>' +
+            '<div style="color:#888;font-size:13px;">La publicaremos en la web una vez aprobada.</div></div>'
+        })
+        .catch(function () { revBtn.disabled = false; revBtn.textContent = 'Enviar reseña →'; document.getElementById('m-rev-err').textContent = 'Error de conexión.' })
+      })
     }
 
     // Chat eventos
@@ -1156,6 +1202,7 @@
       '<div id="m-tabs">' +
       '<button class="mtab mon" data-tab="chat">💬 Asesora privada</button>' +
       '<button class="mtab" data-tab="recursos">⭐ Mis recursos</button>' +
+      '<button class="mtab" data-tab="resena">📝 Reseña</button>' +
       '</div></div>' +
       '<div id="m-body">' +
       '<div id="mtab-chat">' +
@@ -1164,6 +1211,27 @@
       '<input id="m-inp" type="text" placeholder="Pregunta a tu asesora privada…" maxlength="500">' +
       '<button id="m-send">Enviar</button></div></div>' +
       '<div id="mtab-recursos">' + cards + '</div>' +
+      '<div id="mtab-resena" style="display:none;padding:20px;">' +
+      '<div style="text-align:center;margin-bottom:16px;">' +
+      '<div style="font-size:28px;margin-bottom:6px;">📝</div>' +
+      '<div style="font-weight:bold;color:#3a2b16;font-size:16px;">Deja tu reseña</div>' +
+      '<div style="color:#888;font-size:13px;margin-top:4px;">Pendiente de aprobación antes de publicarse en la web.</div></div>' +
+      '<div style="text-align:center;margin-bottom:14px;">' +
+      '<span class="mstar" data-v="1" style="font-size:32px;cursor:pointer;color:#f4b942;">★</span>' +
+      '<span class="mstar" data-v="2" style="font-size:32px;cursor:pointer;color:#f4b942;">★</span>' +
+      '<span class="mstar" data-v="3" style="font-size:32px;cursor:pointer;color:#f4b942;">★</span>' +
+      '<span class="mstar" data-v="4" style="font-size:32px;cursor:pointer;color:#f4b942;">★</span>' +
+      '<span class="mstar" data-v="5" style="font-size:32px;cursor:pointer;color:#f4b942;">★</span>' +
+      '</div>' +
+      '<textarea id="m-review-txt" placeholder="Cuéntanos tu experiencia con M&M Studio..." ' +
+      'style="width:100%;min-height:90px;border:1.5px solid #e8e0d5;border-radius:10px;padding:12px 14px;' +
+      'font-size:14px;font-family:inherit;resize:vertical;outline:none;background:#faf7f2;box-sizing:border-box;"></textarea>' +
+      '<div id="m-rev-err" style="color:#c0392b;font-size:13px;min-height:16px;margin:6px 0;"></div>' +
+      '<button id="m-rev-btn" style="width:100%!important;padding:12px!important;' +
+      'background:linear-gradient(135deg,#6b5438,#b99a5b)!important;color:white!important;' +
+      'border:none!important;border-radius:12px!important;font-size:14px!important;' +
+      'font-weight:bold!important;cursor:pointer!important;">Enviar reseña →</button>' +
+      '</div>' +
       '</div>' +
       '<div id="m-app-footer">' +
       '<p><strong>M&M Studio App</strong>Accede a tu panel completo con todas las ventajas de tu ' + plan + '</p>' +

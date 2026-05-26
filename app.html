@@ -441,6 +441,16 @@ function getSession()  { return JSON.parse(localStorage.getItem('mm_session') ||
 function setSession(u) { localStorage.setItem('mm_session', JSON.stringify(u)) }
 function clearAuth()   { localStorage.removeItem('mm_token'); localStorage.removeItem('mm_session') }
 
+function logActivity(service, summary) {
+  var tok = getToken()
+  if (!tok) return
+  fetch('/api/activity', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+    body: JSON.stringify({ service: service, summary: summary })
+  }).catch(function(){})
+}
+
 function getActivePlan(user) {
   if (!user || !user.plan) return null
   var plans = ['Plan Exeltior','Plan Premium','Plan Normal']
@@ -584,6 +594,7 @@ function enviarConsultoria() {
     if (!reply) { addConMsg('Sin respuesta. Inténtalo de nuevo.', 'bot'); inp.disabled = false; send.disabled = false; inp.focus(); return }
     addConMsg(reply, 'bot')
     _conHistory.push({ role: 'assistant', content: reply })
+    logActivity('Consultoría estratégica', reply.substring(0, 200))
     inp.disabled = false; send.disabled = false; inp.focus()
   })
   .catch(function(){
@@ -646,6 +657,7 @@ function generarLinkedin() {
     document.getElementById('li-res-a').textContent = am ? am[1].trim() : text
     document.getElementById('li-results').style.display = 'block'
     document.getElementById('li-body').scrollTop = 9999
+    logActivity('LinkedIn premium', 'Headline: ' + (hm ? hm[1].trim() : text).substring(0, 150))
     btn.disabled = false; btn.textContent = '✨ Generar perfil LinkedIn'
   })
   .catch(function(){
@@ -717,6 +729,7 @@ function generarFoto() {
     document.getElementById('foto-res-txt').textContent = text
     document.getElementById('foto-results').style.display = 'block'
     document.getElementById('foto-body').scrollTop = 9999
+    logActivity('Sesión fotográfica', text.substring(0, 200))
     btn.disabled = false; btn.textContent = '📷 Generar brief de sesión'
   })
   .catch(function(){
@@ -791,6 +804,7 @@ function enviarReputacion() {
     if (!reply) { addRepMsg('Sin respuesta. Inténtalo de nuevo.', 'bot'); inp.disabled = false; send.disabled = false; inp.focus(); return }
     addRepMsg(reply, 'bot')
     _repHistory.push({ role: 'assistant', content: reply })
+    logActivity('Gestión de reputación', reply.substring(0, 200))
     inp.disabled = false; send.disabled = false; inp.focus()
   })
   .catch(function(){
@@ -866,6 +880,7 @@ function enviarLimpieza() {
     if (!reply) { addLimMsg('Sin respuesta. Inténtalo de nuevo.', 'bot'); inp.disabled = false; send.disabled = false; inp.focus(); return }
     addLimMsg(reply, 'bot')
     _limHistory.push({ role: 'assistant', content: reply })
+    logActivity('Limpieza huella digital', reply.substring(0, 200))
     inp.disabled = false; send.disabled = false; inp.focus()
   })
   .catch(function(){
@@ -924,6 +939,7 @@ function generarFiltrado() {
     document.getElementById('fil-res-txt').textContent = text
     document.getElementById('fil-results').style.display = 'block'
     document.getElementById('fil-body').scrollTop = 9999
+    logActivity('Filtrado de oportunidades', text.substring(0, 200))
     btn.disabled = false; btn.textContent = '🤝 Evaluar oportunidad'
   })
   .catch(function(){
