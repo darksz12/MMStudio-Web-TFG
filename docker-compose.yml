@@ -1,75 +1,107 @@
 # =============================================================
-#  Docker Compose - M&M Studio TFG ASIR
-#  Servicios: nginx, monitorización (prometheus + grafana), logs
-#  Arrancar:  docker compose up -d
-#  Ver logs:  docker compose logs -f
+# DOCKER COMPOSE — M&M Studio
+#
+# Este archivo define y orquesta los 5 contenedores del proyecto.
+# Con un solo comando (docker compose up -d --build) se construyen
+# las imágenes y se arrancan todos los servicios.
+#
+# "restart: unless-stopped" en todos los servicios significa que si
+# el servidor se reinicia o un contenedor cae, Docker lo levanta solo
+# sin que haya que intervenir manualmente.
+#
+# Los servicios se comunican entre ellos por la red interna de Docker
+# usando el nombre del servicio como hostname (ej: "api", "nginx", "prometheus").
+# Solo Nginx tiene puertos abiertos al exterior (80 y 443).
 # =============================================================
 
 services:
 
-  # ---- Servidor web ----
+  # ---- SERVIDOR WEB — Nginx ----
+  # Se construye con el Dockerfile de la raíz del proyecto.
+  # Ese Dockerfile parte de nginx:alpine y copia todos los archivos de la web dentro.
+  # Por eso hay que hacer --build cada vez que se actualiza el código.
   nginx:
     build: .
     container_name: mmstudio_nginx
     ports:
-      - "80:80"      # HTTP (redirige a HTTPS)
-      - "443:443"    # HTTPS con certificado real
+      - "80:80"      # HTTP — solo para redirigir a HTTPS
+      - "443:443"    # HTTPS con certificado real de Let's Encrypt
     volumes:
-      - ./backups:/backups          # backups del sitio
-      - ./logs:/var/log/nginx       # logs centralizados en el host
-      - /etc/letsencrypt:/etc/letsencrypt:ro  # certificado SSL real
+      - ./backups:/backups                        # directorio de backups en el host
+      - ./logs:/var/log/nginx                     # logs de Nginx accesibles desde el host
+      - /etc/letsencrypt:/etc/letsencrypt:ro      # certificado SSL (solo lectura, está en el host)
     restart: unless-stopped
 
-  # ---- API backend (Node.js + SQLite) ----
+  # ---- BACKEND — API Node.js + SQLite ----
+  # Se construye con Dockerfile.api. No tiene puertos externos;
+  # solo es accesible desde dentro de Docker (Nginx le habla como "api:3001").
+  # El volumen api_data guarda la base de datos SQLite en /data/mmstudio.db.
+  # Al ser un volumen con nombre (no un bind mount), los datos NO se borran al hacer --build.
   api:
     build:
       context: .
       dockerfile: Dockerfile.api
     container_name: mmstudio_api
     volumes:
-      - api_data:/data
+      - api_data:/data           # aquí vive la base de datos SQLite
     environment:
-      - JWT_SECRET=mmstudio-jwt-secret-2025
+      - JWT_SECRET=mmstudio-jwt-secret-2025  # secreto para firmar los tokens JWT
+      - GROQ_KEY=${GROQ_KEY}                 # clave Groq — viene del .env del VPS, nunca va a GitHub
     restart: unless-stopped
 
-  # ---- Exportador de métricas de Nginx ----
+  # ---- EXPORTADOR DE MÉTRICAS — nginx-prometheus-exporter ----
+  # Se conecta a /stub_status de Nginx y convierte los contadores internos
+  # (conexiones activas, peticiones totales, etc.) al formato que entiende Prometheus.
+  # Sin este exportador, Prometheus no podría leer las métricas de Nginx.
   nginx-exporter:
     image: nginx/nginx-prometheus-exporter:latest
     container_name: mmstudio_nginx_exporter
-    command: --nginx.scrape-uri=http://nginx:80/stub_status
+    command: --nginx.scrape-uri=http://nginx:80/stub_status  # URL de las métricas internas de Nginx
     depends_on:
-      - nginx
+      - nginx     # espera a que Nginx esté arriba antes de arrancar
     restart: unless-stopped
 
-  # ---- Prometheus (recolector de métricas) ----
+  # ---- PROMETHEUS — recolector de métricas ----
+  # Cada 15 segundos hace una petición al exportador y guarda los valores con su timestamp.
+  # La configuración de qué scrape (de dónde recoger métricas) está en prometheus.yml.
+  # prometheus_data es un volumen con nombre para que los datos históricos no se pierdan.
   prometheus:
     image: prom/prometheus:latest
     container_name: mmstudio_prometheus
     ports:
-      - "9090:9090"   # Panel de Prometheus: http://localhost:9090
+      - "9090:9090"   # panel web de Prometheus (http://localhost:9090 desde el VPS)
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus_data:/prometheus
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro  # configuración de scraping
+      - prometheus_data:/prometheus                          # datos históricos persistentes
     restart: unless-stopped
 
-  # ---- Grafana (dashboards visuales) ----
+  # ---- GRAFANA — visualización de métricas ----
+  # Lee los datos de Prometheus y los muestra en dashboards con gráficas.
+  # El provisioning automático (carpeta grafana/provisioning) configura el datasource
+  # y carga el dashboard de Nginx al arrancar, sin necesidad de configuración manual.
+  # grafana_data guarda los dashboards y ajustes aunque se reconstruya el contenedor.
   grafana:
     image: grafana/grafana:latest
     container_name: mmstudio_grafana
     ports:
-      - "3000:3000"   # Panel de Grafana: http://localhost:3000
+      - "3000:3000"   # panel web de Grafana (http://localhost:3000 desde el VPS)
     volumes:
-      - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning  # datasource y dashboards automáticos
-      - ./grafana/dashboards:/etc/grafana/dashboards      # dashboard de Nginx
+      - grafana_data:/var/lib/grafana                          # dashboards y config persistentes
+      - ./grafana/provisioning:/etc/grafana/provisioning       # datasource automático (Prometheus)
+      - ./grafana/dashboards:/etc/grafana/dashboards           # dashboard de Nginx pre-cargado
     environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=mmstudio123
+      - GF_SECURITY_ADMIN_USER=admin          # usuario de acceso a Grafana
+      - GF_SECURITY_ADMIN_PASSWORD=mmstudio123  # contraseña de Grafana
     depends_on:
-      - prometheus
+      - prometheus    # espera a que Prometheus esté arriba antes de arrancar
     restart: unless-stopped
 
+# =============================================================
+# VOLÚMENES CON NOMBRE
+# Docker los gestiona él solo. Sobreviven a docker compose down y a --build.
+# Son distintos de los bind mounts (./logs, ./backups) que usan carpetas del host.
+# =============================================================
 volumes:
-  prometheus_data:   # datos históricos de Prometheus
+  prometheus_data:   # datos históricos de Prometheus (métricas acumuladas)
   grafana_data:      # dashboards y configuración de Grafana
-  api_data:          # base de datos SQLite de usuarios
+  api_data:          # base de datos SQLite con todos los usuarios y datos del negocio
