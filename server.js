@@ -1,81 +1,134 @@
 'use strict'
 
+// =============================================================
+// DEPENDENCIAS — librerías externas que usa el servidor
+// express       → framework para crear rutas y manejar peticiones HTTP
+// https         → módulo de Node para hacer peticiones HTTPS (llamadas a Groq)
+// mysql2/promise → cliente MySQL con soporte async/await
+// bcryptjs      → para cifrar contraseñas antes de guardarlas en la BD
+// jsonwebtoken  → para crear y verificar tokens JWT (sistema de sesión)
+// cors          → permite que el navegador pueda hacer peticiones a la API
+// =============================================================
 const express = require('express')
 const https   = require('https')
-const Database = require('better-sqlite3')
-const bcrypt = require('bcryptjs')
-const jwt = require('jsonwebtoken')
-const cors = require('cors')
+const mysql   = require('mysql2/promise')
+const bcrypt  = require('bcryptjs')
+const jwt     = require('jsonwebtoken')
+const cors    = require('cors')
 
 const app = express()
+
 const JWT_SECRET = process.env.JWT_SECRET || 'mmstudio-secret-2025'
 const GROQ_KEY   = process.env.GROQ_KEY   || 'TU_API_KEY_GROQ_AQUI'
-const db = new Database('/data/mmstudio.db')
 
 app.use(express.json())
 app.use(cors())
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS users (
-    id               INTEGER PRIMARY KEY AUTOINCREMENT,
-    name             TEXT    NOT NULL,
-    apellidos        TEXT    NOT NULL DEFAULT '',
-    telefono         TEXT    NOT NULL DEFAULT '',
-    birthday         TEXT    NOT NULL DEFAULT '',
-    email            TEXT    UNIQUE NOT NULL,
-    password         TEXT    NOT NULL,
-    plan             TEXT    NOT NULL DEFAULT 'Sin plan activo',
-    plan_requested   TEXT    NOT NULL DEFAULT '',
-    joined           TEXT    NOT NULL,
-    is_admin         INTEGER NOT NULL DEFAULT 0,
-    force_pwd_change INTEGER NOT NULL DEFAULT 0
-  )
-`)
+// Pool de conexiones MySQL. Se inicializa en initDB() antes de arrancar el servidor.
+let pool
 
-// Migraciones para bases de datos existentes
-;[
-  'ALTER TABLE users ADD COLUMN apellidos TEXT NOT NULL DEFAULT \'\'',
-  'ALTER TABLE users ADD COLUMN telefono TEXT NOT NULL DEFAULT \'\'',
-  'ALTER TABLE users ADD COLUMN birthday TEXT NOT NULL DEFAULT \'\'',
-  'ALTER TABLE users ADD COLUMN plan_requested TEXT NOT NULL DEFAULT \'\'',
-  'ALTER TABLE users ADD COLUMN force_pwd_change INTEGER NOT NULL DEFAULT 0'
-].forEach(function(sql) { try { db.exec(sql) } catch(e) {} })
+// =============================================================
+// INICIO DE BASE DE DATOS
+// MySQL tarda unos segundos en estar listo al arrancar el contenedor.
+// Reintentamos la conexión hasta 10 veces con 3 segundos entre intentos.
+// =============================================================
+async function initDB() {
+  for (let i = 0; i < 10; i++) {
+    try {
+      pool = mysql.createPool({
+        host:               process.env.DB_HOST     || 'db',
+        user:               process.env.DB_USER     || 'mmstudio',
+        password:           process.env.DB_PASSWORD || 'mmstudio_pass',
+        database:           process.env.DB_NAME     || 'mmstudio',
+        waitForConnections: true,
+        connectionLimit:    10
+      })
+      await pool.query('SELECT 1')
+      console.log('Conectado a MySQL')
+      break
+    } catch (e) {
+      console.log(`MySQL no disponible, reintentando... (${i + 1}/10)`)
+      await new Promise(r => setTimeout(r, 3000))
+      if (i === 9) throw new Error('No se pudo conectar a MySQL tras 10 intentos')
+    }
+  }
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS activity_logs (
-    id        INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id   INTEGER NOT NULL,
-    service   TEXT NOT NULL,
-    summary   TEXT NOT NULL DEFAULT '',
-    created   TEXT NOT NULL
-  )
-`)
+  // =============================================================
+  // CREACIÓN DE TABLAS — se ejecuta al arrancar el servidor.
+  // "CREATE TABLE IF NOT EXISTS" → solo crea la tabla si no existe,
+  // nunca borra los datos existentes.
+  // =============================================================
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS reviews (
-    id        INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id   INTEGER NOT NULL,
-    user_name TEXT NOT NULL,
-    plan      TEXT NOT NULL,
-    stars     INTEGER NOT NULL DEFAULT 5,
-    body      TEXT NOT NULL,
-    approved  INTEGER NOT NULL DEFAULT 0,
-    created   TEXT NOT NULL
-  )
-`)
+  // Tabla principal de usuarios del sistema
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id               INT AUTO_INCREMENT PRIMARY KEY,
+      name             VARCHAR(255) NOT NULL,
+      apellidos        VARCHAR(255) NOT NULL DEFAULT '',
+      telefono         VARCHAR(50)  NOT NULL DEFAULT '',
+      birthday         VARCHAR(20)  NOT NULL DEFAULT '',
+      email            VARCHAR(255) UNIQUE NOT NULL,
+      password         VARCHAR(255) NOT NULL,
+      plan             VARCHAR(100) NOT NULL DEFAULT 'Sin plan activo',
+      plan_requested   VARCHAR(100) NOT NULL DEFAULT '',
+      joined           VARCHAR(20)  NOT NULL,
+      is_admin         TINYINT(1)   NOT NULL DEFAULT 0,
+      force_pwd_change TINYINT(1)   NOT NULL DEFAULT 0
+    )
+  `)
 
-const count = db.prepare('SELECT COUNT(*) as c FROM users').get()
-if (count.c === 0) {
-  db.prepare('INSERT INTO users (name, email, password, plan, joined, is_admin) VALUES (?,?,?,?,?,?)')
-    .run('Admin', 'admin@mmstudio.com', bcrypt.hashSync('admin123', 10), 'Sin plan activo', new Date().toLocaleDateString('es-ES'), 1)
+  // Tabla para registrar qué servicios IA ha usado cada miembro con plan activo
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS activity_logs (
+      id        INT AUTO_INCREMENT PRIMARY KEY,
+      user_id   INT          NOT NULL,
+      service   VARCHAR(255) NOT NULL,
+      summary   TEXT         NOT NULL,
+      created   VARCHAR(20)  NOT NULL
+    )
+  `)
+
+  // Tabla para las reseñas — pasan por moderación (approved=0) antes de ser visibles (approved=1)
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS reviews (
+      id        INT AUTO_INCREMENT PRIMARY KEY,
+      user_id   INT          NOT NULL,
+      user_name VARCHAR(255) NOT NULL,
+      plan      VARCHAR(100) NOT NULL,
+      stars     INT          NOT NULL DEFAULT 5,
+      body      TEXT         NOT NULL,
+      approved  TINYINT(1)   NOT NULL DEFAULT 0,
+      created   VARCHAR(20)  NOT NULL
+    )
+  `)
+
+  // =============================================================
+  // DATOS INICIALES — solo se insertan si la base de datos está vacía
+  // (es decir, en el primer arranque).
+  // =============================================================
+
+  const [[{ c }]] = await pool.query('SELECT COUNT(*) AS c FROM users')
+  if (c === 0) {
+    await pool.query(
+      'INSERT INTO users (name, email, password, plan, joined, is_admin) VALUES (?,?,?,?,?,?)',
+      ['Admin', 'admin@mmstudio.com', bcrypt.hashSync('admin123', 10), 'Sin plan activo', new Date().toLocaleDateString('es-ES'), 1]
+    )
+  }
+
+  const [[greta]] = await pool.query('SELECT id FROM users WHERE email = ?', ['greta@mmstudio.com'])
+  if (!greta) {
+    await pool.query(
+      'INSERT INTO users (name, apellidos, email, password, plan, joined) VALUES (?,?,?,?,?,?)',
+      ['Greta', '', 'greta@mmstudio.com', bcrypt.hashSync('felicidades', 10), 'Plan Premium activo', new Date().toLocaleDateString('es-ES')]
+    )
+  }
 }
 
-// Easter egg — cuenta de Greta
-if (!db.prepare('SELECT id FROM users WHERE email = ?').get('greta@mmstudio.com')) {
-  db.prepare('INSERT INTO users (name, apellidos, email, password, plan, joined) VALUES (?,?,?,?,?,?)')
-    .run('Greta', '', 'greta@mmstudio.com', bcrypt.hashSync('felicidades', 10), 'Plan Premium activo', new Date().toLocaleDateString('es-ES'))
-}
-
+// =============================================================
+// MIDDLEWARE DE AUTENTICACIÓN — protege las rutas privadas.
+// Lee el token del header "Authorization: Bearer <token>",
+// lo verifica con JWT_SECRET y guarda los datos en req.user.
+// =============================================================
 function authMiddleware(req, res, next) {
   const token = (req.headers.authorization || '').split(' ')[1]
   if (!token) return res.status(401).json({ error: 'No autenticado' })
@@ -83,6 +136,8 @@ function authMiddleware(req, res, next) {
   catch { res.status(401).json({ error: 'Sesión expirada' }) }
 }
 
+// Construye el objeto de usuario que se devuelve al cliente.
+// Nunca incluye el campo "password" para que el hash nunca salga del servidor.
 function userPublic(u) {
   return {
     name: u.name, apellidos: u.apellidos || '', telefono: u.telefono || '',
@@ -92,121 +147,144 @@ function userPublic(u) {
   }
 }
 
-// POST /api/register
-app.post('/api/register', (req, res) => {
+// =============================================================
+// ENDPOINTS — rutas de la API REST
+// =============================================================
+
+// POST /api/register — registro de nuevo usuario
+app.post('/api/register', async (req, res) => {
   const { name, apellidos, email, password } = req.body
   if (!name || !email || !password) return res.status(400).json({ error: 'Faltan campos obligatorios.' })
   if (password.length < 6) return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres.' })
   try {
     const joined = new Date().toLocaleDateString('es-ES')
-    db.prepare('INSERT INTO users (name, apellidos, email, password, joined) VALUES (?,?,?,?,?)')
-      .run(name.trim(), (apellidos || '').trim(), email.trim().toLowerCase(), bcrypt.hashSync(password, 10), joined)
-    const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email.trim().toLowerCase())
+    await pool.query(
+      'INSERT INTO users (name, apellidos, email, password, joined) VALUES (?,?,?,?,?)',
+      [name.trim(), (apellidos || '').trim(), email.trim().toLowerCase(), bcrypt.hashSync(password, 10), joined]
+    )
+    const [[user]] = await pool.query('SELECT * FROM users WHERE email = ?', [email.trim().toLowerCase()])
     const token = jwt.sign({ id: user.id, email: user.email, isAdmin: user.is_admin }, JWT_SECRET, { expiresIn: '7d' })
     res.json({ token, user: userPublic(user) })
   } catch (e) {
-    if (e.message.includes('UNIQUE')) return res.status(409).json({ error: 'Ya existe una cuenta con ese email.' })
+    if (e.code === 'ER_DUP_ENTRY') return res.status(409).json({ error: 'Ya existe una cuenta con ese email.' })
     res.status(500).json({ error: 'Error del servidor.' })
   }
 })
 
-// POST /api/login
-app.post('/api/login', (req, res) => {
+// POST /api/login — inicio de sesión
+app.post('/api/login', async (req, res) => {
   const { email, password } = req.body
   if (!email || !password) return res.status(400).json({ error: 'Faltan campos obligatorios.' })
-  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email.trim().toLowerCase())
+  const [[user]] = await pool.query('SELECT * FROM users WHERE email = ?', [email.trim().toLowerCase()])
   if (!user) return res.status(401).json({ error: 'Email no encontrado.' })
   if (!bcrypt.compareSync(password, user.password)) return res.status(401).json({ error: 'Contraseña incorrecta.' })
   const token = jwt.sign({ id: user.id, email: user.email, isAdmin: user.is_admin }, JWT_SECRET, { expiresIn: '7d' })
   res.json({ token, user: userPublic(user) })
 })
 
-// GET /api/me
-app.get('/api/me', authMiddleware, (req, res) => {
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id)
+// GET /api/me — devuelve los datos del usuario autenticado
+app.get('/api/me', authMiddleware, async (req, res) => {
+  const [[user]] = await pool.query('SELECT * FROM users WHERE id = ?', [req.user.id])
   if (!user) return res.status(404).json({ error: 'Usuario no encontrado' })
   res.json(userPublic(user))
 })
 
-// PATCH /api/me/profile
-app.patch('/api/me/profile', authMiddleware, (req, res) => {
+// PATCH /api/me/profile — actualiza nombre, apellidos, teléfono y cumpleaños
+app.patch('/api/me/profile', authMiddleware, async (req, res) => {
   const { name, apellidos, telefono, birthday } = req.body
   if (!name || name.trim().length < 2) return res.status(400).json({ error: 'El nombre es obligatorio.' })
-  db.prepare('UPDATE users SET name = ?, apellidos = ?, telefono = ?, birthday = ? WHERE id = ?')
-    .run(name.trim(), (apellidos || '').trim(), (telefono || '').trim(), (birthday || '').trim(), req.user.id)
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id)
+  await pool.query(
+    'UPDATE users SET name = ?, apellidos = ?, telefono = ?, birthday = ? WHERE id = ?',
+    [name.trim(), (apellidos || '').trim(), (telefono || '').trim(), (birthday || '').trim(), req.user.id]
+  )
+  const [[user]] = await pool.query('SELECT * FROM users WHERE id = ?', [req.user.id])
   res.json(userPublic(user))
 })
 
-// POST /api/change-password
-app.post('/api/change-password', authMiddleware, (req, res) => {
+// POST /api/change-password — cambia la contraseña del usuario autenticado
+app.post('/api/change-password', authMiddleware, async (req, res) => {
   const { oldPassword, password } = req.body
   if (!oldPassword) return res.status(400).json({ error: 'Introduce la contraseña actual.' })
   if (!password || password.length < 6) return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 6 caracteres.' })
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id)
+  const [[user]] = await pool.query('SELECT * FROM users WHERE id = ?', [req.user.id])
   if (!user) return res.status(404).json({ error: 'Usuario no encontrado.' })
   if (!bcrypt.compareSync(oldPassword, user.password)) return res.status(401).json({ error: 'La contraseña actual no es correcta.' })
-  db.prepare('UPDATE users SET password = ?, force_pwd_change = 0 WHERE id = ?')
-    .run(bcrypt.hashSync(password, 10), req.user.id)
+  await pool.query(
+    'UPDATE users SET password = ?, force_pwd_change = 0 WHERE id = ?',
+    [bcrypt.hashSync(password, 10), req.user.id]
+  )
   res.json({ ok: true })
 })
 
-// POST /api/plan/request
-app.post('/api/plan/request', authMiddleware, (req, res) => {
+// POST /api/plan/request — el usuario solicita un plan
+app.post('/api/plan/request', authMiddleware, async (req, res) => {
   const { plan } = req.body
   const valid = ['Plan Normal', 'Plan Premium', 'Plan Exeltior']
   if (!valid.includes(plan)) return res.status(400).json({ error: 'Plan no válido.' })
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id)
+  const [[user]] = await pool.query('SELECT * FROM users WHERE id = ?', [req.user.id])
   if (user.plan !== 'Sin plan activo') return res.status(400).json({ error: 'Ya tienes un plan activo.' })
   if (user.plan_requested) return res.status(400).json({ error: 'Ya tienes una solicitud pendiente.' })
-  db.prepare('UPDATE users SET plan_requested = ? WHERE id = ?').run(plan, req.user.id)
-  const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id)
+  await pool.query('UPDATE users SET plan_requested = ? WHERE id = ?', [plan, req.user.id])
+  const [[updated]] = await pool.query('SELECT * FROM users WHERE id = ?', [req.user.id])
   res.json(userPublic(updated))
 })
 
-// GET /api/admin/users
-app.get('/api/admin/users', authMiddleware, (req, res) => {
+// =============================================================
+// ENDPOINTS DE ADMINISTRADOR
+// Todos pasan por authMiddleware y luego comprueban isAdmin.
+// =============================================================
+
+// GET /api/admin/users — lista todos los usuarios
+app.get('/api/admin/users', authMiddleware, async (req, res) => {
   if (!req.user.isAdmin) return res.status(403).json({ error: 'Acceso denegado' })
-  const users = db.prepare('SELECT id, name, apellidos, telefono, email, plan, plan_requested, joined, force_pwd_change FROM users ORDER BY id DESC').all()
+  const [users] = await pool.query(
+    'SELECT id, name, apellidos, telefono, email, plan, plan_requested, joined, force_pwd_change FROM users ORDER BY id DESC'
+  )
   res.json(users)
 })
 
-// PATCH /api/admin/plan-requests/:id/approve
-app.patch('/api/admin/plan-requests/:id/approve', authMiddleware, (req, res) => {
+// PATCH /api/admin/plan-requests/:id/approve — aprueba la solicitud de plan
+app.patch('/api/admin/plan-requests/:id/approve', authMiddleware, async (req, res) => {
   if (!req.user.isAdmin) return res.status(403).json({ error: 'Acceso denegado' })
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.params.id)
+  const [[user]] = await pool.query('SELECT * FROM users WHERE id = ?', [req.params.id])
   if (!user || !user.plan_requested) return res.status(404).json({ error: 'Solicitud no encontrada.' })
-  db.prepare('UPDATE users SET plan = ?, plan_requested = ? WHERE id = ?')
-    .run(user.plan_requested + ' activo', '', req.params.id)
+  await pool.query(
+    'UPDATE users SET plan = ?, plan_requested = ? WHERE id = ?',
+    [user.plan_requested + ' activo', '', req.params.id]
+  )
   res.json({ ok: true })
 })
 
-// PATCH /api/admin/plan-requests/:id/reject
-app.patch('/api/admin/plan-requests/:id/reject', authMiddleware, (req, res) => {
+// PATCH /api/admin/plan-requests/:id/reject — rechaza la solicitud de plan
+app.patch('/api/admin/plan-requests/:id/reject', authMiddleware, async (req, res) => {
   if (!req.user.isAdmin) return res.status(403).json({ error: 'Acceso denegado' })
-  db.prepare('UPDATE users SET plan_requested = ? WHERE id = ?').run('', req.params.id)
+  await pool.query('UPDATE users SET plan_requested = ? WHERE id = ?', ['', req.params.id])
   res.json({ ok: true })
 })
 
-// PATCH /api/admin/users/:id/plan
-app.patch('/api/admin/users/:id/plan', authMiddleware, (req, res) => {
+// PATCH /api/admin/users/:id/plan — cambia el plan de un usuario directamente
+app.patch('/api/admin/users/:id/plan', authMiddleware, async (req, res) => {
   if (!req.user.isAdmin) return res.status(403).json({ error: 'Acceso denegado' })
   const { plan } = req.body
-  db.prepare('UPDATE users SET plan = ?, plan_requested = ? WHERE id = ?').run(plan, '', req.params.id)
+  await pool.query('UPDATE users SET plan = ?, plan_requested = ? WHERE id = ?', [plan, '', req.params.id])
   res.json({ ok: true })
 })
 
-// PATCH /api/admin/users/:id/password
-app.patch('/api/admin/users/:id/password', authMiddleware, (req, res) => {
+// PATCH /api/admin/users/:id/password — el admin resetea la contraseña de un usuario
+app.patch('/api/admin/users/:id/password', authMiddleware, async (req, res) => {
   if (!req.user.isAdmin) return res.status(403).json({ error: 'Acceso denegado' })
   const { password, forceChange } = req.body
   if (!password || password.length < 6) return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres.' })
-  db.prepare('UPDATE users SET password = ?, force_pwd_change = ? WHERE id = ?')
-    .run(bcrypt.hashSync(password, 10), forceChange ? 1 : 0, req.params.id)
+  await pool.query(
+    'UPDATE users SET password = ?, force_pwd_change = ? WHERE id = ?',
+    [bcrypt.hashSync(password, 10), forceChange ? 1 : 0, req.params.id]
+  )
   res.json({ ok: true })
 })
 
-// POST /api/groq  — proxy autenticado hacia Groq
+// POST /api/groq — proxy hacia la API de inteligencia artificial (Groq)
+// El cliente nunca llama directamente a Groq. Llama a este endpoint con su JWT,
+// y el servidor es quien hace la petición real a Groq con la clave secreta.
 app.post('/api/groq', authMiddleware, (req, res) => {
   if (!GROQ_KEY) {
     return res.status(503).json({ error: 'Servicio de IA no configurado.' })
@@ -242,64 +320,79 @@ app.post('/api/groq', authMiddleware, (req, res) => {
   pr.end()
 })
 
-// POST /api/activity
-app.post('/api/activity', authMiddleware, (req, res) => {
+// POST /api/activity — registra el uso de un servicio IA por parte de un miembro
+app.post('/api/activity', authMiddleware, async (req, res) => {
   const { service, summary } = req.body
   if (!service) return res.status(400).json({ error: 'Falta el servicio.' })
-  const user = db.prepare('SELECT plan FROM users WHERE id = ?').get(req.user.id)
+  const [[user]] = await pool.query('SELECT plan FROM users WHERE id = ?', [req.user.id])
   if (!user || user.plan === 'Sin plan activo') return res.status(403).json({ error: 'Sin plan activo.' })
-  db.prepare('INSERT INTO activity_logs (user_id, service, summary, created) VALUES (?,?,?,?)')
-    .run(req.user.id, service, (summary || '').substring(0, 300), new Date().toLocaleDateString('es-ES'))
+  await pool.query(
+    'INSERT INTO activity_logs (user_id, service, summary, created) VALUES (?,?,?,?)',
+    [req.user.id, service, (summary || '').substring(0, 300), new Date().toLocaleDateString('es-ES')]
+  )
   res.json({ ok: true })
 })
 
-// GET /api/admin/users/:id/activity
-app.get('/api/admin/users/:id/activity', authMiddleware, (req, res) => {
+// GET /api/admin/users/:id/activity — el admin consulta la actividad de un usuario
+app.get('/api/admin/users/:id/activity', authMiddleware, async (req, res) => {
   if (!req.user.isAdmin) return res.status(403).json({ error: 'Acceso denegado' })
-  const logs = db.prepare('SELECT * FROM activity_logs WHERE user_id = ? ORDER BY id DESC LIMIT 50').all(req.params.id)
+  const [logs] = await pool.query(
+    'SELECT * FROM activity_logs WHERE user_id = ? ORDER BY id DESC LIMIT 50',
+    [req.params.id]
+  )
   res.json(logs)
 })
 
-// POST /api/reviews
-app.post('/api/reviews', authMiddleware, (req, res) => {
+// POST /api/reviews — el usuario envía una reseña
+app.post('/api/reviews', authMiddleware, async (req, res) => {
   const { stars, body } = req.body
   if (!body || body.trim().length < 10) return res.status(400).json({ error: 'La reseña debe tener al menos 10 caracteres.' })
   const s = parseInt(stars)
   if (!s || s < 1 || s > 5) return res.status(400).json({ error: 'Valoración no válida.' })
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id)
+  const [[user]] = await pool.query('SELECT * FROM users WHERE id = ?', [req.user.id])
   if (!user || user.plan === 'Sin plan activo') return res.status(403).json({ error: 'Solo los usuarios con plan activo pueden publicar reseñas.' })
-  const existing = db.prepare('SELECT id FROM reviews WHERE user_id = ?').get(req.user.id)
+  const [[existing]] = await pool.query('SELECT id FROM reviews WHERE user_id = ?', [req.user.id])
   if (existing) return res.status(409).json({ error: 'Ya tienes una reseña enviada.' })
-  db.prepare('INSERT INTO reviews (user_id, user_name, plan, stars, body, created) VALUES (?,?,?,?,?,?)')
-    .run(req.user.id, user.name, user.plan, s, body.trim(), new Date().toLocaleDateString('es-ES'))
+  await pool.query(
+    'INSERT INTO reviews (user_id, user_name, plan, stars, body, created) VALUES (?,?,?,?,?,?)',
+    [req.user.id, user.name, user.plan, s, body.trim(), new Date().toLocaleDateString('es-ES')]
+  )
   res.json({ ok: true })
 })
 
-// GET /api/reviews — público, solo aprobadas
-app.get('/api/reviews', (req, res) => {
-  const reviews = db.prepare('SELECT user_name, plan, stars, body, created FROM reviews WHERE approved = 1 ORDER BY id DESC').all()
+// GET /api/reviews — endpoint público con las reseñas aprobadas
+app.get('/api/reviews', async (req, res) => {
+  const [reviews] = await pool.query(
+    'SELECT user_name, plan, stars, body, created FROM reviews WHERE approved = 1 ORDER BY id DESC'
+  )
   res.json(reviews)
 })
 
-// GET /api/admin/reviews
-app.get('/api/admin/reviews', authMiddleware, (req, res) => {
+// GET /api/admin/reviews — el admin ve todas las reseñas
+app.get('/api/admin/reviews', authMiddleware, async (req, res) => {
   if (!req.user.isAdmin) return res.status(403).json({ error: 'Acceso denegado' })
-  const reviews = db.prepare('SELECT * FROM reviews ORDER BY approved ASC, id DESC').all()
+  const [reviews] = await pool.query('SELECT * FROM reviews ORDER BY approved ASC, id DESC')
   res.json(reviews)
 })
 
-// PATCH /api/admin/reviews/:id/approve
-app.patch('/api/admin/reviews/:id/approve', authMiddleware, (req, res) => {
+// PATCH /api/admin/reviews/:id/approve — aprueba una reseña
+app.patch('/api/admin/reviews/:id/approve', authMiddleware, async (req, res) => {
   if (!req.user.isAdmin) return res.status(403).json({ error: 'Acceso denegado' })
-  db.prepare('UPDATE reviews SET approved = 1 WHERE id = ?').run(req.params.id)
+  await pool.query('UPDATE reviews SET approved = 1 WHERE id = ?', [req.params.id])
   res.json({ ok: true })
 })
 
-// DELETE /api/admin/reviews/:id
-app.delete('/api/admin/reviews/:id', authMiddleware, (req, res) => {
+// DELETE /api/admin/reviews/:id — elimina una reseña
+app.delete('/api/admin/reviews/:id', authMiddleware, async (req, res) => {
   if (!req.user.isAdmin) return res.status(403).json({ error: 'Acceso denegado' })
-  db.prepare('DELETE FROM reviews WHERE id = ?').run(req.params.id)
+  await pool.query('DELETE FROM reviews WHERE id = ?', [req.params.id])
   res.json({ ok: true })
 })
 
-app.listen(3001, () => console.log('API MMStudio en puerto 3001'))
+// Conecta con MySQL, crea las tablas y arranca el servidor
+initDB().then(() => {
+  app.listen(3001, () => console.log('API MMStudio en puerto 3001'))
+}).catch(e => {
+  console.error('Error iniciando la base de datos:', e.message)
+  process.exit(1)
+})

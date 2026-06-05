@@ -1,7 +1,7 @@
 # =============================================================
 # DOCKER COMPOSE — M&M Studio
 #
-# Este archivo define y orquesta los 5 contenedores del proyecto.
+# Este archivo define y orquesta los 6 contenedores del proyecto.
 # Con un solo comando (docker compose up -d --build) se construyen
 # las imágenes y se arrancan todos los servicios.
 #
@@ -10,7 +10,7 @@
 # sin que haya que intervenir manualmente.
 #
 # Los servicios se comunican entre ellos por la red interna de Docker
-# usando el nombre del servicio como hostname (ej: "api", "nginx", "prometheus").
+# usando el nombre del servicio como hostname (ej: "api", "db", "nginx").
 # Solo Nginx tiene puertos abiertos al exterior (80 y 443).
 # =============================================================
 
@@ -32,21 +32,47 @@ services:
       - /etc/letsencrypt:/etc/letsencrypt:ro      # certificado SSL (solo lectura, está en el host)
     restart: unless-stopped
 
-  # ---- BACKEND — API Node.js + SQLite ----
+  # ---- BASE DE DATOS — MySQL ----
+  # Contenedor oficial de MySQL 8. Almacena todos los usuarios y datos del negocio.
+  # db_data es un volumen con nombre gestionado por Docker: los datos persisten
+  # aunque se reconstruya o elimine el contenedor.
+  # La API se conecta a este contenedor usando "db" como hostname (DNS interno de Docker).
+  db:
+    image: mysql:8.0
+    container_name: mmstudio_db
+    environment:
+      - MYSQL_ROOT_PASSWORD=root_mmstudio_2025   # contraseña del superusuario de MySQL
+      - MYSQL_DATABASE=mmstudio                  # base de datos que se crea automáticamente
+      - MYSQL_USER=mmstudio                      # usuario de la aplicación
+      - MYSQL_PASSWORD=mmstudio_pass             # contraseña del usuario de la aplicación
+    volumes:
+      - db_data:/var/lib/mysql                   # aquí guarda MySQL sus ficheros internos
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "mmstudio", "-pmmstudio_pass"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ---- BACKEND — API Node.js + MySQL ----
   # Se construye con Dockerfile.api. No tiene puertos externos;
   # solo es accesible desde dentro de Docker (Nginx le habla como "api:3001").
-  # El volumen api_data guarda la base de datos SQLite en /data/mmstudio.db.
-  # Al ser un volumen con nombre (no un bind mount), los datos NO se borran al hacer --build.
+  # Espera a que el contenedor "db" supere su healthcheck antes de arrancar.
   api:
     build:
       context: .
       dockerfile: Dockerfile.api
     container_name: mmstudio_api
-    volumes:
-      - api_data:/data           # aquí vive la base de datos SQLite
     environment:
       - JWT_SECRET=mmstudio-jwt-secret-2025  # secreto para firmar los tokens JWT
       - GROQ_KEY=${GROQ_KEY}                 # clave Groq — viene del .env del VPS, nunca va a GitHub
+      - DB_HOST=db                           # hostname del contenedor MySQL (DNS interno Docker)
+      - DB_USER=mmstudio                     # usuario de la base de datos
+      - DB_PASSWORD=mmstudio_pass            # contraseña de la base de datos
+      - DB_NAME=mmstudio                     # nombre de la base de datos
+    depends_on:
+      db:
+        condition: service_healthy           # espera a que MySQL esté listo antes de arrancar
     restart: unless-stopped
 
   # ---- EXPORTADOR DE MÉTRICAS — nginx-prometheus-exporter ----
@@ -104,4 +130,4 @@ services:
 volumes:
   prometheus_data:   # datos históricos de Prometheus (métricas acumuladas)
   grafana_data:      # dashboards y configuración de Grafana
-  api_data:          # base de datos SQLite con todos los usuarios y datos del negocio
+  db_data:           # base de datos MySQL con todos los usuarios y datos del negocio
