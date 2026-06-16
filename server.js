@@ -88,6 +88,18 @@ async function initDB() {
     )
   `)
 
+  // Tabla para guardar el historial de conversaciones con la IA por usuario
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS chat_logs (
+      id        INT AUTO_INCREMENT PRIMARY KEY,
+      user_id   INT          NOT NULL,
+      service   VARCHAR(255) NOT NULL,
+      role      VARCHAR(20)  NOT NULL,
+      message   TEXT         NOT NULL,
+      created   DATETIME     DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+
   // Tabla para las reseñas — pasan por moderación (approved=0) antes de ser visibles (approved=1)
   await pool.query(`
     CREATE TABLE IF NOT EXISTS reviews (
@@ -285,6 +297,7 @@ app.patch('/api/admin/users/:id/password', authMiddleware, async (req, res) => {
 // POST /api/groq — proxy hacia la API de inteligencia artificial (Groq)
 // El cliente nunca llama directamente a Groq. Llama a este endpoint con su JWT,
 // y el servidor es quien hace la petición real a Groq con la clave secreta.
+// Si el body incluye "service", guarda el mensaje del usuario y la respuesta en chat_logs.
 app.post('/api/groq', authMiddleware, (req, res) => {
   if (!GROQ_KEY) {
     return res.status(503).json({ error: 'Servicio de IA no configurado.' })
@@ -308,8 +321,23 @@ app.post('/api/groq', authMiddleware, (req, res) => {
     let data = ''
     gr.on('data', c => { data += c })
     gr.on('end', () => {
-      try { res.json(JSON.parse(data)) }
-      catch (e) { res.status(500).json({ error: 'Respuesta inválida de Groq.' }) }
+      try {
+        const parsed = JSON.parse(data)
+        res.json(parsed)
+        // Guardar conversación si se indica el servicio
+        const service = req.body.service
+        if (service && parsed.choices && parsed.choices[0]) {
+          const messages = req.body.messages || []
+          const lastUser = [...messages].reverse().find(m => m.role === 'user')
+          const aiReply = parsed.choices[0].message.content
+          if (lastUser) {
+            pool.query('INSERT INTO chat_logs (user_id, service, role, message) VALUES (?,?,?,?)',
+              [req.user.id, service, 'user', lastUser.content]).catch(() => {})
+          }
+          pool.query('INSERT INTO chat_logs (user_id, service, role, message) VALUES (?,?,?,?)',
+            [req.user.id, service, 'assistant', aiReply]).catch(() => {})
+        }
+      } catch (e) { res.status(500).json({ error: 'Respuesta inválida de Groq.' }) }
     })
   })
   pr.on('error', e => {
@@ -338,6 +366,27 @@ app.get('/api/admin/users/:id/activity', authMiddleware, async (req, res) => {
   if (!req.user.isAdmin) return res.status(403).json({ error: 'Acceso denegado' })
   const [logs] = await pool.query(
     'SELECT * FROM activity_logs WHERE user_id = ? ORDER BY id DESC LIMIT 50',
+    [req.params.id]
+  )
+  res.json(logs)
+})
+
+// POST /api/chat-log — guarda un mensaje individual de chat (usado por auth.js área de miembros)
+app.post('/api/chat-log', authMiddleware, async (req, res) => {
+  const { service, role, message } = req.body
+  if (!service || !role || !message) return res.status(400).json({ error: 'Faltan datos.' })
+  await pool.query(
+    'INSERT INTO chat_logs (user_id, service, role, message) VALUES (?,?,?,?)',
+    [req.user.id, service, role, message]
+  )
+  res.json({ ok: true })
+})
+
+// GET /api/admin/users/:id/chat — el admin ve el historial de conversaciones IA de un usuario
+app.get('/api/admin/users/:id/chat', authMiddleware, async (req, res) => {
+  if (!req.user.isAdmin) return res.status(403).json({ error: 'Acceso denegado' })
+  const [logs] = await pool.query(
+    'SELECT service, role, message, created FROM chat_logs WHERE user_id = ? ORDER BY id ASC',
     [req.params.id]
   )
   res.json(logs)

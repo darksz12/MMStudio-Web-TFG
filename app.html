@@ -580,7 +580,7 @@ function enviarConsultoria() {
   fetch('/api/groq', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
-    body: JSON.stringify({ max_tokens: 450,
+    body: JSON.stringify({ max_tokens: 450, service: 'Consultoría estratégica',
       messages: [{ role: 'system', content: sys }].concat(_conHistory) })
   })
   .then(function(r){ return r.json() })
@@ -644,7 +644,7 @@ function generarLinkedin() {
   fetch('/api/groq', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
-    body: JSON.stringify({ max_tokens: 700, messages: [{ role: 'user', content: prompt }] })
+    body: JSON.stringify({ max_tokens: 700, service: 'LinkedIn premium', messages: [{ role: 'user', content: prompt }] })
   })
   .then(function(r){ return r.json() })
   .then(function(d){
@@ -719,7 +719,7 @@ function generarFoto() {
   fetch('/api/groq', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
-    body: JSON.stringify({ max_tokens: 900, messages: [{ role: 'user', content: prompt }] })
+    body: JSON.stringify({ max_tokens: 900, service: 'Sesión fotográfica', messages: [{ role: 'user', content: prompt }] })
   })
   .then(function(r){ return r.json() })
   .then(function(d){
@@ -790,7 +790,7 @@ function enviarReputacion() {
   fetch('/api/groq', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
-    body: JSON.stringify({ max_tokens: 450,
+    body: JSON.stringify({ max_tokens: 450, service: 'Gestión de reputación',
       messages: [{ role: 'system', content: sys }].concat(_repHistory) })
   })
   .then(function(r){ return r.json() })
@@ -866,7 +866,7 @@ function enviarLimpieza() {
   fetch('/api/groq', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
-    body: JSON.stringify({ max_tokens: 500,
+    body: JSON.stringify({ max_tokens: 500, service: 'Limpieza huella digital',
       messages: [{ role: 'system', content: sys }].concat(_limHistory) })
   })
   .then(function(r){ return r.json() })
@@ -929,7 +929,7 @@ function generarFiltrado() {
   fetch('/api/groq', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
-    body: JSON.stringify({ max_tokens: 500, messages: [{ role: 'user', content: prompt }] })
+    body: JSON.stringify({ max_tokens: 500, service: 'Filtrado de oportunidades', messages: [{ role: 'user', content: prompt }] })
   })
   .then(function(r){ return r.json() })
   .then(function(d){

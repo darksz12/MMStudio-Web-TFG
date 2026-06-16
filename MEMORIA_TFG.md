@@ -8,7 +8,7 @@
 
 ---
 
-**Autor:** Marcos Valero Báscones
+**Autores:** Marcos Valero Báscones y Marius
 **Centro:** Universidad Europea
 **Ciclo:** Administración de Sistemas Informáticos en Red (ASIR)
 **Curso:** 2025/2026
@@ -95,11 +95,11 @@ Adicionalmente, la plataforma integra servicios de **inteligencia artificial** a
 
 ### 1.1 Motivación del proyecto
 
-Cuando empecé a pensar en qué hacer para el TFG, tenía claro que quería que fuera algo que pudiera mostrar en una entrevista de trabajo y que no pareciera un proyecto de prácticas básico. En ASIR aprendemos muchas cosas de forma aislada: Docker en un módulo, bases de datos en otro, redes en otro... pero pocas veces se trabaja con todo a la vez en un proyecto real.
+Al plantearse el TFG, los autores tenían claro que querían desarrollar algo que pudiera mostrarse en una entrevista de trabajo y que no pareciera un proyecto de prácticas básico. En ASIR se aprenden muchas cosas de forma aislada: Docker en un módulo, bases de datos en otro, redes en otro... pero pocas veces se trabaja con todo a la vez en un proyecto real.
 
-La idea fue crear una web de empresa real, no solo una página estática, sino algo que tuviera un sistema de usuarios, autenticación, base de datos, backups, monitorización... todo lo que tendría una aplicación en producción. Elegí el concepto de asesoría de imagen porque permite tener distintos niveles de usuario (visitante, cliente con plan, administrador) y eso enriquece mucho la parte técnica.
+La idea fue crear una web de empresa real, no solo una página estática, sino algo que tuviera un sistema de usuarios, autenticación, base de datos, backups, monitorización... todo lo que tendría una aplicación en producción. Se eligió el concepto de asesoría de imagen porque permite tener distintos niveles de usuario (visitante, cliente con plan, administrador) y eso enriquece mucho la parte técnica.
 
-El objetivo personal era, al terminar el proyecto, poder decir que había montado y administrado una aplicación completa desde cero: desde la configuración del servidor hasta el despliegue en un VPS con dominio y certificado real.
+El objetivo del proyecto era demostrar que se era capaz de montar y administrar una aplicación completa desde cero: desde la configuración del servidor hasta el despliegue en un VPS con dominio y certificado real.
 
 ### 1.2 Descripción general
 
@@ -166,9 +166,9 @@ Diseñar, desarrollar y desplegar una plataforma web empresarial completa que de
 
 ### 3.1 Metodología de trabajo
 
-Para este proyecto he seguido una metodología incremental, es decir, en lugar de intentar desarrollar todo a la vez, he ido añadiendo funcionalidades por capas. Primero monté la infraestructura básica (Docker + Nginx funcionando), luego añadí el backend, luego la autenticación, y así sucesivamente. Esto me permitió tener siempre algo funcionando y detectar problemas en cada fase antes de seguir.
+Para este proyecto se ha seguido una metodología incremental, es decir, en lugar de intentar desarrollar todo a la vez, se han ido añadiendo funcionalidades por capas. Primero se montó la infraestructura básica (Docker + Nginx funcionando), luego se añadió el backend, luego la autenticación, y así sucesivamente. Esto permitió tener siempre algo funcionando y detectar problemas en cada fase antes de continuar.
 
-Para el control de versiones he usado **Git** con un repositorio en GitHub. Cada vez que terminaba una funcionalidad hacía un commit. El flujo de trabajo con el VPS es: hacer cambios en local → commit y push a GitHub → en el VPS hacer `git pull` y reconstruir los contenedores.
+Para el control de versiones se ha utilizado **Git** con un repositorio en GitHub. Cada vez que se terminaba una funcionalidad se hacía un commit. El flujo de trabajo con el VPS es: hacer cambios en local → commit y push a GitHub → en el VPS hacer `git pull` y reconstruir los contenedores.
 
 ### 3.2 Fases del proyecto
 
@@ -991,7 +991,7 @@ Las rutas de administrador comprueban siempre en el servidor que el usuario aute
 
 ### 10.1 Objetivos alcanzados
 
-Al terminar el proyecto puedo confirmar que todos los objetivos marcados al inicio han sido cumplidos:
+Al concluir el proyecto se puede confirmar que todos los objetivos marcados al inicio han sido cumplidos:
 
 - La aplicación está completamente contenerizada con Docker y Docker Compose, con 5 servicios funcionando en paralelo.
 - Nginx sirve la web con HTTPS, redirección automática desde HTTP, cabeceras de seguridad y proxy inverso hacia el backend.
@@ -1003,15 +1003,15 @@ Al terminar el proyecto puedo confirmar que todos los objetivos marcados al inic
 - La integración con la IA (Groq) funciona de forma segura a través del proxy backend.
 - La aplicación está desplegada y accesible en un dominio real: `mymstudio.duckdns.org`.
 
-Más allá de los objetivos técnicos, este proyecto me ha servido para entender cómo funciona una aplicación real de principio a fin: desde la petición del usuario en el navegador hasta la respuesta de la base de datos, pasando por la red, el servidor web, el backend y la autenticación. Creo que eso es lo más valioso del TFG.
+Más allá de los objetivos técnicos, este proyecto ha servido para comprender cómo funciona una aplicación real de principio a fin: desde la petición del usuario en el navegador hasta la respuesta de la base de datos, pasando por la red, el servidor web, el backend y la autenticación. Esa visión global es, sin duda, lo más valioso del TFG.
 
 ### 10.2 Dificultades encontradas
 
-**Gestión de la API key con Docker:** el mayor problema técnico fue cómo inyectar la clave de la IA sin subirla a GitHub. Al principio no había pensado en esto y la clave estaba directamente en el código. La solución con `sed` antes del `docker build` requirió varias pruebas para que el flujo de despliegue fuera correcto y no hubiera conflictos al hacer `git pull`.
+**Gestión de la API key con Docker:** el mayor problema técnico fue cómo inyectar la clave de la IA sin subirla a GitHub. Al principio no se había contemplado este aspecto y la clave estaba directamente en el código. La solución con `sed` antes del `docker build` requirió varias pruebas para que el flujo de despliegue fuera correcto y no hubiera conflictos al hacer `git pull`.
 
 **Certificado SSL con Let's Encrypt y Docker:** obtener el certificado es sencillo en un servidor normal, pero con Docker el proceso es más complejo porque Certbot necesita el puerto 80 libre y los contenedores lo usan. La solución fue parar los contenedores, obtener el certificado, y luego montar la carpeta de Let's Encrypt como volumen de solo lectura en el contenedor de Nginx.
 
-**Persistencia de la base de datos:** al principio no configuré bien el volumen de Docker y al reconstruir el contenedor con `--build` se perdían los usuarios registrados. Entender que el volumen debe ser con nombre (no un bind mount del directorio del código) fue clave para solucionarlo.
+**Persistencia de la base de datos:** al inicio el volumen de Docker no estaba configurado correctamente y al reconstruir el contenedor con `--build` se perdían los usuarios registrados. La clave para solucionarlo fue comprender que el volumen debe ser con nombre (no un bind mount del directorio del código).
 
 **Historial de la IA:** los chats conversacionales de la app tenían un problema: el modelo se volvía a presentar en cada mensaje nuevo. El problema era que el saludo inicial se mostraba en la UI pero no se incluía en el historial enviado a la API. La solución fue pre-sembrar el historial con un turno sintético.
 
@@ -1208,4 +1208,4 @@ VISITANTE
 ---
 
 *Memoria del Trabajo de Fin de Grado — M&M Studio*
-*Marcos Valero Báscones — Universidad Europea — 2025/2026*
+*Marcos Valero Báscones y Marius — Universidad Europea — 2025/2026*

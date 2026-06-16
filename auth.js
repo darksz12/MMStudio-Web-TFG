@@ -1,10 +1,29 @@
+// =============================================================
+// auth.js — Sistema de autenticación del cliente
+//
+// Este archivo se carga en TODAS las páginas públicas de la web.
+// Hace dos cosas principales:
+//   1. Gestiona el login/registro/perfil del usuario (botón 👤 abajo a la derecha)
+//   2. Gestiona el Área de Miembros (botón 👑 Mi Área arriba a la izquierda)
+//
+// Está dividido en dos bloques envueltos en IIFEs (funciones que se ejecutan solas),
+// para que las variables no "ensucien" el espacio global de la página.
+// =============================================================
+
+// =============================================================
+// BLOQUE 1 — Autenticación (login, registro, perfil)
+// La función se llama sola al cargarse el script: ;(function(){ ... })()
+// =============================================================
 ;(function () {
   'use strict'
 
-  // ---- Datos (localStorage + API) ----
+  // Las claves con las que se guardan los datos en localStorage del navegador.
+  // mm_session → objeto JSON con los datos del usuario (nombre, email, plan...)
+  // mm_token   → el JWT que se manda al servidor en cada petición protegida
   var SESSION_KEY = 'mm_session'
   var TOKEN_KEY   = 'mm_token'
 
+  // Funciones helper para leer y escribir en localStorage
   function getSession() { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null') }
   function setSession(u) { localStorage.setItem(SESSION_KEY, JSON.stringify(u)) }
   function clearSession() { localStorage.removeItem(SESSION_KEY); localStorage.removeItem(TOKEN_KEY) }
@@ -595,7 +614,11 @@
     updateFab(session)
     if (session) { fillProfile(session); updateBanner(session) }
 
-    // Validar token con la API en segundo plano
+    // Al cargar la página, si hay un token guardado, lo validamos contra el servidor.
+    // Esto sirve para dos cosas:
+    //   1. Detectar si el token ha expirado (el servidor devuelve error)
+    //   2. Actualizar el estado del usuario si el admin le cambió el plan
+    //      (la sesión local puede estar desactualizada)
     if (token) {
       fetch('/api/me', { headers: { 'Authorization': 'Bearer ' + token } })
         .then(function (r) { return r.json() })
@@ -631,7 +654,10 @@
     document.getElementById('go-reg').addEventListener('click', function (e) { e.preventDefault(); switchTab('register') })
     document.getElementById('go-login').addEventListener('click', function (e) { e.preventDefault(); switchTab('login') })
 
-    // Login
+    // ---- LOGIN ----
+    // Manda email y contraseña al servidor. Si la respuesta tiene token, lo guarda
+    // en localStorage y actualiza el perfil visible. Si el admin marcó force_pwd_change,
+    // en lugar de cerrar el modal abre directamente el formulario de cambio de contraseña.
     document.getElementById('l-btn').addEventListener('click', function () {
       var email = document.getElementById('l-email').value.trim()
       var pwd   = document.getElementById('l-pwd').value
@@ -662,7 +688,11 @@
       .finally(function () { btn.disabled = false; btn.textContent = 'Entrar →' })
     })
 
-    // Register
+    // ---- REGISTRO ----
+    // Valida los campos en el cliente antes de mandar la petición al servidor.
+    // El servidor también los valida (doble validación: cliente + servidor).
+    // Si el registro es correcto, el servidor devuelve un token y el usuario
+    // queda logueado directamente sin tener que hacer login por separado.
     document.getElementById('r-btn').addEventListener('click', function () {
       var name      = document.getElementById('r-name').value.trim()
       var apellidos = document.getElementById('r-apellidos').value.trim()
@@ -692,7 +722,10 @@
       .finally(function () { btn.disabled = false; btn.textContent = 'Crear cuenta →' })
     })
 
-    // Cambio de contraseña forzado
+    // ---- CAMBIO DE CONTRASEÑA FORZADO ----
+    // Se muestra cuando el admin ha reseteado la contraseña del usuario y marcó "forzar cambio".
+    // Requiere introducir la contraseña temporal (para verificar que es el usuario real),
+    // la nueva contraseña y confirmarla. La validación de que coinciden se hace aquí en el cliente.
     document.getElementById('cp-btn').addEventListener('click', function () {
       var oldPwd = document.getElementById('cp-old').value
       var pwd    = document.getElementById('cp-pwd').value
@@ -787,12 +820,21 @@
   })
 })()
 
-// ---- ÁREA DE MIEMBROS ----
+// =============================================================
+// BLOQUE 2 — Área de Miembros (botón 👑 Mi Área)
+//
+// Este bloque crea el modal del Área de Miembros con tres pestañas:
+//   - "Asesora privada": chat IA personalizado para el miembro
+//   - "Mis recursos": lista de lo que incluye su plan
+//   - "Reseña": formulario para dejar una valoración
+//
+// Si el usuario no tiene plan activo, muestra una pantalla de bloqueo
+// con los planes disponibles o el estado de su solicitud pendiente.
+// =============================================================
 ;(function () {
   'use strict'
 
-  var GROQ_KEY = 'TU_API_KEY_GROQ_AQUI'
-
+  // Clave de la API de Groq para el chat del Área de Miembros.
   var PLAN_RECURSOS = {
     'Plan Normal': [
       { icon: '📸', titulo: 'Guía de foto de perfil', desc: 'Ángulos, iluminación y composición para transmitir confianza en tu primera impresión.' },
@@ -819,6 +861,8 @@
     ]
   }
 
+  // El historial del chat se guarda en window (variable global) para que no se pierda
+  // si el usuario cierra y vuelve a abrir el modal sin recargar la página.
   window._miembrosHistory = window._miembrosHistory || []
   window._miembrosInit    = window._miembrosInit    || false
 
@@ -844,6 +888,10 @@
     return name.trim().split(/\s+/).map(function (w) { return w[0] }).slice(0, 2).join('').toUpperCase()
   }
 
+  // Genera el "system prompt" que le dice al modelo de IA cómo debe comportarse.
+  // Le indica el nombre del usuario, su plan y sus recursos para que la asesora
+  // hable de forma personalizada. El modelo nunca ve este prompt directamente,
+  // va en el array de mensajes como role:"system" antes del historial del chat.
   function systemPrompt(session, plan) {
     var nombre = session.name.split(' ')[0]
     var recursos = (PLAN_RECURSOS[plan] || []).map(function (r) { return r.titulo }).join(', ')
@@ -1039,7 +1087,9 @@
       else if (m.role === 'user')  addMsg(m.content, 'user')
     })
 
-    // Bienvenida (solo la primera vez)
+    // Mensaje de bienvenida — solo se muestra la primera vez que se abre el modal.
+    // Se añade también al historial (_miembrosHistory) para que la IA "recuerde"
+    // que ya saludó y no repita la presentación en el segundo mensaje.
     if (!window._miembrosInit) {
       window._miembrosInit = true
       var bienvenida = '¡Bienvenido/a al Área de Miembros, ' + nombre + '! 🌟 Soy tu asesora privada en M&M Studio. ' +
@@ -1113,6 +1163,11 @@
     return el
   }
 
+  // ---- ENVÍO DE MENSAJE AL CHAT IA ----
+  // Coge el texto del input, lo añade al historial y llama a la API de Groq.
+  // Manda el historial completo de la conversación en cada petición para que
+  // el modelo tenga contexto y recuerde lo que se ha hablado antes.
+  // Mientras espera la respuesta muestra "Escribiendo..." en el chat.
   function enviar(session, plan) {
     var inp  = document.getElementById('m-inp')
     var send = document.getElementById('m-send')
@@ -1128,10 +1183,10 @@
 
     var msgs = [{ role: 'system', content: systemPrompt(session, plan) }].concat(window._miembrosHistory)
 
-    fetch('https://api.groq.com/openai/v1/chat/completions', {
+    fetch('/api/groq', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
-      body: JSON.stringify({ model: 'llama-3.3-70b-versatile', max_tokens: 300, messages: msgs })
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('mm_token') },
+      body: JSON.stringify({ max_tokens: 300, service: 'Asesora privada', messages: msgs })
     })
     .then(function (r) { return r.json() })
     .then(function (d) {

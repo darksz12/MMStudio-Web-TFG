@@ -1,0 +1,8 @@
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    volumes:
+      - ./backups:/backups
+      - ./logs:/var/log/nginx

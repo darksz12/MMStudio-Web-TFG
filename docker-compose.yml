@@ -45,6 +45,8 @@ services:
       - MYSQL_DATABASE=mmstudio                  # base de datos que se crea automáticamente
       - MYSQL_USER=mmstudio                      # usuario de la aplicación
       - MYSQL_PASSWORD=mmstudio_pass             # contraseña del usuario de la aplicación
+    ports:
+      - "3306:3306"                              # expone MySQL al host para conectarse con Workbench/TablePlus
     volumes:
       - db_data:/var/lib/mysql                   # aquí guarda MySQL sus ficheros internos
     healthcheck:
