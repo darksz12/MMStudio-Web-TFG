@@ -230,8 +230,33 @@ window.addEventListener('DOMContentLoaded', function () {
   })
   document.getElementById('p-exp').addEventListener('input', function(){
     var v = this.value.replace(/\D/g,'').substring(0,4)
+    // Forzar mes máximo 12 en cuanto el usuario escribe 2 dígitos
+    if (v.length >= 2) {
+      var mm = parseInt(v.substring(0,2), 10)
+      if (mm < 1)  v = '01' + v.substring(2)
+      if (mm > 12) v = '12' + v.substring(2)
+    }
     if (v.length > 2) v = v.substring(0,2) + '/' + v.substring(2)
     this.value = v
+    // Feedback visual si la fecha está completa
+    var err = document.getElementById('pago-err')
+    if (v.length === 5) {
+      var parts = v.split('/')
+      var now = new Date()
+      var inputYear  = 2000 + parseInt(parts[1], 10)
+      var inputMonth = parseInt(parts[0], 10)
+      var expired = inputYear < now.getFullYear() ||
+                   (inputYear === now.getFullYear() && inputMonth < now.getMonth() + 1)
+      if (expired) {
+        this.style.borderColor = '#c0392b'
+        err.textContent = 'La tarjeta ha caducado.'
+      } else {
+        this.style.borderColor = '#5a9e4e'
+        if (err.textContent === 'La tarjeta ha caducado.') err.textContent = ''
+      }
+    } else {
+      this.style.borderColor = ''
+    }
   })
   document.getElementById('p-cvv').addEventListener('input', function(){
     this.value = this.value.replace(/\D/g,'').substring(0,3)
@@ -339,7 +364,15 @@ function procesarPago() {
 
   if (!name) { err.textContent = 'Introduce el nombre del titular.'; return }
   if (num.length !== 16 || isNaN(num)) { err.textContent = 'Introduce un número de tarjeta válido (16 dígitos).'; return }
-  if (!/^\d{2}\/\d{2}$/.test(exp)) { err.textContent = 'Introduce la fecha en formato MM/AA.'; return }
+  if (!/^\d{2}\/\d{2}$/.test(exp)) { err.textContent = 'Introduce la fecha de caducidad en formato MM/AA.'; return }
+  var expParts = exp.split('/')
+  var expMes = parseInt(expParts[0], 10)
+  var expYear = 2000 + parseInt(expParts[1], 10)
+  if (expMes < 1 || expMes > 12) { err.textContent = 'El mes de caducidad debe estar entre 01 y 12.'; return }
+  var now = new Date()
+  if (expYear < now.getFullYear() || (expYear === now.getFullYear() && expMes < now.getMonth() + 1)) {
+    err.textContent = 'La tarjeta ha caducado. Introduce una fecha válida.'; return
+  }
   if (cvv.length < 3) { err.textContent = 'Introduce el CVV (3 dígitos).'; return }
   err.textContent = ''
 
