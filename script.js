@@ -1,4 +1,27 @@
 function scrollToTop(){window.scrollTo({top:0,behavior:'smooth'});}
+
+// ---- MENÚ HAMBURGUESA (móvil) ----
+;(function(){
+  document.addEventListener('DOMContentLoaded', function(){
+    var nav = document.querySelector('header nav')
+    if (!nav) return
+    var btn = document.createElement('button')
+    btn.className = 'nav-hamburger'
+    btn.innerHTML = '☰ Menú'
+    btn.setAttribute('aria-label', 'Abrir menú de navegación')
+    btn.addEventListener('click', function() {
+      var open = nav.classList.toggle('open')
+      btn.innerHTML = open ? '✕ Cerrar' : '☰ Menú'
+    })
+    nav.querySelectorAll('a').forEach(function(a) {
+      a.addEventListener('click', function() {
+        nav.classList.remove('open')
+        btn.innerHTML = '☰ Menú'
+      })
+    })
+    nav.parentNode.insertBefore(btn, nav)
+  })
+})();
 function mensajeFormulario(){alert('Formulario recibido. En una web real se enviaría al correo de la empresa.');return false;}
 
 // ---- BOTÓN FLOTANTE DE CONTACTO (top-right) ----

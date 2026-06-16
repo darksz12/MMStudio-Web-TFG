@@ -150,9 +150,24 @@
     .a-field input {
       width: 100% !important; padding: 12px 14px !important;
       border: 1.5px solid #e8e0d5 !important; border-radius: 10px !important;
-      font-size: 14px !important; color: #2b2b2b !important;
+      font-size: 16px !important; color: #2b2b2b !important;
       background: #faf7f2 !important; transition: border-color .2s, box-shadow .2s !important;
       margin-top: 0 !important; outline: none;
+    }
+    .a-pwd-wrap { position: relative; }
+    .a-pwd-wrap input { padding-right: 46px !important; }
+    .a-pwd-eye {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      background: none !important; border: none !important; cursor: pointer !important;
+      font-size: 17px !important; color: #aaa !important; padding: 0 !important;
+      margin: 0 !important; width: auto !important; line-height: 1;
+      transition: color .15s !important;
+    }
+    .a-pwd-eye:hover { color: #8c6a32 !important; }
+    @media(max-width:480px) {
+      #auth-modal { border-radius: 16px; width: 100% !important; max-width: 100vw !important; margin: 0 !important; border-bottom-left-radius: 0 !important; border-bottom-right-radius: 0 !important; }
+      #auth-overlay { align-items: flex-end !important; }
+      #auth-modal-body { padding: 20px 16px 28px !important; }
     }
     .a-field input:focus { border-color: #b99a5b !important; box-shadow: 0 0 0 3px rgba(185,154,91,.15) !important; background: white !important; }
     .a-err { font-size: 13px; color: #c0392b; font-weight: 600; min-height: 16px; }
@@ -337,7 +352,7 @@
 
         <form id="a-form-login" class="a-form active" onsubmit="return false">
           <div class="a-field"><label>Email</label><input id="l-email" type="email" placeholder="tu@email.com" autocomplete="email"></div>
-          <div class="a-field"><label>Contraseña</label><input id="l-pwd" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+          <div class="a-field"><label>Contraseña</label><div class="a-pwd-wrap"><input id="l-pwd" type="password" placeholder="••••••••" autocomplete="current-password"><button type="button" class="a-pwd-eye" title="Mostrar contraseña">👁</button></div></div>
           <div class="a-err" id="l-err"></div>
           <button class="a-submit" id="l-btn">Entrar →</button>
           <p class="a-switch">¿Sin cuenta? <a href="#" id="go-reg">Regístrate gratis</a></p>
@@ -347,7 +362,7 @@
           <div class="a-field"><label>Nombre</label><input id="r-name" type="text" placeholder="Tu nombre" autocomplete="given-name"></div>
           <div class="a-field"><label>Apellidos <span style="font-weight:normal;color:#aaa">(opcional)</span></label><input id="r-apellidos" type="text" placeholder="Tus apellidos" autocomplete="family-name"></div>
           <div class="a-field"><label>Email</label><input id="r-email" type="email" placeholder="tu@email.com" autocomplete="email"></div>
-          <div class="a-field"><label>Contraseña</label><input id="r-pwd" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password"></div>
+          <div class="a-field"><label>Contraseña</label><div class="a-pwd-wrap"><input id="r-pwd" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password"><button type="button" class="a-pwd-eye" title="Mostrar contraseña">👁</button></div></div>
           <div class="a-err" id="r-err"></div>
           <div class="a-ok"  id="r-ok"></div>
           <button class="a-submit" id="r-btn">Crear cuenta →</button>
@@ -422,6 +437,8 @@
       icon.style.background = 'rgba(255,255,255,.15)'
       icon.style.fontSize = '18px'
     }
+    var navLink = document.getElementById('nav-auth-link')
+    if (navLink) navLink.textContent = session ? '👤 ' + session.name.split(' ')[0] : '👤 Mi cuenta'
   }
 
   function openModal(tab) {
@@ -612,6 +629,21 @@
     var session = getSession()
     var token   = getToken()
     updateFab(session)
+
+    // Inyectar enlace "Mi cuenta" en la nav para que el registro sea visible
+    var nav = document.querySelector('header nav')
+    if (nav) {
+      var navAuthLink = document.createElement('a')
+      navAuthLink.id = 'nav-auth-link'
+      navAuthLink.href = '#'
+      navAuthLink.style.cssText = 'background:rgba(185,154,91,.35)!important;border:1px solid rgba(185,154,91,.6)!important;'
+      navAuthLink.textContent = session ? '👤 ' + session.name.split(' ')[0] : '👤 Mi cuenta'
+      navAuthLink.addEventListener('click', function(e) {
+        e.preventDefault()
+        document.getElementById('auth-fab').click()
+      })
+      nav.appendChild(navAuthLink)
+    }
     if (session) { fillProfile(session); updateBanner(session) }
 
     // Al cargar la página, si hay un token guardado, lo validamos contra el servidor.
@@ -640,6 +672,15 @@
         openModal('changepwd')
       })
     }
+
+    overlay.querySelectorAll('.a-pwd-eye').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var input = btn.previousElementSibling
+        var show = input.type === 'password'
+        input.type = show ? 'text' : 'password'
+        btn.textContent = show ? '🙈' : '👁'
+      })
+    })
 
     fab.addEventListener('click', function () {
       openModal(getSession() ? 'profile' : 'login')
