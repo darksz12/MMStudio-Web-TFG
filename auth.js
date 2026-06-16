@@ -1087,15 +1087,32 @@
       else if (m.role === 'user')  addMsg(m.content, 'user')
     })
 
-    // Mensaje de bienvenida — solo se muestra la primera vez que se abre el modal.
-    // Se añade también al historial (_miembrosHistory) para que la IA "recuerde"
-    // que ya saludó y no repita la presentación en el segundo mensaje.
+    // Mensaje de bienvenida — solo la primera vez. Si hay historial en BD, lo carga
+    // para que la IA recuerde conversaciones anteriores en lugar de empezar de cero.
     if (!window._miembrosInit) {
       window._miembrosInit = true
-      var bienvenida = '¡Bienvenido/a al Área de Miembros, ' + nombre + '! 🌟 Soy tu asesora privada en M&M Studio. ' +
+      var _bienvenida = '¡Bienvenido/a al Área de Miembros, ' + nombre + '! 🌟 Soy tu asesora privada en M&M Studio. ' +
         'Tienes activo el ' + plan + ', así que estoy aquí para ayudarte con todo lo que incluye. ¿Por dónde quieres empezar?'
-      addMsg(bienvenida, 'bot')
-      window._miembrosHistory.push({ role: 'assistant', content: bienvenida })
+      fetch('/api/chat-history?service=' + encodeURIComponent('Asesora privada'), {
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('mm_token') }
+      })
+      .then(function(r) { return r.json() })
+      .then(function(d) {
+        if (d.messages && d.messages.length > 0) {
+          window._miembrosHistory = d.messages
+          d.messages.forEach(function(m) {
+            if (m.role === 'assistant') addMsg(m.content, 'bot')
+            else if (m.role === 'user') addMsg(m.content, 'user')
+          })
+        } else {
+          addMsg(_bienvenida, 'bot')
+          window._miembrosHistory.push({ role: 'assistant', content: _bienvenida })
+        }
+      })
+      .catch(function() {
+        addMsg(_bienvenida, 'bot')
+        window._miembrosHistory.push({ role: 'assistant', content: _bienvenida })
+      })
     }
 
     // Reseña — estrellas y envío

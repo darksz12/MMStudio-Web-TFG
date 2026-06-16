@@ -540,9 +540,24 @@ function openConsultoria() {
   if (!_conInit) {
     _conInit = true
     var nombre = _user.name.split(' ')[0]
-    var w = '¡Hola ' + nombre + '! Vamos a empezar tu consultoría estratégica. Te haré unas preguntas para entender tu situación y construiremos juntos tu plan de imagen personalizado. Para empezar: ¿cuál es tu objetivo principal ahora mismo?'
-    addConMsg(w, 'bot')
-    _conHistory = [{ role:'user', content:'Hola' }, { role:'assistant', content:w }]
+    var _wCon = '¡Hola ' + nombre + '! Vamos a empezar tu consultoría estratégica. Te haré unas preguntas para entender tu situación y construiremos juntos tu plan de imagen personalizado. Para empezar: ¿cuál es tu objetivo principal ahora mismo?'
+    fetch('/api/chat-history?service=' + encodeURIComponent('Consultoría estratégica'), {
+      headers: { 'Authorization': 'Bearer ' + getToken() }
+    })
+    .then(function(r) { return r.json() })
+    .then(function(d) {
+      if (d.messages && d.messages.length > 0) {
+        _conHistory = d.messages
+        d.messages.forEach(function(m) { addConMsg(m.content, m.role === 'assistant' ? 'bot' : 'user') })
+      } else {
+        addConMsg(_wCon, 'bot')
+        _conHistory = [{ role:'user', content:'Hola' }, { role:'assistant', content:_wCon }]
+      }
+    })
+    .catch(function() {
+      addConMsg(_wCon, 'bot')
+      _conHistory = [{ role:'user', content:'Hola' }, { role:'assistant', content:_wCon }]
+    })
   }
   var inp  = document.getElementById('con-inp')
   var send = document.getElementById('con-send')
@@ -749,9 +764,24 @@ function openReputacion() {
   if (!_repInit) {
     _repInit = true
     var nombre = _user.name.split(' ')[0]
-    var w = '¡Hola ' + nombre + '! Soy tu asesora de reputación digital. Estoy aquí para ayudarte a proteger y mejorar tu imagen online. Cuéntame: ¿cuál es tu situación actual? ¿Hay algo que te preocupe o quieras mejorar en tu reputación digital?'
-    addRepMsg(w, 'bot')
-    _repHistory = [{ role:'user', content:'Hola' }, { role:'assistant', content:w }]
+    var _wRep = '¡Hola ' + nombre + '! Soy tu asesora de reputación digital. Estoy aquí para ayudarte a proteger y mejorar tu imagen online. Cuéntame: ¿cuál es tu situación actual? ¿Hay algo que te preocupe o quieras mejorar en tu reputación digital?'
+    fetch('/api/chat-history?service=' + encodeURIComponent('Gestión de reputación'), {
+      headers: { 'Authorization': 'Bearer ' + getToken() }
+    })
+    .then(function(r) { return r.json() })
+    .then(function(d) {
+      if (d.messages && d.messages.length > 0) {
+        _repHistory = d.messages
+        d.messages.forEach(function(m) { addRepMsg(m.content, m.role === 'assistant' ? 'bot' : 'user') })
+      } else {
+        addRepMsg(_wRep, 'bot')
+        _repHistory = [{ role:'user', content:'Hola' }, { role:'assistant', content:_wRep }]
+      }
+    })
+    .catch(function() {
+      addRepMsg(_wRep, 'bot')
+      _repHistory = [{ role:'user', content:'Hola' }, { role:'assistant', content:_wRep }]
+    })
   }
   var inp  = document.getElementById('rep-inp')
   var send = document.getElementById('rep-send')
@@ -825,9 +855,24 @@ function openLimpieza() {
   if (!_limInit) {
     _limInit = true
     var nombre = _user.name.split(' ')[0]
-    var w = '¡Hola ' + nombre + '! Vamos a limpiar tu huella digital. Te guiaré paso a paso para identificar y eliminar contenido no deseado de la red. Para empezar: ¿qué tipo de contenido te preocupa? (fotos antiguas, comentarios, perfiles en plataformas que ya no usas…)'
-    addLimMsg(w, 'bot')
-    _limHistory = [{ role:'user', content:'Hola' }, { role:'assistant', content:w }]
+    var _wLim = '¡Hola ' + nombre + '! Vamos a limpiar tu huella digital. Te guiaré paso a paso para identificar y eliminar contenido no deseado de la red. Para empezar: ¿qué tipo de contenido te preocupa? (fotos antiguas, comentarios, perfiles en plataformas que ya no usas…)'
+    fetch('/api/chat-history?service=' + encodeURIComponent('Limpieza huella digital'), {
+      headers: { 'Authorization': 'Bearer ' + getToken() }
+    })
+    .then(function(r) { return r.json() })
+    .then(function(d) {
+      if (d.messages && d.messages.length > 0) {
+        _limHistory = d.messages
+        d.messages.forEach(function(m) { addLimMsg(m.content, m.role === 'assistant' ? 'bot' : 'user') })
+      } else {
+        addLimMsg(_wLim, 'bot')
+        _limHistory = [{ role:'user', content:'Hola' }, { role:'assistant', content:_wLim }]
+      }
+    })
+    .catch(function() {
+      addLimMsg(_wLim, 'bot')
+      _limHistory = [{ role:'user', content:'Hola' }, { role:'assistant', content:_wLim }]
+    })
   }
   var inp  = document.getElementById('lim-inp')
   var send = document.getElementById('lim-send')

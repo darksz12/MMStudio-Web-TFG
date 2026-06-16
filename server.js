@@ -376,6 +376,21 @@ app.get('/api/admin/users/:id/activity', authMiddleware, async (req, res) => {
   res.json(logs)
 })
 
+// GET /api/chat-history — devuelve los últimos 30 mensajes del usuario para un servicio concreto
+app.get('/api/chat-history', authMiddleware, async (req, res) => {
+  const service = req.query.service
+  if (!service) return res.json({ messages: [] })
+  try {
+    const [rows] = await pool.query(
+      'SELECT role, message FROM (SELECT id, role, message FROM chat_logs WHERE user_id = ? AND service = ? ORDER BY id DESC LIMIT 30) sub ORDER BY id ASC',
+      [req.user.id, service]
+    )
+    res.json({ messages: rows.map(r => ({ role: r.role, content: r.message })) })
+  } catch (e) {
+    res.json({ messages: [] })
+  }
+})
+
 // POST /api/chat-log — guarda un mensaje individual de chat (usado por auth.js área de miembros)
 app.post('/api/chat-log', authMiddleware, async (req, res) => {
   const { service, role, message } = req.body
