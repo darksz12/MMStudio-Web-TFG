@@ -79,6 +79,14 @@ body.dark-mode .quiz-step-label{color:#d4a96a;}
   #contact-fab{top:auto;bottom:80px;padding:9px 14px;font-size:13px;}
 }
 
+/* ---- VARIANTES DE BOTÓN ---- */
+.boton-outline{display:inline-block;background:transparent;color:white;text-decoration:none;padding:12px 20px;border-radius:8px;margin-top:10px;border:2px solid rgba(255,255,255,.7);font-weight:bold;transition:background .2s,color .2s;}
+.boton-outline:hover{background:white;color:#5b421e;}
+.boton-group{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px;align-items:center;}
+.trust-line{font-size:12px;color:rgba(255,255,255,.65);margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;}
+.trust-line span{background:rgba(255,255,255,.12);border-radius:20px;padding:3px 10px;}
+.badge-popular{display:inline-block;background:linear-gradient(135deg,#b99a5b,#f4d48a);color:#3a2b16;font-size:11px;font-weight:bold;padding:4px 12px;border-radius:20px;margin-bottom:10px;letter-spacing:.5px;}
+
 /* ---- MEJORAS MÓVIL GENERALES ---- */
 @media(max-width:600px){
   header{padding:16px 14px;}
@@ -91,4 +99,7 @@ body.dark-mode .quiz-step-label{color:#d4a96a;}
   .franja{padding:22px 14px;}
   .footer{padding:14px;}
   button,input,select,textarea{font-size:16px;}
+  .boton-group{flex-direction:column;align-items:flex-start;}
+  .boton,.boton-outline{width:100%;max-width:320px;text-align:center;box-sizing:border-box;}
+  .trust-line{justify-content:flex-start;}
 }

@@ -344,7 +344,7 @@
         </div>
         <div id="auth-tabs">
           <button class="a-tab active" data-tab="login">Iniciar sesión</button>
-          <button class="a-tab" data-tab="register">Registrarse</button>
+          <button class="a-tab" data-tab="register">Crear cuenta</button>
         </div>
       </div>
 
@@ -354,18 +354,23 @@
           <div class="a-field"><label>Email</label><input id="l-email" type="email" placeholder="tu@email.com" autocomplete="email"></div>
           <div class="a-field"><label>Contraseña</label><div class="a-pwd-wrap"><input id="l-pwd" type="password" placeholder="••••••••" autocomplete="current-password"><button type="button" class="a-pwd-eye" title="Mostrar contraseña">👁</button></div></div>
           <div class="a-err" id="l-err"></div>
-          <button class="a-submit" id="l-btn">Entrar →</button>
-          <p class="a-switch">¿Sin cuenta? <a href="#" id="go-reg">Regístrate gratis</a></p>
+          <button class="a-submit" id="l-btn">Acceder a mi cuenta</button>
+          <p class="a-switch">¿Sin cuenta? <a href="#" id="go-reg">Crear cuenta gratis</a></p>
         </form>
 
         <form id="a-form-register" class="a-form" onsubmit="return false">
-          <div class="a-field"><label>Nombre</label><input id="r-name" type="text" placeholder="Tu nombre" autocomplete="given-name"></div>
-          <div class="a-field"><label>Apellidos <span style="font-weight:normal;color:#aaa">(opcional)</span></label><input id="r-apellidos" type="text" placeholder="Tus apellidos" autocomplete="family-name"></div>
+          <div style="display:flex;gap:6px;margin-bottom:4px;flex-wrap:wrap;">
+            <span style="font-size:11px;background:#edf7ed;color:#2e7d32;border-radius:20px;padding:3px 10px;font-weight:600;">✓ Gratis</span>
+            <span style="font-size:11px;background:#edf7ed;color:#2e7d32;border-radius:20px;padding:3px 10px;font-weight:600;">✓ Sin tarjeta</span>
+            <span style="font-size:11px;background:#edf7ed;color:#2e7d32;border-radius:20px;padding:3px 10px;font-weight:600;">✓ Acceso inmediato</span>
+          </div>
+          <div class="a-field"><label>Nombre</label><input id="r-name" type="text" placeholder="¿Cómo te llamamos?" autocomplete="given-name"></div>
           <div class="a-field"><label>Email</label><input id="r-email" type="email" placeholder="tu@email.com" autocomplete="email"></div>
           <div class="a-field"><label>Contraseña</label><div class="a-pwd-wrap"><input id="r-pwd" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password"><button type="button" class="a-pwd-eye" title="Mostrar contraseña">👁</button></div></div>
+          <input id="r-apellidos" type="hidden" value="">
           <div class="a-err" id="r-err"></div>
           <div class="a-ok"  id="r-ok"></div>
-          <button class="a-submit" id="r-btn">Crear cuenta →</button>
+          <button class="a-submit" id="r-btn">Crear cuenta gratis</button>
           <p class="a-switch">¿Ya tienes cuenta? <a href="#" id="go-login">Inicia sesión</a></p>
         </form>
 
@@ -440,6 +445,8 @@
     var navLink = document.getElementById('nav-auth-link')
     if (navLink) navLink.textContent = session ? '👤 ' + session.name.split(' ')[0] : '👤 Mi cuenta'
   }
+
+  window.openAuthModal = function(tab) { openModal(tab || 'login') }
 
   function openModal(tab) {
     overlay.classList.add('open')
@@ -726,7 +733,7 @@
         }
       })
       .catch(function () { err.textContent = 'Error de conexión. Inténtalo de nuevo.' })
-      .finally(function () { btn.disabled = false; btn.textContent = 'Entrar →' })
+      .finally(function () { btn.disabled = false; btn.textContent = 'Acceder a mi cuenta' })
     })
 
     // ---- REGISTRO ----
@@ -760,7 +767,7 @@
         }, 900)
       })
       .catch(function () { err.textContent = 'Error de conexión. Inténtalo de nuevo.' })
-      .finally(function () { btn.disabled = false; btn.textContent = 'Crear cuenta →' })
+      .finally(function () { btn.disabled = false; btn.textContent = 'Crear cuenta gratis' })
     })
 
     // ---- CAMBIO DE CONTRASEÑA FORZADO ----
