@@ -299,6 +299,7 @@ app.patch('/api/admin/users/:id/password', authMiddleware, async (req, res) => {
 // y el servidor es quien hace la petición real a Groq con la clave secreta.
 // Si el body incluye "service", guarda el mensaje del usuario y la respuesta en chat_logs.
 app.post('/api/groq', authMiddleware, (req, res) => {
+  console.log('>> /api/groq recibido, user:', req.user.id, 'service:', req.body.service)
   if (!GROQ_KEY) {
     return res.status(503).json({ error: 'Servicio de IA no configurado.' })
   }
