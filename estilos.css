@@ -80,7 +80,9 @@ body.dark-mode .quiz-step-label{color:#d4a96a;}
 }
 
 /* ---- VARIANTES DE BOTÓN ---- */
-.boton-outline{display:inline-block;background:transparent;color:white;text-decoration:none;padding:12px 20px;border-radius:8px;margin-top:10px;border:2px solid rgba(255,255,255,.7);font-weight:bold;transition:background .2s,color .2s;}
+.boton-secondary{display:inline-block;background:white;color:#8c6a32;text-decoration:none;padding:11px 20px;border-radius:8px;margin-top:10px;border:2px solid #8c6a32;font-weight:bold;cursor:pointer;font-size:15px;transition:background .2s,color .2s,border-color .2s;}
+.boton-secondary:hover{background:#8c6a32;color:white;}
+.boton-outline{display:inline-block;background:transparent;color:white;text-decoration:none;padding:12px 20px;border-radius:8px;margin-top:10px;border:2px solid rgba(255,255,255,.7);font-weight:bold;cursor:pointer;font-size:15px;transition:background .2s,color .2s;}
 .boton-outline:hover{background:white;color:#5b421e;}
 .boton-group{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px;align-items:center;}
 .trust-line{font-size:12px;color:rgba(255,255,255,.65);margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;}
