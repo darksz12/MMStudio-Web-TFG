@@ -332,10 +332,14 @@ app.post('/api/groq', authMiddleware, (req, res) => {
           const aiReply = parsed.choices[0].message.content
           if (lastUser) {
             pool.query('INSERT INTO chat_logs (user_id, service, role, message) VALUES (?,?,?,?)',
-              [req.user.id, service, 'user', lastUser.content]).catch(() => {})
+              [req.user.id, service, 'user', lastUser.content])
+              .then(() => console.log('Chat guardado [user]:', req.user.id, service))
+              .catch(e => console.error('Error chat_log user:', e.message))
           }
           pool.query('INSERT INTO chat_logs (user_id, service, role, message) VALUES (?,?,?,?)',
-            [req.user.id, service, 'assistant', aiReply]).catch(() => {})
+            [req.user.id, service, 'assistant', aiReply])
+            .then(() => console.log('Chat guardado [assistant]:', req.user.id, service))
+            .catch(e => console.error('Error chat_log assistant:', e.message))
         }
       } catch (e) { res.status(500).json({ error: 'Respuesta inválida de Groq.' }) }
     })
